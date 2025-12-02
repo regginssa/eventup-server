@@ -1,0 +1,485 @@
+{
+  "AirSearchResponse": {
+    "session_id": "MTc2MzQ3Mzg1MF8yMjkxNzc5",
+    "AirSearchResult": {
+      "FareItineraries": [
+        {
+          "FareItinerary": {
+            "DirectionInd": "OneWay",
+            "AirItineraryFareInfo": {
+              "DivideInPartyIndicator": "false",
+              "FareSourceCode": "MG00Wm16aTRpUHpUV3dHbHJwVDdDMysyQW1kUitWVEF4MWRDaHZCeXJkZ2dXa29OaGpvckVybjNRUnVIRlBhMmtUQUhsc2tEV05GVHZtNTFmbDFCZ0oxUTFWZGdiVm9YZXJhK1BtY09CSXQrWTBDZHJXQ2dxVitKVk8wcitLeUlxRmg3VDlsOVBodFdtcGNVYlU1R3FBPT0=",
+              "FareInfos": [],
+              "FareType": "WebFare",
+              "ResultIndex": "",
+              "IsRefundable": "No",
+              "ItinTotalFares": {
+                "BaseFare": {
+                  "Amount": "2680.54",
+                  "CurrencyCode": "USD",
+                  "DecimalPlaces": "2"
+                },
+                "EquivFare": {
+                  "Amount": "2680.54",
+                  "CurrencyCode": "USD",
+                  "DecimalPlaces": "2"
+                },
+                "ServiceTax": {
+                  "Amount": "0.00",
+                  "CurrencyCode": "USD",
+                  "DecimalPlaces": "2"
+                },
+                "TotalTax": {
+                  "Amount": "1190.77",
+                  "CurrencyCode": "USD",
+                  "DecimalPlaces": "2"
+                },
+                "TotalFare": {
+                  "Amount": "3871.30",
+                  "CurrencyCode": "USD",
+                  "DecimalPlaces": "2"
+                }
+              },
+              "FareBreakdown": [
+                {
+                  "FareBasisCode": "",
+                  "Baggage": ["SB", "SB"],
+                  "CabinBaggage": ["SB", "SB"],
+                  "PassengerFare": {
+                    "BaseFare": {
+                      "Amount": "1821.26",
+                      "CurrencyCode": "USD",
+                      "DecimalPlaces": "2"
+                    },
+                    "EquivFare": {
+                      "Amount": "1821.26",
+                      "CurrencyCode": "USD",
+                      "DecimalPlaces": "2"
+                    },
+                    "ServiceTax": {
+                      "Amount": "0.00",
+                      "CurrencyCode": "USD",
+                      "DecimalPlaces": "2"
+                    },
+                    "Surcharges": {
+                      "Amount": "0.00",
+                      "CurrencyCode": "USD",
+                      "DecimalPlaces": "2"
+                    },
+                    "Taxes": [
+                      {
+                        "TaxCode": "Taxes and Charges",
+                        "Amount": "785.41",
+                        "CurrencyCode": "USD",
+                        "DecimalPlaces": "2"
+                      },
+                      {
+                        "TaxCode": "Admin Charge",
+                        "Amount": "0.00",
+                        "CurrencyCode": "USD",
+                        "DecimalPlaces": "2"
+                      },
+                      {
+                        "TaxCode": "Tax2",
+                        "Amount": "57.22",
+                        "CurrencyCode": "USD",
+                        "DecimalPlaces": "2"
+                      }
+                    ],
+                    "TotalFare": {
+                      "Amount": "2663.89",
+                      "CurrencyCode": "USD",
+                      "DecimalPlaces": "2"
+                    }
+                  },
+                  "PassengerTypeQuantity": {
+                    "Code": "ADT",
+                    "Quantity": 2
+                  },
+                  "PenaltyDetails": {
+                    "Currency": "USD",
+                    "RefundAllowed": false,
+                    "RefundPenaltyAmount": "0.00",
+                    "ChangeAllowed": false,
+                    "ChangePenaltyAmount": "0.00"
+                  }
+                },
+                {
+                  "FareBasisCode": "",
+                  "Baggage": ["SB", "SB"],
+                  "CabinBaggage": ["SB", "SB"],
+                  "PassengerFare": {
+                    "BaseFare": {
+                      "Amount": "770.18",
+                      "CurrencyCode": "USD",
+                      "DecimalPlaces": "2"
+                    },
+                    "EquivFare": {
+                      "Amount": "770.18",
+                      "CurrencyCode": "USD",
+                      "DecimalPlaces": "2"
+                    },
+                    "ServiceTax": {
+                      "Amount": "0.00",
+                      "CurrencyCode": "USD",
+                      "DecimalPlaces": "2"
+                    },
+                    "Surcharges": {
+                      "Amount": "0.00",
+                      "CurrencyCode": "USD",
+                      "DecimalPlaces": "2"
+                    },
+                    "Taxes": [
+                      {
+                        "TaxCode": "Taxes and Charges",
+                        "Amount": "274.25",
+                        "CurrencyCode": "USD",
+                        "DecimalPlaces": "2"
+                      },
+                      {
+                        "TaxCode": "Admin Charge",
+                        "Amount": "0.00",
+                        "CurrencyCode": "USD",
+                        "DecimalPlaces": "2"
+                      }
+                    ],
+                    "TotalFare": {
+                      "Amount": "1044.42",
+                      "CurrencyCode": "USD",
+                      "DecimalPlaces": "2"
+                    }
+                  },
+                  "PassengerTypeQuantity": {
+                    "Code": "CHD",
+                    "Quantity": 1
+                  },
+                  "PenaltyDetails": {
+                    "Currency": "USD",
+                    "RefundAllowed": false,
+                    "RefundPenaltyAmount": "0.00",
+                    "ChangeAllowed": false,
+                    "ChangePenaltyAmount": "0.00"
+                  }
+                },
+                {
+                  "FareBasisCode": "",
+                  "Baggage": ["SB", "SB"],
+                  "CabinBaggage": ["SB", "SB"],
+                  "PassengerFare": {
+                    "BaseFare": {
+                      "Amount": "89.09",
+                      "CurrencyCode": "USD",
+                      "DecimalPlaces": "2"
+                    },
+                    "EquivFare": {
+                      "Amount": "89.09",
+                      "CurrencyCode": "USD",
+                      "DecimalPlaces": "2"
+                    },
+                    "ServiceTax": {
+                      "Amount": "0.00",
+                      "CurrencyCode": "USD",
+                      "DecimalPlaces": "2"
+                    },
+                    "Surcharges": {
+                      "Amount": "0.00",
+                      "CurrencyCode": "USD",
+                      "DecimalPlaces": "2"
+                    },
+                    "Taxes": [
+                      {
+                        "TaxCode": "Taxes and Charges",
+                        "Amount": "73.89",
+                        "CurrencyCode": "USD",
+                        "DecimalPlaces": "2"
+                      }
+                    ],
+                    "TotalFare": {
+                      "Amount": "162.99",
+                      "CurrencyCode": "USD",
+                      "DecimalPlaces": "2"
+                    }
+                  },
+                  "PassengerTypeQuantity": {
+                    "Code": "INF",
+                    "Quantity": 1
+                  },
+                  "PenaltyDetails": {
+                    "Currency": "USD",
+                    "RefundAllowed": false,
+                    "RefundPenaltyAmount": "0.00",
+                    "ChangeAllowed": false,
+                    "ChangePenaltyAmount": "0.00"
+                  }
+                }
+              ],
+              "SplitItinerary": false
+            },
+            "OriginDestinationOptions": [
+              {
+                "OriginDestinationOption": [
+                  {
+                    "FlightSegment": {
+                      "ArrivalAirportLocationCode": "DUB",
+                      "ArrivalDateTime": "2025-11-20T09:10:00",
+                      "CabinClassCode": "Y",
+                      "CabinClassText": "SAVER",
+                      "DepartureAirportLocationCode": "LHR",
+                      "DepartureDateTime": "2025-11-20T07:50:00",
+                      "Eticket": true,
+                      "JourneyDuration": "80",
+                      "FlightNumber": "151",
+                      "MarketingAirlineCode": "EI",
+                      "MarketingAirlineName": "Aer Lingus Irish",
+                      "MarriageGroup": "",
+                      "MealCode": "",
+                      "OperatingAirline": {
+                        "Code": "EI",
+                        "Name": "Aer Lingus Irish",
+                        "Equipment": "",
+                        "FlightNumber": ""
+                      }
+                    },
+                    "ResBookDesigCode": "",
+                    "ResBookDesigText": "",
+                    "SeatsRemaining": {
+                      "BelowMinimum": false,
+                      "Number": 4
+                    },
+                    "StopQuantity": 0,
+                    "StopQuantityInfo": {
+                      "ArrivalDateTime": "",
+                      "DepartureDateTime": "",
+                      "Duration": "",
+                      "LocationCode": ""
+                    }
+                  },
+                  {
+                    "FlightSegment": {
+                      "ArrivalAirportLocationCode": "IAD",
+                      "ArrivalDateTime": "2025-11-20T15:35:00",
+                      "CabinClassCode": "Y",
+                      "CabinClassText": "SAVER",
+                      "DepartureAirportLocationCode": "DUB",
+                      "DepartureDateTime": "2025-11-20T12:15:00",
+                      "Eticket": true,
+                      "JourneyDuration": "500",
+                      "FlightNumber": "117",
+                      "MarketingAirlineCode": "EI",
+                      "MarketingAirlineName": "Aer Lingus Irish",
+                      "MarriageGroup": "",
+                      "MealCode": "",
+                      "OperatingAirline": {
+                        "Code": "EI",
+                        "Name": "Aer Lingus Irish",
+                        "Equipment": "",
+                        "FlightNumber": ""
+                      }
+                    },
+                    "ResBookDesigCode": "",
+                    "ResBookDesigText": "",
+                    "SeatsRemaining": {
+                      "BelowMinimum": false,
+                      "Number": 4
+                    },
+                    "StopQuantity": 0,
+                    "StopQuantityInfo": {
+                      "ArrivalDateTime": "",
+                      "DepartureDateTime": "",
+                      "Duration": "",
+                      "LocationCode": ""
+                    }
+                  }
+                ],
+                "TotalStops": 1
+              }
+            ],
+            "IsPassportMandatory": null,
+            "SequenceNumber": "",
+            "TicketType": "eTicket",
+            "ValidatingAirlineCode": "EI"
+          }
+        }
+      ]
+    }
+  }
+}
+
+// {
+//   "_id": {
+//     "$oid": "691aaa6a4d63af0874a605d9"
+//   },
+//   "id": "1kC8vxqaGAuYpHd",
+//   "__v": 0,
+//   "address": "The Spiegeltent at Caesars Palace, 3570 Las Vegas Blvd South, Las Vegas, NV, 89109, United States Of America",
+//   "attractions": [
+//     {
+//       "id": "K8vZ917GF4V",
+//       "name": "Absinthe",
+//       "url": "https://www.ticketmaster.com/absinthe-tickets/artist/802082",
+//       "_id": {
+//         "$oid": "691aaa6afe8375c41e0afd84"
+//       }
+//     }
+//   ],
+//   "availability_hint": "likely_available",
+//   "category": "arts_and_culture",
+//   "classifications": {
+//     "segment": "Arts & Theatre",
+//     "genre": "Circus & Specialty Acts",
+//     "subGenre": "Circus",
+//     "type": "Undefined",
+//     "subType": "Undefined",
+//     "primary": true
+//   },
+//   "coordinate": {
+//     "longitude": -115.175058,
+//     "latitude": 36.116156
+//   },
+//   "country": "United States Of America",
+//   "country_code": "US",
+//   "createdAt": {
+//     "$date": "2025-11-17T04:54:02.482Z"
+//   },
+//   "detail": null,
+//   "end_date": null,
+//   "image": "https://s1.ticketm.net/dam/a/6d3/3a70795b-51fe-4a5b-a550-7413e2fdb6d3_ARTIST_PAGE_3_2.jpg",
+//   "images": [],
+//   "lastSyncedAt": {
+//     "$date": "2025-11-17T04:54:02.481Z"
+//   },
+//   "loc": {
+//     "type": "Point",
+//     "coordinates": [
+//       -115.175058,
+//       36.116156
+//     ]
+//   },
+//   "locale": "en-us",
+//   "offers": [],
+//   "opening_date": {
+//     "$date": "2025-11-17T05:00:00.000Z"
+//   },
+//   "priceRanges": [],
+//   "promoterId": "494",
+//   "region": "Nevada",
+//   "region_code": "NV",
+//   "salesPresales": [],
+//   "salesPublic": {
+//     "startDateTime": {
+//       "$date": "2025-04-04T17:00:00.000Z"
+//     },
+//     "endDateTime": {
+//       "$date": "2025-11-17T06:00:00.000Z"
+//     },
+//     "startTBD": false
+//   },
+//   "status": "onsale",
+//   "subcategories": [
+//     "circus/acrobatics"
+//   ],
+//   "test": false,
+//   "timezone": "America/Los_Angeles",
+//   "title": "Absinthe",
+//   "type": "event",
+//   "updatedAt": {
+//     "$date": "2025-11-17T04:54:02.482Z"
+//   },
+//   "url": "https://www.ticketmaster.com/absinthe-las-vegas-nevada-11-16-2025/event/390062749DC16F03",
+//   "venue": {
+//     "id": "KovZ917App7",
+//     "name": "The Spiegeltent at Caesars Palace",
+//     "city": "Las Vegas",
+//     "region": "Nevada",
+//     "region_code": "NV",
+//     "postalCode": "89109",
+//     "country": "United States Of America",
+//     "country_code": "US",
+//     "address_line1": "3570 Las Vegas Blvd South",
+//     "address_line2": null,
+//     "timezone": "America/Los_Angeles",
+//     "coordinate": {
+//       "longitude": -115.175058,
+//       "latitude": 36.116156
+//     },
+//     "fullAddress": "The Spiegeltent at Caesars Palace, 3570 Las Vegas Blvd South, Las Vegas, NV, 89109, United States Of America"
+//   },
+//   "venue_type": [],
+//   "vibe": []
+// }
+
+// Hotel availability response
+// {
+//   "status": {
+//     "sessionId": "TVRjMk16VTFORGd5TUY4ek9EWmZOamN1TkRNdU5UUXVNVEE9XzEyMTYzOTE=",
+//     "moreResults": false,
+//     "nextToken": "",
+//     "totalResults": 212
+//   },
+//   "itineraries": [
+//     {
+//       "hotelId": "1094726",
+//       "twxHotelId": "1775029",
+//       "productId": "trx109",
+//       "tokenId": "oWFEyU0enZYb4xfCpMIO",
+//       "hotelName": "Athithi International",
+//       "city": "Bengaluru",
+//       "locality": "",
+//       "distanceValue": 14.47,
+//       "distanceUnit": "KM",
+//       "country": "",
+//       "countryCode": "",
+//       "address": "No.41, 2nd Cross, Satish Reddy Electronic City",
+//       "latitude": "12.85160270000000000000",
+//       "longitude": "77.64882460000000000000",
+//       "hotelRating": 3,
+//       "total": "1729.60",
+//       "perNightArray": [
+//         {
+//           "nightIndex": 1,
+//           "currency": "INR",
+//           "price": "1729.60"
+//         }
+//       ],
+//       "currency": "INR",
+//       "fareType": "Refundable",
+//       "propertyType": "",
+//       "postalCode": "560100",
+//       "phone": "+919743878899,+919743878899",
+//       "email": "athithiinternational@gmail.com",
+//       "thumbNailUrl": "https://photos.hotelbeds.com/giata/original/10/1094726/1094726a_hb_ro_001_20250922_100938.jpg",
+//       "facilities": [
+//         "hotel",
+//         "American Express",
+//         "City centre",
+//         "Bathroom",
+//         "Air conditioning in public areas",
+//         "RIU - Covid-19 Health Protocol",
+//         "Room size (sqm)",
+//         "Wheelchair-accessible",
+//         "Fitness",
+//         "Year of most recent renovation",
+//         "apartment",
+//         "JCB",
+//         "Bathtub",
+//         "24-hour reception",
+//         "Breakfast buffet",
+//         "Blue Diamond Resorts - Enhanced Health, Safety & Cleanliness Protocols",
+//         "vacation townhouse",
+//         "Dining Area",
+//         "Car park",
+//         "Cycling / mountain biking",
+//         "Wi-fi",
+//         "Total number of rooms",
+//         "resort",
+//         "Harbour",
+//         "Lift access",
+//         "Set menu lunch",
+//         "Minor - AvaniSHIELD"
+//       ],
+//       "tripAdvisorRating": 0,
+//       "tripAdvisorReview": 0,
+//       "special": ""
+//     },
+//   ]
+//   }
