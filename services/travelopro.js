@@ -350,19 +350,19 @@ async function flightBookingMethod(payload) {
       };
     }
 
-    // 🔥 extract common fields
-    const common = {
-      status: result.Status,
-      success: result.Success,
-      target: result.Target,
-      tktTimeLimit: result.TktTimeLimit,
-      uniqueId: result.UniqueID,
-    };
-
     const isSuccess =
       typeof result.Success === "string"
         ? result.Success.toLowerCase() === "true"
         : Boolean(result.Success);
+
+    // 🔥 extract common fields
+    const common = {
+      status: result.Status,
+      success: isSuccess,
+      target: result.Target,
+      tktTimeLimit: result.TktTimeLimit,
+      uniqueId: result.UniqueID,
+    };
 
     // 🟢 Successful booking
     if (isSuccess) {
@@ -387,10 +387,50 @@ async function flightBookingMethod(payload) {
   }
 }
 
+// Ticket order methods ----------------------------------------------------------------
+async function flightTicketOrderMethod(uniqueId) {
+  const res = await fetch(process.env.TRAVELOPRO_FLIGHT_TICKET_ORDER_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      user_id: process.env.TRAVELOPRO_USER_ID,
+      user_password: process.env.TRAVELOPRO_USER_PASSWORD,
+      access: process.env.TRAVELOPRO_ACCESS_MODE,
+      ip_address: "50.7.159.34",
+      UniqueID: uniqueId,
+    }),
+  });
+
+  const response = await res.json();
+
+  if (response?.Errors) {
+    return {
+      errorMessage: response.Errors.ErrorMessage,
+      success: false,
+    };
+  }
+
+  const result = response.AirOrderTicketRS.TicketOrderResult;
+
+  const errorMessage = result?.Errors?.Error?.ErrorMessage ?? "";
+
+  return {
+    errorMessage,
+    success:
+      typeof result.Success === "string"
+        ? result.Success.toLowerCase() === "true"
+        : Boolean(result.Success),
+    uniqueId: result.UniqueID,
+  };
+}
+
 module.exports = {
   fetchFlightAvailability,
   validateFlightFareMethod,
   flightBookingMethod,
+  flightTicketOrderMethod,
   fetchHotelAvailability,
   getCheapestFlight,
   getCheapestMidRangeHotel,

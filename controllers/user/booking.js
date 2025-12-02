@@ -13,6 +13,7 @@ const {
   fetchHotelDetails,
   validateFlightFareMethod,
   flightBookingMethod,
+  flightTicketOrderMethod,
 } = require("../../services/travelopro");
 const { formatDate } = require("../../utils/format");
 
@@ -279,7 +280,7 @@ const validateFlightFare = async (req, res) => {
     if (!result) {
       return res
         .status(400)
-        .json({ ok: false, message: "Your Flight information is incorrect" });
+        .json({ ok: false, message: "Your Flight is not available" });
     }
 
     res.status(200).json({ ok: true, data: result });
@@ -301,6 +302,20 @@ const bookingFlight = async (req, res) => {
   }
 };
 
+// Ticket controllers ------------------------------------------------------------------
+const ticketFlight = async (req, res) => {
+  try {
+    const { uniqueId } = req.body;
+
+    const result = await flightTicketOrderMethod(uniqueId);
+
+    res.status(200).json({ ok: true, data: result });
+  } catch (error) {
+    console.error("ticket flight error: ", error);
+    res.status(500).json({ ok: false, message: "Interal server error" });
+  }
+};
+
 module.exports = {
   getStandardFlightsAvailability,
   getStandardHotelsAvailability,
@@ -308,4 +323,5 @@ module.exports = {
   getHotelDetails,
   validateFlightFare,
   bookingFlight,
+  ticketFlight,
 };
