@@ -322,12 +322,75 @@ async function validateFlightFareMethod(session_id, fare_source_code) {
 
   const response = await res.json();
 
-  console.log(response);
+  if (response?.AirRevalidateResponse?.AirRevalidateResult) {
+    return response?.AirRevalidateResponse?.AirRevalidateResult.IsValid;
+  }
+
+  return false;
+}
+
+async function flightBookingMethod(payload) {
+  try {
+    const res = await fetch(process.env.TRAVELOPRO_FLIGHT_BOOKING_METHOD, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const response = await res.json();
+
+    const result = response?.BookFlightResponse?.BookFlightResult;
+    if (!result) {
+      return {
+        success: false,
+        errorMessage:
+          response?.Errors?.Error?.ErrorMessage ?? "Unexpected response format",
+      };
+    }
+
+    // 🔥 extract common fields
+    const common = {
+      status: result.Status,
+      success: result.Success,
+      target: result.Target,
+      tktTimeLimit: result.TktTimeLimit,
+      uniqueId: result.UniqueID,
+    };
+
+    const isSuccess =
+      typeof result.Success === "string"
+        ? result.Success.toLowerCase() === "true"
+        : Boolean(result.Success);
+
+    // 🟢 Successful booking
+    if (isSuccess) {
+      console.log(isSuccess);
+      return { ...common, errorMessage: "" };
+    }
+
+    // 🔴 Error booking — normalize error message
+    const errorMsg =
+      result.Errors?.ErrorMessage ??
+      result?.Errors?.Error?.ErrorMessage ??
+      result.Errors?.[0]?.Errors?.ErrorMessage ??
+      "Booking failed";
+
+    return { ...common, errorMessage: errorMsg };
+  } catch (err) {
+    console.error("❌ Flight booking failed:", err);
+    return {
+      success: false,
+      errorMessage: err?.message ?? "Network error",
+    };
+  }
 }
 
 module.exports = {
   fetchFlightAvailability,
   validateFlightFareMethod,
+  flightBookingMethod,
   fetchHotelAvailability,
   getCheapestFlight,
   getCheapestMidRangeHotel,

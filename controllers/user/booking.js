@@ -12,6 +12,7 @@ const {
   fetchTransfersAvailability,
   fetchHotelDetails,
   validateFlightFareMethod,
+  flightBookingMethod,
 } = require("../../services/travelopro");
 const { formatDate } = require("../../utils/format");
 
@@ -274,8 +275,28 @@ const validateFlightFare = async (req, res) => {
     const { session_id, fare_source_code } = req.body;
 
     const result = await validateFlightFareMethod(session_id, fare_source_code);
+
+    if (!result) {
+      return res
+        .status(400)
+        .json({ ok: false, message: "Your Flight information is incorrect" });
+    }
+
+    res.status(200).json({ ok: true, data: result });
   } catch (error) {
     console.error("validate flight fare method: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
+// booking controllers ----------------------------------------------------------------
+const bookingFlight = async (req, res) => {
+  try {
+    const { payload } = req.body;
+    const result = await flightBookingMethod(payload);
+    res.status(200).json({ ok: true, data: result });
+  } catch (error) {
+    console.error("booking flight error: ", error);
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
 };
@@ -286,4 +307,5 @@ module.exports = {
   getStandardTransfersAvailability,
   getHotelDetails,
   validateFlightFare,
+  bookingFlight,
 };
