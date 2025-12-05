@@ -152,6 +152,7 @@ const BookingSchema = new Schema({
     ref: "Event",
     required: true,
   },
+  type: { type: String, enum: ["standard", "gold"], default: "standard" },
   flight: TripDetailsSchema,
 });
 

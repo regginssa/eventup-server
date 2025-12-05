@@ -331,8 +331,6 @@ const addNewFlight = async (req, res) => {
 
     const result = await fetchFlightTripDetails(uniqueId);
 
-    console.log("trip details: ", result);
-
     if (!result) {
       return res.status(400).json({ ok: false, message: result });
     }
