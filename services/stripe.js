@@ -1,4 +1,5 @@
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const { calculateStripeAmount } = require("../utils/currency");
 
 const createCustomer = async (email, name) => {
   const customer = await stripe.customers.create({
@@ -27,8 +28,42 @@ const retrieveSetupIntentPaymentMethod = async (setupIntentId) => {
   return setupIntent.payment_method;
 };
 
+const createPaymentIntent = async (
+  customerId,
+  paymentMethodId,
+  amount,
+  currency,
+  metadata
+) => {
+  const stripeAmount = calculateStripeAmount(amount, "USD");
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: stripeAmount,
+    currency: currency,
+    customer: customerId,
+    payment_method: paymentMethodId,
+    setup_future_usage: "off_session",
+    metadata,
+  });
+
+  if (paymentIntent?.error) {
+    return {
+      message: paymentIntent.error?.message,
+    };
+  }
+
+  return { id: paymentIntent?.id, clientSecret: paymentIntent?.client_secret };
+};
+
+const refundPayment = async (paymentIntentId) => {
+  await stripe.refunds.create({
+    payment_intent: paymentIntentId,
+  });
+};
+
 module.exports = {
   createCustomer,
   setupIntents,
   retrieveSetupIntentPaymentMethod,
+  createPaymentIntent,
+  refundPayment,
 };
