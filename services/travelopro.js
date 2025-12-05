@@ -443,8 +443,8 @@ async function fetchFlightTripDetails(uniqueId) {
 
   const response = await res.json();
 
-  if (response?.Errors) {
-    return null;
+  if (response?.Errors?.ErrorMessage) {
+    return response.Errors.ErrorMessage;
   }
 
   return response?.TripDetailsResponse?.TripDetailsResult;
@@ -460,4 +460,5 @@ module.exports = {
   getCheapestMidRangeHotel,
   fetchTransfersAvailability,
   fetchHotelDetails,
+  fetchFlightTripDetails,
 };

@@ -1,5 +1,6 @@
 const User = require("../../models/User");
 const Event = require("../../models/Event");
+const Booking = require("../../models/Booking");
 const {
   findNearestAirport,
   getAirportByIATA,
@@ -14,6 +15,7 @@ const {
   validateFlightFareMethod,
   flightBookingMethod,
   flightTicketOrderMethod,
+  fetchFlightTripDetails,
 } = require("../../services/travelopro");
 const { formatDate } = require("../../utils/format");
 
@@ -316,6 +318,33 @@ const ticketFlight = async (req, res) => {
   }
 };
 
+const addNewFlight = async (req, res) => {
+  try {
+    const { sessionId, uniqueId, fareSourceCode, userId, eventId } = req.body;
+
+    const result = await fetchFlightTripDetails(uniqueId);
+
+    if (!result) {
+      return res.status(400).json({ ok: false, message: result });
+    }
+
+    const newBooking = await Booking.create({
+      flight: {
+        ...result,
+        sessionId,
+        fareSourceCode,
+      },
+      userId,
+      eventId,
+    });
+
+    res.status(200).json({ ok: true, data: newBooking });
+  } catch (error) {
+    console.error("add new flight error: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
 module.exports = {
   getStandardFlightsAvailability,
   getStandardHotelsAvailability,
@@ -324,4 +353,5 @@ module.exports = {
   validateFlightFare,
   bookingFlight,
   ticketFlight,
+  addNewFlight,
 };

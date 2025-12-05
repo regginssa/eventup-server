@@ -8,6 +8,7 @@ const {
   validateFlightFare,
   bookingFlight,
   ticketFlight,
+  addNewFlight,
 } = require("../../controllers/user/booking");
 
 router.post(
@@ -28,5 +29,6 @@ router.get("/hotel/:sessionId/:hotelId/:productId/:tokenId", getHotelDetails);
 router.post("/flight/validate/fare", validateFlightFare);
 router.post("/flight", bookingFlight);
 router.post("/ticket/flight", ticketFlight);
+router.post("/add/flight", addNewFlight);
 
 module.exports = router;
