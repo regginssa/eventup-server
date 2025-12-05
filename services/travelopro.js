@@ -426,6 +426,30 @@ async function flightTicketOrderMethod(uniqueId) {
   };
 }
 
+async function fetchFlightTripDetails(uniqueId) {
+  const res = await fetch(process.env.TRAVELOPRO_FLIGHT_TICKET_ORDER_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      user_id: process.env.TRAVELOPRO_USER_ID,
+      user_password: process.env.TRAVELOPRO_USER_PASSWORD,
+      access: process.env.TRAVELOPRO_ACCESS_MODE,
+      ip_address: "50.7.159.34",
+      UniqueID: uniqueId,
+    }),
+  });
+
+  const response = await res.json();
+
+  if (response?.Errors) {
+    return null;
+  }
+
+  return response?.TripDetailsResponse?.TripDetailsResult;
+}
+
 module.exports = {
   fetchFlightAvailability,
   validateFlightFareMethod,
