@@ -320,9 +320,18 @@ const ticketFlight = async (req, res) => {
 
 const addNewFlight = async (req, res) => {
   try {
-    const { sessionId, uniqueId, fareSourceCode, userId, eventId } = req.body;
+    const {
+      sessionId,
+      uniqueId,
+      fareSourceCode,
+      tktTimeLimit,
+      userId,
+      eventId,
+    } = req.body;
 
     const result = await fetchFlightTripDetails(uniqueId);
+
+    console.log("trip details: ", result);
 
     if (!result) {
       return res.status(400).json({ ok: false, message: result });
@@ -333,6 +342,7 @@ const addNewFlight = async (req, res) => {
         ...result,
         sessionId,
         fareSourceCode,
+        tktTimeLimit,
       },
       userId,
       eventId,

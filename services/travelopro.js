@@ -427,7 +427,7 @@ async function flightTicketOrderMethod(uniqueId) {
 }
 
 async function fetchFlightTripDetails(uniqueId) {
-  const res = await fetch(process.env.TRAVELOPRO_FLIGHT_TICKET_ORDER_API_URL, {
+  const res = await fetch(process.env.TRAVELOPRO_FLIGHT_TRIP_DETAILS_API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
