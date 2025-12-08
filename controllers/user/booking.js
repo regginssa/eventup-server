@@ -18,6 +18,8 @@ const {
   fetchFlightTripDetails,
   fetchRoomRates,
   checkRoomRates,
+  hotelBookingMethod,
+  fetchHotelBookingDetails,
 } = require("../../services/travelopro");
 const { formatDate } = require("../../utils/format");
 
@@ -344,6 +346,19 @@ const bookingFlight = async (req, res) => {
   }
 };
 
+const bookingHotel = async (req, res) => {
+  try {
+    const { payload } = req.body;
+
+    const result = await hotelBookingMethod(payload);
+
+    res.status(200).json({ ok: true, data: result });
+  } catch (error) {
+    console.error("booking hotel error: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
 // Ticket controllers ------------------------------------------------------------------
 const ticketFlight = async (req, res) => {
   try {
@@ -393,6 +408,70 @@ const addNewFlight = async (req, res) => {
   }
 };
 
+const addNewHotel = async (req, res) => {
+  try {
+    const {
+      supplierConfirmationNum,
+      referenceNum,
+      sessionId,
+      userId,
+      eventId,
+      type,
+      bookingId,
+    } = req.body;
+
+    const result = await fetchHotelBookingDetails(
+      supplierConfirmationNum,
+      referenceNum
+    );
+
+    if (!result) {
+      return res
+        .status(400)
+        .json({ ok: false, message: "Booking information is incorrect" });
+    }
+
+    if (bookingId) {
+      const booking = await Booking.findById(bookingId);
+
+      if (!booking) {
+        return res
+          .status(404)
+          .json({ ok: false, message: "Booking data not found" });
+      }
+
+      booking.hotel = {
+        ...result,
+        sessionId,
+      };
+
+      await booking.save();
+
+      return res.status(200).json({ ok: true, data: booking });
+    }
+
+    const newBooking = await Booking.create({
+      hotel: {
+        ...result,
+        sessionId,
+      },
+      userId,
+      eventId,
+      type,
+    });
+
+    res.status(200).json({ ok: true, data: newBooking });
+  } catch (error) {
+    console.error("add new hotel error: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
+const updateBooking = async (req, res) => {
+  try {
+  } catch (error) {}
+};
+
 module.exports = {
   getStandardFlightsAvailability,
   getStandardHotelsAvailability,
@@ -402,6 +481,9 @@ module.exports = {
   fetchHotelRoomRates,
   checkHotelRoomRates,
   bookingFlight,
+  bookingHotel,
   ticketFlight,
   addNewFlight,
+  addNewHotel,
+  updateBooking,
 };

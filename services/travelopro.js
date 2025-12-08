@@ -488,6 +488,67 @@ async function checkRoomRates(sessionId, productId, tokenId, rateBasisId) {
   return response?.roomRates?.perBookingRates;
 }
 
+// {
+//   "sessionId":"TVRVNE1qSTJOelEzTVY4ME5UZGZNVEkxTGprNUxqSTBNUzR5TkE9PV8w",
+//   "productId":"trx101",
+//   "tokenId":"HTB0zd1QyPEeR3oIpmVn",
+//   "rateBasisId": "MTU3",
+//   "clientRef":"TDB85454",
+//   "customerEmail":"test@gmail.com",
+//   "customerPhone":"53453454334",
+//   "bookingNote":"Remark",
+//   "paxDetails":[
+//     {
+//       "room_no":1,
+//       "adult":{
+//         "title":["Mr","Mr"],
+//         "firstName":["test1","test2"],
+//         "lastName":["last1","last2"]
+//       }
+//     }
+//   ]
+// }
+
+async function hotelBookingMethod(payload) {
+  console.log(payload);
+
+  const res = await fetch(process.env.TRAVELOPRO_HOTEL_BOOKING_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ ...payload, clientRef: "TDB85454" }),
+  });
+
+  const response = await res.json();
+
+  return response;
+}
+
+async function fetchHotelBookingDetails(supplierConfirmationNum, referenceNum) {
+  const res = await fetch(
+    process.env.TRAVELOPRO_HOTEL_BOOKING_DETAILS_API_URL,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_id: process.env.TRAVELOPRO_USER_ID,
+        user_password: process.env.TRAVELOPRO_USER_PASSWORD,
+        access: process.env.TRAVELOPRO_ACCESS_MODE,
+        ip_address: "50.7.159.34",
+        supplierConfirmationNum,
+        referenceNum,
+      }),
+    }
+  );
+
+  const response = await res.json();
+
+  return response;
+}
+
 module.exports = {
   fetchFlightAvailability,
   validateFlightFareMethod,
@@ -501,4 +562,6 @@ module.exports = {
   fetchFlightTripDetails,
   fetchRoomRates,
   checkRoomRates,
+  hotelBookingMethod,
+  fetchHotelBookingDetails,
 };

@@ -145,6 +145,71 @@ const TripDetailsSchema = new Schema(
   { _id: false, timestamps: true }
 );
 
+// hotel
+const PaxDetailsSchema = new Schema(
+  {
+    name: [String],
+  },
+  { _id: false }
+);
+
+const RoomSchema = new Schema(
+  {
+    name: { type: String },
+    description: { type: String },
+    boardType: { type: String }, // raw value: "BED AND BREAKFAST|t|ROOM ONLY"
+    paxDetails: PaxDetailsSchema,
+  },
+  { _id: false }
+);
+
+const HotelBookingDetailsSchema = new Schema(
+  {
+    hotelId: { type: String, required: true },
+    hotelName: { type: String },
+    address: { type: String },
+    latitude: { type: String },
+    longitude: { type: String },
+    postalCode: { type: String },
+    email: { type: String },
+    phone: { type: String },
+    image: { type: String, default: null },
+    city: { type: String },
+    country: { type: String },
+    rating: { type: String },
+
+    checkIn: { type: Date },
+    checkOut: { type: Date },
+    days: { type: Number },
+
+    currency: { type: String },
+    NetPrice: { type: Number },
+    fareType: { type: String },
+    cancellationPolicy: { type: String },
+
+    cancelReferenceNum: { type: String, default: null },
+    customerEmail: { type: String, default: null },
+    customerPhone: { type: String },
+
+    bookingDateTime: { type: Date },
+
+    rooms: [RoomSchema],
+  },
+  { _id: false }
+);
+
+const HotelSchema = new Schema(
+  {
+    roomBookDetails: HotelBookingDetailsSchema,
+    supplierConfirmationNum: String,
+    referenceNum: String,
+    clientRefNum: String,
+    productId: String,
+    sessionId: String,
+  },
+  { _id: false, timestamps: true }
+);
+
 const BookingSchema = new Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   eventId: {
@@ -154,6 +219,7 @@ const BookingSchema = new Schema({
   },
   type: { type: String, enum: ["standard", "gold"], default: "standard" },
   flight: TripDetailsSchema,
+  hotel: HotelSchema,
 });
 
 module.exports = mongoose.model("Booking", BookingSchema);
