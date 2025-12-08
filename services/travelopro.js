@@ -450,6 +450,25 @@ async function fetchFlightTripDetails(uniqueId) {
   return response?.TripDetailsResponse?.TripDetailsResult;
 }
 
+async function fetchRoomRates(sessionId, productId, tokenId, hotelId) {
+  const res = await fetch(process.env.TRAVELOPRO_HOTE_ROOM_RATES_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      sessionId,
+      productId,
+      tokenId,
+      hotelId,
+    }),
+  });
+
+  const response = await res.json();
+
+  return response?.roomRates?.perBookingRates;
+}
+
 module.exports = {
   fetchFlightAvailability,
   validateFlightFareMethod,
@@ -461,4 +480,5 @@ module.exports = {
   fetchTransfersAvailability,
   fetchHotelDetails,
   fetchFlightTripDetails,
+  fetchRoomRates,
 };
