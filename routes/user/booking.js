@@ -14,6 +14,7 @@ const {
   bookingHotel,
   addNewHotel,
   updateBooking,
+  getBooking,
 } = require("../../controllers/user/booking");
 
 router.post(
@@ -40,5 +41,6 @@ router.post("/ticket/flight", ticketFlight);
 router.post("/add/flight", addNewFlight);
 router.post("/add/hotel", addNewHotel);
 router.patch("/:id", updateBooking);
+router.get("/:id", getBooking);
 
 module.exports = router;

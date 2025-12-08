@@ -472,6 +472,23 @@ const updateBooking = async (req, res) => {
   } catch (error) {}
 };
 
+const getBooking = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const booking = await Booking.findById(id);
+
+    if (!booking) {
+      return res.status(404).json({ ok: false, message: "Booking not found" });
+    }
+
+    res.status(200).json({ ok: true, data: booking });
+  } catch (error) {
+    console.error("get booking error: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
 module.exports = {
   getStandardFlightsAvailability,
   getStandardHotelsAvailability,
@@ -486,4 +503,5 @@ module.exports = {
   addNewFlight,
   addNewHotel,
   updateBooking,
+  getBooking,
 };
