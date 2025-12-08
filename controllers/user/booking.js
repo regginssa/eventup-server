@@ -17,6 +17,7 @@ const {
   flightTicketOrderMethod,
   fetchFlightTripDetails,
   fetchRoomRates,
+  checkRoomRates,
 } = require("../../services/travelopro");
 const { formatDate } = require("../../utils/format");
 
@@ -307,6 +308,30 @@ const fetchHotelRoomRates = async (req, res) => {
   res.status(200).json({ ok: true, data: result });
 };
 
+const checkHotelRoomRates = async (req, res) => {
+  try {
+    const { sessionId, productId, tokenId, rateBasisId } = req.body;
+
+    const result = await checkRoomRates(
+      sessionId,
+      productId,
+      tokenId,
+      rateBasisId
+    );
+
+    if (!result) {
+      return res
+        .status(500)
+        .json({ ok: false, message: "Failed to fetch room rates" });
+    }
+
+    res.status(200).json({ ok: true, data: result });
+  } catch (error) {
+    console.error("check hotel room rates error: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
 // booking controllers ----------------------------------------------------------------
 const bookingFlight = async (req, res) => {
   try {
@@ -375,6 +400,7 @@ module.exports = {
   getHotelDetails,
   validateFlightFare,
   fetchHotelRoomRates,
+  checkHotelRoomRates,
   bookingFlight,
   ticketFlight,
   addNewFlight,

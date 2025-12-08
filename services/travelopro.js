@@ -451,7 +451,7 @@ async function fetchFlightTripDetails(uniqueId) {
 }
 
 async function fetchRoomRates(sessionId, productId, tokenId, hotelId) {
-  const res = await fetch(process.env.TRAVELOPRO_HOTE_ROOM_RATES_API_URL, {
+  const res = await fetch(process.env.TRAVELOPRO_HOTEL_ROOM_RATES_API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -461,6 +461,25 @@ async function fetchRoomRates(sessionId, productId, tokenId, hotelId) {
       productId,
       tokenId,
       hotelId,
+    }),
+  });
+
+  const response = await res.json();
+
+  return response?.roomRates?.perBookingRates;
+}
+
+async function checkRoomRates(sessionId, productId, tokenId, rateBasisId) {
+  const res = await fetch(process.env.TRAVELOPRO_HOTEL_CHECK_ROOM_RATES, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      sessionId,
+      productId,
+      tokenId,
+      rateBasisId,
     }),
   });
 
@@ -481,4 +500,5 @@ module.exports = {
   fetchHotelDetails,
   fetchFlightTripDetails,
   fetchRoomRates,
+  checkRoomRates,
 };

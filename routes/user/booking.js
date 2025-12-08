@@ -10,6 +10,7 @@ const {
   ticketFlight,
   addNewFlight,
   fetchHotelRoomRates,
+  checkHotelRoomRates,
 } = require("../../controllers/user/booking");
 
 router.post(
@@ -29,6 +30,7 @@ router.post(
 router.get("/hotel/:sessionId/:hotelId/:productId/:tokenId", getHotelDetails);
 router.post("/flight/validate/fare", validateFlightFare);
 router.post("/hotel/room-rates", fetchHotelRoomRates);
+router.post("/hotel/check-room-rates", checkHotelRoomRates);
 router.post("/flight", bookingFlight);
 router.post("/ticket/flight", ticketFlight);
 router.post("/add/flight", addNewFlight);
