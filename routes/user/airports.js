@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const {
-  updateUserNearestAirports,
-} = require("../../controllers/user/airports");
+const { getNearestAirports } = require("../../controllers/user/airports");
 
-router.patch("/multiple", updateUserNearestAirports);
+router.post("/nearest-multiple", getNearestAirports);
 
 module.exports = router;

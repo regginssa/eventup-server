@@ -54,11 +54,7 @@ app.use("/api/user", userUserRoutes);
 app.use("/api/callbacks", userCallbacksRoutes);
 app.use("/api/didit", userDiditRoutes);
 app.use("/api/events", userEventRoutes);
-app.use(
-  "/api/airports",
-  passport.authenticate("jwt", { session: false }),
-  userAirportsRoutes
-);
+app.use("/api/airports", userAirportsRoutes);
 app.use(
   "/api/booking",
   passport.authenticate("jwt", { session: false }),
