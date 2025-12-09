@@ -220,11 +220,9 @@ const fetchTransfersAvailability = async (
   dropoffLat,
   dropoffLon,
   arrivalDateTime,
-  departureDateTime,
   sorting = "price-low-high"
 ) => {
   const arrival = parseDateTime(arrivalDateTime);
-  const departure = parseDateTime(departureDateTime);
 
   const payload = {
     user_id: process.env.TRAVELOPRO_USER_ID,

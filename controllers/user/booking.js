@@ -182,15 +182,8 @@ const getStandardTransfersAvailability = async (req, res) => {
     let data = null;
 
     if (ahTransfer) {
-      const {
-        airportCode,
-        adults,
-        childs,
-        infants,
-        hotel,
-        arrivalDate,
-        departureDate,
-      } = ahTransfer;
+      const { airportCode, adults, childs, infants, hotel, arrivalDate } =
+        ahTransfer;
 
       const airportCoords = getAirportByIATA(airportCode);
 
@@ -208,28 +201,15 @@ const getStandardTransfersAvailability = async (req, res) => {
             hotelDetail.latitude,
             hotelDetail.longitude,
             arrivalDate,
-            departureDate,
             "price-low-high"
           );
-
-          console.log("Event coords: ", event.coordinate);
-          console.log("user nearest airports: ", user.nearest_airports);
-
-          console.log("destination airport: ", airportCoords);
-
-          console.log(
-            "event hotel coords: ",
-            hotelDetail.latitude,
-            hotelDetail.longitude
-          );
-          console.log("airport - hotel transfer result: ", result);
+          data = { ah: result };
         }
       }
     }
 
     if (heTransfer) {
-      const { hotel, adults, childs, infants, departureDate, arrivalDate } =
-        heTransfer;
+      const { hotel, adults, childs, infants, arrivalDate } = heTransfer;
 
       const hotelDetail = await fetchHotelDetails(hotel);
 
@@ -244,11 +224,10 @@ const getStandardTransfersAvailability = async (req, res) => {
           event.coordinate.latitude,
           event.coordinate.longitude,
           arrivalDate,
-          departureDate,
           "price-low-high"
         );
 
-        console.log("hotel - event transfer result: ", result);
+        data = { ...data, he: result };
       }
     }
 
