@@ -194,6 +194,8 @@ const getTransfersAvailability = async (req, res) => {
             hotelDetail.latitude,
             hotelDetail.longitude,
             arrivalDate,
+            "AP",
+            "AC",
             "price-low-high"
           );
           data = { ah: result };
@@ -202,7 +204,15 @@ const getTransfersAvailability = async (req, res) => {
     }
 
     if (heTransfer) {
-      const { hotel, adults, childs, infants, arrivalDate } = heTransfer;
+      const {
+        hotel,
+        adults,
+        childs,
+        infants,
+        arrivalDate,
+        pickupDate,
+        pickupTime,
+      } = heTransfer;
 
       const hotelDetail = await fetchHotelDetails(hotel);
 
@@ -217,7 +227,11 @@ const getTransfersAvailability = async (req, res) => {
           event.coordinate.latitude,
           event.coordinate.longitude,
           arrivalDate,
-          "price-low-high"
+          "AC",
+          "AC",
+          "price-low-high",
+          pickupDate,
+          pickupTime
         );
 
         data = { ...data, he: result };

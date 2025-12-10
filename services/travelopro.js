@@ -220,11 +220,17 @@ const fetchTransfersAvailability = async (
   dropoffLat,
   dropoffLon,
   arrivalDateTime,
-  sorting = "price-low-high"
+  pickupLocationType,
+  dropoffLocationType,
+  sorting = "price-low-high",
+  pickupDate,
+  pickupTime
 ) => {
   const arrival = parseDateTime(arrivalDateTime);
 
-  const payload = {
+  console.log(pickupDate, pickupTime);
+
+  let payload = {
     user_id: process.env.TRAVELOPRO_USER_ID,
     user_password: process.env.TRAVELOPRO_USER_PASSWORD,
     access: process.env.TRAVELOPRO_ACCESS_MODE,
@@ -239,10 +245,10 @@ const fetchTransfersAvailability = async (
 
     // GEO search values for airport → hotel
     pickup_location_code: `${pickupLat},${pickupLon}`,
-    pickup_location_type: "AP",
+    pickup_location_type: pickupLocationType,
 
     dropoff_location_code: `${dropoffLat},${dropoffLon}`,
-    dropoff_location_type: "AC",
+    dropoff_location_type: dropoffLocationType,
 
     // Flight arrival at destination
     arrival_date: arrival.date,
@@ -254,6 +260,11 @@ const fetchTransfersAvailability = async (
 
     sorting,
   };
+
+  if (pickupDate) {
+    payload.pickup_date = pickupDate;
+    payload.pickup_time = pickupTime;
+  }
 
   console.log("Transfer availability payload: ", payload);
 
