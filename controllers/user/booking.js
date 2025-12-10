@@ -23,28 +23,21 @@ const {
 } = require("../../services/travelopro");
 const { formatDate } = require("../../utils/format");
 
-const getStandardFlightsAvailability = async (req, res) => {
+const getFlightsAvailability = async (req, res) => {
   try {
-    const userId = req.user.id;
     const { eventId } = req.params;
-    const { departureDate, adults, childs, infants } = req.body.flight;
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ ok: false, message: "Unauthorized" });
-    }
+    const {
+      departureDate,
+      adults,
+      childs,
+      infants,
+      airports: airportOrigins,
+      packageType,
+    } = req.body.flight;
 
     const event = await Event.findById(eventId);
     if (!event) {
       return res.status(404).json({ ok: false, message: "Event not found" });
-    }
-
-    const airportOrigins = user.nearest_airports;
-    if (!airportOrigins || airportOrigins.length === 0) {
-      return res.status(400).json({
-        ok: false,
-        message: "No nearest airports found for user",
-      });
     }
 
     const { coordinate: eventCoords } = event;
@@ -107,11 +100,11 @@ const getStandardFlightsAvailability = async (req, res) => {
   }
 };
 
-const getStandardHotelsAvailability = async (req, res) => {
+const getHotelsAvailability = async (req, res) => {
   try {
     const userId = req.user.id;
     const { eventId } = req.params;
-    const { occupancy, checkin, checkout } = req.body;
+    const { occupancy, checkin, checkout, packageType } = req.body;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -163,11 +156,11 @@ const getStandardHotelsAvailability = async (req, res) => {
   }
 };
 
-const getStandardTransfersAvailability = async (req, res) => {
+const getTransfersAvailability = async (req, res) => {
   try {
     const userId = req.user.id;
     const { eventId } = req.params;
-    const { ahTransfer, heTransfer } = req.body;
+    const { ahTransfer, heTransfer, packageType } = req.body;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -469,9 +462,9 @@ const getBooking = async (req, res) => {
 };
 
 module.exports = {
-  getStandardFlightsAvailability,
-  getStandardHotelsAvailability,
-  getStandardTransfersAvailability,
+  getFlightsAvailability,
+  getHotelsAvailability,
+  getTransfersAvailability,
   getHotelDetails,
   validateFlightFare,
   fetchHotelRoomRates,

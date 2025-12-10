@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const {
-  getStandardHotelsAvailability,
-  getStandardFlightsAvailability,
-  getStandardTransfersAvailability,
+  getFlightsAvailability,
+  getHotelsAvailability,
+  getTransfersAvailability,
   getHotelDetails,
   validateFlightFare,
   bookingFlight,
@@ -17,19 +17,10 @@ const {
   getBooking,
 } = require("../../controllers/user/booking");
 
-router.post(
-  "/standard-package/flights-availability/:eventId",
-  getStandardFlightsAvailability
-);
-router.post(
-  "/standard-package/hotels-availability/:eventId",
-  getStandardHotelsAvailability
-);
+router.post("/flights-availability/:eventId", getFlightsAvailability);
+router.post("/hotels-availability/:eventId", getHotelsAvailability);
 
-router.post(
-  "/standard-package/transfers-availability/:eventId",
-  getStandardTransfersAvailability
-);
+router.post("/transfers-availability/:eventId", getTransfersAvailability);
 
 router.get("/hotel/:sessionId/:hotelId/:productId/:tokenId", getHotelDetails);
 router.post("/flight/validate/fare", validateFlightFare);
