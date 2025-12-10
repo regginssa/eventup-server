@@ -20,6 +20,7 @@ const {
   checkRoomRates,
   hotelBookingMethod,
   fetchHotelBookingDetails,
+  getMostExpensiveFlight,
 } = require("../../services/travelopro");
 const { formatDate } = require("../../utils/format");
 
@@ -53,13 +54,15 @@ const getFlightsAvailability = async (req, res) => {
       });
     }
 
+    console.log("package type: ", packageType);
+
     let flights = [];
     let flightSessionId = null;
 
     // Find the cheapest flight among all nearest airports
     for (const airportOrigin of airportOrigins) {
       const result = await fetchFlightAvailability(
-        "standard",
+        packageType,
         airportOrigin.iata,
         airportDestination.iata,
         formatDate(new Date(departureDate)),
@@ -80,10 +83,14 @@ const getFlightsAvailability = async (req, res) => {
       );
     }
 
-    let cheapestFlight = null;
+    let recommend = null;
 
     if (flights.length > 0) {
-      cheapestFlight = getCheapestFlight(flights);
+      if (packageType === "standard") {
+        recommend = getCheapestFlight(flights);
+      } else {
+        recommend = getMostExpensiveFlight(flights);
+      }
     }
 
     res.status(200).json({
@@ -91,7 +98,7 @@ const getFlightsAvailability = async (req, res) => {
       data: {
         session_id: flightSessionId,
         availabilities: flights,
-        recommend: cheapestFlight,
+        recommend,
       },
     });
   } catch (error) {

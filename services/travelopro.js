@@ -93,6 +93,37 @@ function getCheapestFlight(flights) {
   return cheapest;
 }
 
+function getMostExpensiveFlight(flights) {
+  if (!Array.isArray(flights) || flights.length === 0) {
+    return null;
+  }
+
+  let expensive = null;
+  let maxPrice = -Infinity;
+
+  for (const item of flights) {
+    try {
+      const fareInfo = item.FareItinerary?.AirItineraryFareInfo;
+      const priceStr = fareInfo?.ItinTotalFares?.TotalFare?.Amount;
+
+      if (!priceStr) continue;
+
+      const price = parseFloat(priceStr);
+      if (isNaN(price)) continue;
+
+      if (price > maxPrice) {
+        maxPrice = price;
+        expensive = item;
+      }
+    } catch (err) {
+      // Skip invalid items
+      continue;
+    }
+  }
+
+  return expensive;
+}
+
 /*
 @params = {
   "user_id": "<id>",
@@ -227,8 +258,6 @@ const fetchTransfersAvailability = async (
   pickupTime
 ) => {
   const arrival = parseDateTime(arrivalDateTime);
-
-  console.log(pickupDate, pickupTime);
 
   let payload = {
     user_id: process.env.TRAVELOPRO_USER_ID,
@@ -565,6 +594,7 @@ module.exports = {
   flightTicketOrderMethod,
   fetchHotelAvailability,
   getCheapestFlight,
+  getMostExpensiveFlight,
   getCheapestMidRangeHotel,
   fetchTransfersAvailability,
   fetchHotelDetails,

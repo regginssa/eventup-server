@@ -122,7 +122,7 @@ const EventSchema = new mongoose.Schema(
     fee_type: { type: String, enum: ["free", "paid"], default: "free" },
     fee: {
       amount: { type: Number, default: 0 },
-      currency: { type: String, enum: ["usd", "eur", "pln"], default: "usd" },
+      currency: String,
     },
 
     // From Discovery
