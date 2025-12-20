@@ -257,45 +257,58 @@ const fetchTransfersAvailability = async (
   pickupDate,
   pickupTime
 ) => {
-  const arrival = parseDateTime(arrivalDateTime);
+  // const arrival = parseDateTime(arrivalDateTime);
 
-  let payload = {
-    user_id: process.env.TRAVELOPRO_USER_ID,
-    user_password: process.env.TRAVELOPRO_USER_PASSWORD,
-    access: process.env.TRAVELOPRO_ACCESS_MODE,
+  // let payload = {
+  //   user_id: process.env.TRAVELOPRO_USER_ID,
+  //   user_password: process.env.TRAVELOPRO_USER_PASSWORD,
+  //   access: process.env.TRAVELOPRO_ACCESS_MODE,
+  //   ip_address: "50.7.159.34",
+
+  //   journey_type: "OneWay",
+  //   search_currency: currency,
+
+  //   adults: String(adults),
+  //   children: String(children),
+  //   infants: String(infants),
+
+  //   // GEO search values for airport → hotel
+  //   pickup_location_code: `${pickupLat},${pickupLon}`,
+  //   pickup_location_type: pickupLocationType,
+
+  //   dropoff_location_code: `${dropoffLat},${dropoffLon}`,
+  //   dropoff_location_type: dropoffLocationType,
+
+  //   sorting,
+  // };
+
+  // if (pickupDate) {
+  //   payload.pickup_date = pickupDate;
+  //   payload.pickup_time = pickupTime;
+  // } else {
+  //   payload.arrival_date = arrival.date;
+  //   payload.arrival_time = arrival.time;
+  // }
+
+  // console.log("Transfer availability payload: ", JSON.stringify(payload));
+
+  const payload = {
+    user_id: "charlieunicornai_testAPI",
+    user_password: "charlieunicornaiTest@2025",
+    access: "Test",
     ip_address: "50.7.159.34",
-
-    journey_type: "OneWay",
-    search_currency: currency,
-
-    adults: String(adults),
-    children: String(children),
-    infants: String(infants),
-
-    // GEO search values for airport → hotel
-    pickup_location_code: `${pickupLat},${pickupLon}`,
-    pickup_location_type: pickupLocationType,
-
-    dropoff_location_code: `${dropoffLat},${dropoffLon}`,
-    dropoff_location_type: dropoffLocationType,
-
-    // Flight arrival at destination
-    arrival_date: arrival.date,
-    arrival_time: arrival.time,
-
-    // // Flight departure (return)
-    // departure_date: departure.date,
-    // departure_time: departure.time,
-
-    sorting,
+    journey_type: "Return",
+    search_currency: "USD",
+    adults: "2",
+    children: "1",
+    infants: "0",
+    pickup_location: "598330",
+    dropoff_location: "22954",
+    arrival_date: "2026-02-19",
+    arrival_time: "02:00",
+    departure_date: "2026-02-26",
+    departure_time: "05:00",
   };
-
-  if (pickupDate) {
-    payload.pickup_date = pickupDate;
-    payload.pickup_time = pickupTime;
-  }
-
-  console.log("Transfer availability payload: ", payload);
 
   const response = await fetch(
     process.env.TRAVELOPRO_TRANSFER_AVAILABILITY_API_URL,
@@ -359,6 +372,8 @@ async function validateFlightFareMethod(session_id, fare_source_code) {
   });
 
   const response = await res.json();
+
+  console.log("validate flight fare method response: ", response);
 
   if (response?.AirRevalidateResponse?.AirRevalidateResult) {
     return response?.AirRevalidateResponse?.AirRevalidateResult.IsValid;

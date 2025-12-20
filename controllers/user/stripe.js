@@ -128,7 +128,7 @@ const createStripePaymentIntent = async (req, res) => {
   }
 };
 
-const refundStripePaymentIntent = async () => {
+const refundStripePaymentIntent = async (req, res) => {
   try {
     const userId = req.user.id;
     const { paymentIntentId } = req.body;
