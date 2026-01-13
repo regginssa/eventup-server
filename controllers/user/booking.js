@@ -482,6 +482,15 @@ const getBooking = async (req, res) => {
   }
 };
 
+const getAllBookingsByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params.userId;
+  } catch (error) {
+    console.error("get all bookings by user id error: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
 module.exports = {
   getFlightsAvailability,
   getHotelsAvailability,
