@@ -484,7 +484,13 @@ const getBooking = async (req, res) => {
 
 const getAllBookingsByUserId = async (req, res) => {
   try {
-    const { userId } = req.params.userId;
+    const userId = req.params.userId;
+    const bookings = await Booking.find({ userId }).populate({
+      path: "eventId",
+      as: "event",
+    });
+
+    res.status(200).json({ ok: true, data: bookings });
   } catch (error) {
     console.error("get all bookings by user id error: ", error);
     res.status(500).json({ ok: false, message: "Internal server error" });
@@ -506,4 +512,5 @@ module.exports = {
   addNewHotel,
   updateBooking,
   getBooking,
+  getAllBookingsByUserId,
 };
