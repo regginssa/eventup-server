@@ -19,8 +19,6 @@ const fetchFlightAvailability = async (
   airportDestinationCode,
   departureDate,
   adults = 1,
-  childs = 0,
-  infants = 0,
   requiredCurrency = "USD"
 ) => {
   const res = await fetch(process.env.TRAVELOPRO_FLIGHT_AVAILABILITY_API_URL, {
