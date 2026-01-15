@@ -55,6 +55,7 @@ app.use("/api/callbacks", userCallbacksRoutes);
 app.use("/api/didit", userDiditRoutes);
 app.use("/api/events", userEventRoutes);
 app.use("/api/airports", userAirportsRoutes);
+
 app.use(
   "/api/booking",
   passport.authenticate("jwt", { session: false }),
@@ -92,7 +93,7 @@ connectDB();
 
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`Server is running on ${PORT}`);
 });
 

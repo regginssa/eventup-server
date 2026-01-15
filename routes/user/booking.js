@@ -19,7 +19,7 @@ const {
   getAllBookingsByUserId,
 } = require("../../controllers/user/booking");
 
-router.post("/flights-offer-search", getFlightsOfferSearch);
+router.post("/flights-search", getFlightsOfferSearch);
 
 // router.post("/flights-availability/:eventId", getFlightsAvailability);
 // router.post("/hotels-availability/:eventId", getHotelsAvailability);

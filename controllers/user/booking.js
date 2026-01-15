@@ -23,7 +23,10 @@ const {
 //   getMostExpensiveFlight,
 // } = require("../../services/travelopro");
 const { formatDate } = require("../../utils/format");
-const { fetchFlightOfferSearch } = require("../../services/amadeus");
+const {
+  fetchFlightOfferSearch,
+  getLocationCodeFromCoords,
+} = require("../../services/amadeus");
 
 // const getFlightsAvailability = async (req, res) => {
 //   try {
@@ -479,38 +482,42 @@ const getFlightsOfferSearch = async (req, res) => {
 
     const { coordinate: eventCoords } = event;
 
-    // To get the city code (IATA code) using coordinates, you usually need an airport/city lookup API or a local database.
-    // Here, if you have longitude/latitude, you can use a helper like findNearestAirport from utils/airports to get the nearest airport,
-    // then use its "cityCode" or "iata code" as the city code.
-    const nearestDestinationAirport = findNearestAirport(
-      eventCoords.latitude,
-      eventCoords.longitude
+    // Get location codes from coordinates using Amadeus API
+    // This will return airport/city IATA codes that Amadeus accepts
+    const [destinationLocationCode, originLocationCode] = await Promise.all([
+      getLocationCodeFromCoords(eventCoords.latitude, eventCoords.longitude),
+      getLocationCodeFromCoords(
+        originLocationCoords.latitude,
+        originLocationCoords.longitude
+      ),
+    ]);
+
+    if (!destinationLocationCode) {
+      return res.status(400).json({
+        ok: false,
+        message: "Could not determine destination location code",
+      });
+    }
+
+    if (!originLocationCode) {
+      return res.status(400).json({
+        ok: false,
+        message: "Could not determine origin location code",
+      });
+    }
+
+    const result = await fetchFlightOfferSearch(
+      type,
+      originLocationCode,
+      destinationLocationCode,
+      departureDate,
+      adults
     );
 
-    const destinationLocationCode = nearestDestinationAirport
-      ? nearestDestinationAirport.city || nearestDestinationAirport.iata
-      : null;
-
-    const nearestOriginAirport = findNearestAirport(
-      originLocationCoords.latitude,
-      originLocationCoords.longitude
-    );
-
-    const originLocationCode = nearestOriginAirport
-      ? nearestOriginAirport.city || nearestOriginAirport.iata
-      : null;
-
-    console.log(originLocationCode, destinationLocationCode);
-
-    // const result = await fetchFlightOfferSearch(
-    //   type,
-    //   originLocationCode,
-    //   destinationLocationCode,
-    //   departureDate,
-    //   adults
-    // );
-
-    // console.log(result);
+    res.status(200).json({
+      ok: true,
+      data: result,
+    });
   } catch (error) {
     console.error("get flights offer search error: ", error);
     res.status(500).json({ ok: false, message: "Internal server error" });
