@@ -11,13 +11,15 @@ const amadeus = new Amadeus({
   logLevel: "warn", // Reduce log noise, but keep errors
 });
 
+//----------------- Flight Booking Engine -----------------
+
 /**
  * Get location code (airport or city) from coordinates using Amadeus API
  * @param {number} latitude - Latitude coordinate
  * @param {number} longitude - Longitude coordinate
  * @returns {Promise<string|null>} - Location code (IATA) or null if not found
  */
-const getLocationCodeFromCoords = async (latitude, longitude) => {
+const fetchLocationCodeFromCoords = async (latitude, longitude) => {
   try {
     const response = await amadeus.referenceData.locations.airports.get({
       latitude,
@@ -40,6 +42,22 @@ const getLocationCodeFromCoords = async (latitude, longitude) => {
     return null;
   }
 };
+
+const fetchPointOfInterest = async (latitude, longitude) => {
+  try {
+    const pois = await amadeus.referenceData.locations.pointsOfInterest.get({
+      latitude,
+      longitude,
+      radius: 2,
+    });
+
+    return pois.data[0].id;
+  } catch (error) {
+    return null;
+  }
+};
+
+//----------------- Flight Booking Engine -----------------
 
 const fetchFlightOfferSearch = async (
   type = "standard",
@@ -122,9 +140,39 @@ const fetchHotelOffers = async (
   }
 };
 
+//----------------- Transfer Booking Engine -----------------
+
+const fetchTransferOffers = async (
+  startCode,
+  endCode,
+  startDateTime,
+  passengers,
+  transferType
+) => {
+  try {
+    console.log("params: ", startCode, endCode, startDateTime, passengers);
+
+    const response = await amadeus.shopping.transferOffers.post({
+      startLocationCode: startCode,
+      endLocationCode: endCode,
+      startDateTime,
+      passengers,
+      // transferType,
+      // currency: "USD",
+    });
+
+    return response.data || [];
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+};
+
 module.exports = {
+  fetchLocationCodeFromCoords,
+  fetchPointOfInterest,
   fetchFlightOfferSearch,
-  getLocationCodeFromCoords,
   fetchHotelsList,
   fetchHotelOffers,
+  fetchTransferOffers,
 };

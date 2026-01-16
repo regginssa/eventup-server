@@ -18,10 +18,12 @@ const {
   updateBooking,
   getBooking,
   getAllBookingsByUserId,
+  getTransferOffers,
 } = require("../../controllers/user/booking");
 
 router.get("/flight-offers", getFlightOffers);
 router.get("/hotel-offers", getHotelOffers);
+router.get("/transfer-offers", getTransferOffers);
 
 // router.post("/flights-availability/:eventId", getFlightsAvailability);
 // router.post("/hotels-availability/:eventId", getHotelsAvailability);
