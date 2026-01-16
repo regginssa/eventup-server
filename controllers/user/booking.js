@@ -468,15 +468,16 @@ const {
 
 //----------------- Flight Booking Engine -----------------
 
-const getFlightsOfferSearch = async (req, res) => {
+const getFlightOffers = async (req, res) => {
   try {
     const {
-      type = "standard",
+      type,
       eventId,
-      originLocationCoords,
+      originLocationCoordsLatitude,
+      originLocationCoordsLongitude,
       departureDate,
       adults,
-    } = req.body;
+    } = req.query;
 
     const event = await Event.findById(eventId);
 
@@ -491,8 +492,8 @@ const getFlightsOfferSearch = async (req, res) => {
     const [destinationLocationCode, originLocationCode] = await Promise.all([
       getLocationCodeFromCoords(eventCoords.latitude, eventCoords.longitude),
       getLocationCodeFromCoords(
-        originLocationCoords.latitude,
-        originLocationCoords.longitude
+        originLocationCoordsLatitude,
+        originLocationCoordsLongitude
       ),
     ]);
 
@@ -529,7 +530,7 @@ const getFlightsOfferSearch = async (req, res) => {
 };
 
 //----------------- Hotel Booking Engine -----------------
-const getHotelsList = async (req, res) => {
+const getHotelOffers = async (req, res) => {
   try {
     const { eventId, checkInDate, checkOutDate, adults, roomQuantity, type } =
       req.query;
@@ -542,7 +543,7 @@ const getHotelsList = async (req, res) => {
 
     const { coordinate: eventCoords } = event;
 
-    const result = await fetchHotelsList(
+    const list = await fetchHotelsList(
       eventCoords.latitude,
       eventCoords.longitude,
       checkInDate,
@@ -551,21 +552,25 @@ const getHotelsList = async (req, res) => {
       roomQuantity
     );
 
-    if (result.length === 0) {
+    if (list.length === 0) {
       return res.status(400).json({
         ok: false,
         message: "No hotels found",
       });
     }
 
+    console.log(list.length);
+
     // Sort hotels by distance.value in ascending order and select the closest 5
     // Amadeus API returns hotelId, not id
-    const hotelIds = result
+    const hotelIds = list
       .sort((a, b) => a.distance.value - b.distance.value)
-      .slice(0, 5)
+      .slice(0, 10)
       .map((hotel) => hotel.hotelId)
       .filter((id) => id) // Filter out any undefined/null values
       .join(",");
+
+    console.log(hotelIds);
 
     if (hotelIds.length === 0) {
       return res.status(400).json({
@@ -583,8 +588,6 @@ const getHotelsList = async (req, res) => {
       "USD",
       type
     );
-
-    console.log("offers.length: ", offers.length);
 
     if (offers.length === 0) {
       return res.status(400).json({
@@ -612,8 +615,6 @@ const getHotelsList = async (req, res) => {
             parseFloat(a.offers[0].price.total)
         );
     }
-
-    console.log(type, "data.length: ", data.length);
 
     res.status(200).json({ ok: true, data });
   } catch (error) {
@@ -660,20 +661,8 @@ const getAllBookingsByUserId = async (req, res) => {
 };
 
 module.exports = {
-  // getFlightsAvailability,
-  // getHotelsAvailability,
-  // getTransfersAvailability,
-  // getHotelDetails,
-  // validateFlightFare,
-  // fetchHotelRoomRates,
-  // checkHotelRoomRates,
-  // bookingFlight,
-  // bookingHotel,
-  // ticketFlight,
-  // addNewFlight,
-  // addNewHotel,
-  getFlightsOfferSearch,
-  getHotelsList,
+  getFlightOffers,
+  getHotelOffers,
   updateBooking,
   getBooking,
   getAllBookingsByUserId,

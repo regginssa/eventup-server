@@ -13,15 +13,15 @@ const {
   // checkHotelRoomRates,
   // bookingHotel,
   // addNewHotel,
-  getFlightsOfferSearch,
-  getHotelsList,
+  getFlightOffers,
+  getHotelOffers,
   updateBooking,
   getBooking,
   getAllBookingsByUserId,
 } = require("../../controllers/user/booking");
 
-router.post("/flights-search", getFlightsOfferSearch);
-router.get("/hotels-list", getHotelsList);
+router.get("/flight-offers", getFlightOffers);
+router.get("/hotel-offers", getHotelOffers);
 
 // router.post("/flights-availability/:eventId", getFlightsAvailability);
 // router.post("/hotels-availability/:eventId", getHotelsAvailability);
