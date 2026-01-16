@@ -26,6 +26,7 @@ const { formatDate } = require("../../utils/format");
 const {
   fetchFlightOfferSearch,
   getLocationCodeFromCoords,
+  fetchHotelsList,
 } = require("../../services/amadeus");
 
 // const getFlightsAvailability = async (req, res) => {
@@ -464,6 +465,8 @@ const {
 //   }
 // };
 
+//----------------- Flight Booking Engine -----------------
+
 const getFlightsOfferSearch = async (req, res) => {
   try {
     const {
@@ -524,6 +527,36 @@ const getFlightsOfferSearch = async (req, res) => {
   }
 };
 
+//----------------- Hotel Booking Engine -----------------
+const getHotelsList = async (req, res) => {
+  try {
+    const { eventId, checkInDate, checkOutDate, adults, roomQuantity, type } =
+      req.query;
+
+    const event = await Event.findById(eventId);
+
+    if (!event) {
+      return res.status(404).json({ ok: false, message: "Event not found" });
+    }
+
+    const { coordinate: eventCoords } = event;
+
+    const result = await fetchHotelsList(
+      eventCoords.latitude,
+      eventCoords.longitude,
+      checkInDate,
+      checkOutDate,
+      adults,
+      roomQuantity
+    );
+
+    res.status(200).json({ ok: true, data: result });
+  } catch (error) {
+    console.error("get hotel list error: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
 const updateBooking = async (req, res) => {
   try {
   } catch (error) {}
@@ -575,6 +608,7 @@ module.exports = {
   // addNewFlight,
   // addNewHotel,
   getFlightsOfferSearch,
+  getHotelsList,
   updateBooking,
   getBooking,
   getAllBookingsByUserId,

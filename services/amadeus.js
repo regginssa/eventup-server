@@ -27,11 +27,16 @@ const getLocationCodeFromCoords = async (latitude, longitude) => {
     // Return the IATA code of the first result (closest airport)
     if (response.data && response.data.length > 0) {
       return response.data[0].iataCode;
+    } else {
+      const { findNearestAirport } = require("../utils/airports");
+      const nearestAirport = findNearestAirport(latitude, longitude);
+      if (nearestAirport && nearestAirport.iata) {
+        return nearestAirport.iata;
+      }
     }
 
     return null;
   } catch (error) {
-    console.error("Error getting location code from coords:", error);
     return null;
   }
 };
@@ -45,16 +50,57 @@ const fetchFlightOfferSearch = async (
 ) => {
   try {
     const response = await amadeus.shopping.flightOffersSearch.get({
-      originLocationCode: "LON",
-      destinationLocationCode: "NYC",
-      departureDate: "2026-01-20",
-      adults: 1,
-      oneWay: true,
+      travelClass: type === "standard" ? "ECONOMY" : "BUSINESS",
+      originLocationCode,
+      destinationLocationCode,
+      departureDate,
+      adults,
+      currencyCode: "USD",
     });
 
-    return response.data;
+    return response.data || [];
   } catch (error) {
-    console.error("Error fetching flight offer search:", error);
+    return [];
+  }
+};
+
+//----------------- Hotel Booking Engine -----------------
+
+/**
+ * Fetch hotel list from Amadeus API
+ * @param {number} latitude - Latitude coordinate
+ * @param {number} longitude - Longitude coordinate
+ * @param {string} checkInDate - Check-in date
+ * @param {string} checkOutDate - Check-out date
+ * @param {number} adults - Number of adults
+ * @param {number} roomQuantity - Number of rooms
+ * @param {string} currency - Currency code
+ * @returns {Promise<Array>} - Array of hotel offers
+ */
+const fetchHotelsList = async (
+  latitude,
+  longitude,
+  checkInDate,
+  checkOutDate,
+  adults,
+  roomQuantity,
+  currency = "USD"
+) => {
+  try {
+    const response = await amadeus.shopping.hotelOffers.get({
+      latitude, // Latitude
+      longitude, // Longitude
+      radius: 5, // Optional — radius in km (default 5)
+      radiusUnit: "KM", // Optional — unit can be 'KM' or 'MILE'
+      adults, // Optional — number of guests
+      checkInDate,
+      checkOutDate,
+      roomQuantity, // Optional — number of rooms
+      currency, // Optional — display currency
+    });
+
+    return response.data || [];
+  } catch (error) {
     return [];
   }
 };
@@ -62,4 +108,5 @@ const fetchFlightOfferSearch = async (
 module.exports = {
   fetchFlightOfferSearch,
   getLocationCodeFromCoords,
+  fetchHotelsList,
 };

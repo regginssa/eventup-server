@@ -14,12 +14,14 @@ const {
   // bookingHotel,
   // addNewHotel,
   getFlightsOfferSearch,
+  getHotelsList,
   updateBooking,
   getBooking,
   getAllBookingsByUserId,
 } = require("../../controllers/user/booking");
 
 router.post("/flights-search", getFlightsOfferSearch);
+router.get("/hotels-list", getHotelsList);
 
 // router.post("/flights-availability/:eventId", getFlightsAvailability);
 // router.post("/hotels-availability/:eventId", getHotelsAvailability);
