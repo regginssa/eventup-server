@@ -70,11 +70,11 @@ const getEvent = async (req, res) => {
       return res.status(404).json({ ok: false, message: "Event not found" });
     }
 
-    const discovery = await fetchEventDetailsFromTM(event.id);
+    // const discovery = await fetchEventDetailsFromTM(event.id);
 
-    if (discovery) {
-      event = await upsertEventFromDiscovery(discovery);
-    }
+    // if (discovery) {
+    //   event = await upsertEventFromDiscovery(discovery);
+    // }
 
     res.status(200).json({ ok: true, data: event });
   } catch (error) {

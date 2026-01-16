@@ -70,33 +70,50 @@ const fetchFlightOfferSearch = async (
  * Fetch hotel list from Amadeus API
  * @param {number} latitude - Latitude coordinate
  * @param {number} longitude - Longitude coordinate
+ */
+const fetchHotelsList = async (latitude, longitude) => {
+  try {
+    const response = await amadeus.referenceData.locations.hotels.byGeocode.get(
+      {
+        latitude,
+        longitude,
+      }
+    );
+
+    return response.data || [];
+  } catch (error) {
+    return [];
+  }
+};
+
+/**
+ * Fetch hotel offers from Amadeus API
+ * @param {string} hotelIds - Comma-separated hotel IDs
  * @param {string} checkInDate - Check-in date
  * @param {string} checkOutDate - Check-out date
  * @param {number} adults - Number of adults
  * @param {number} roomQuantity - Number of rooms
  * @param {string} currency - Currency code
- * @returns {Promise<Array>} - Array of hotel offers
+ * @param {string} type - Hotel type (standard or gold)
  */
-const fetchHotelsList = async (
-  latitude,
-  longitude,
+const fetchHotelOffers = async (
+  hotelIds,
   checkInDate,
   checkOutDate,
-  adults,
-  roomQuantity,
-  currency = "USD"
+  adults = 1,
+  roomQuantity = 1,
+  currency = "USD",
+  type = "standard"
 ) => {
   try {
-    const response = await amadeus.shopping.hotelOffers.get({
-      latitude, // Latitude
-      longitude, // Longitude
-      radius: 5, // Optional — radius in km (default 5)
-      radiusUnit: "KM", // Optional — unit can be 'KM' or 'MILE'
-      adults, // Optional — number of guests
+    const response = await amadeus.shopping.hotelOffersSearch.get({
+      hotelIds,
       checkInDate,
       checkOutDate,
-      roomQuantity, // Optional — number of rooms
-      currency, // Optional — display currency
+      adults,
+      roomQuantity,
+      currency,
+      boardType: type === "standard" ? "BED_AND_BREAKFAST" : "ALL_INCLUSIVE",
     });
 
     return response.data || [];
@@ -109,4 +126,5 @@ module.exports = {
   fetchFlightOfferSearch,
   getLocationCodeFromCoords,
   fetchHotelsList,
+  fetchHotelOffers,
 };

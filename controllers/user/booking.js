@@ -27,6 +27,7 @@ const {
   fetchFlightOfferSearch,
   getLocationCodeFromCoords,
   fetchHotelsList,
+  fetchHotelOffers,
 } = require("../../services/amadeus");
 
 // const getFlightsAvailability = async (req, res) => {
@@ -550,7 +551,71 @@ const getHotelsList = async (req, res) => {
       roomQuantity
     );
 
-    res.status(200).json({ ok: true, data: result });
+    if (result.length === 0) {
+      return res.status(400).json({
+        ok: false,
+        message: "No hotels found",
+      });
+    }
+
+    // Sort hotels by distance.value in ascending order and select the closest 5
+    // Amadeus API returns hotelId, not id
+    const hotelIds = result
+      .sort((a, b) => a.distance.value - b.distance.value)
+      .slice(0, 5)
+      .map((hotel) => hotel.hotelId)
+      .filter((id) => id) // Filter out any undefined/null values
+      .join(",");
+
+    if (hotelIds.length === 0) {
+      return res.status(400).json({
+        ok: false,
+        message: "No hotels found",
+      });
+    }
+
+    const offers = await fetchHotelOffers(
+      hotelIds,
+      checkInDate,
+      checkOutDate,
+      adults,
+      roomQuantity,
+      "USD",
+      type
+    );
+
+    console.log("offers.length: ", offers.length);
+
+    if (offers.length === 0) {
+      return res.status(400).json({
+        ok: false,
+        message: "No hotel offers found",
+      });
+    }
+
+    let data = [];
+
+    if (type == "standard") {
+      data = offers
+        .slice()
+        .sort(
+          (a, b) =>
+            parseFloat(a.offers[0].price.total) -
+            parseFloat(b.offers[0].price.total)
+        );
+    } else {
+      data = offers
+        .filter((o) => o.hotel.rating >= 4)
+        .sort(
+          (a, b) =>
+            parseFloat(b.offers[0].price.total) -
+            parseFloat(a.offers[0].price.total)
+        );
+    }
+
+    console.log(type, "data.length: ", data.length);
+
+    res.status(200).json({ ok: true, data });
   } catch (error) {
     console.error("get hotel list error: ", error);
     res.status(500).json({ ok: false, message: "Internal server error" });
