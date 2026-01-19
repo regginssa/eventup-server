@@ -142,28 +142,57 @@ const fetchHotelOffers = async (
 
 //----------------- Transfer Booking Engine -----------------
 
+/**
+ * Fetch transfer offers from Amadeus API
+ * @param {string} startLocationCode - Start location code
+ * @param {string} endAddressLine - End address line
+ * @param {string} endCityName - End city name
+ * @param {string} endZipCode - End zip code
+ * @param {string} endCountryCode - End country code
+ * @param {string} endName - End name
+ * @param {string} endGeoCode - End geo code
+ * @param {string} transferType - Transfer type
+ * @param {string} startDateTime - Start date time
+ * @param {number} passengers - Number of passengers
+ */
 const fetchTransferOffers = async (
-  startCode,
-  endCode,
+  startLocationCode,
+  endAddressLine,
+  endCityName,
+  endZipCode,
+  endCountryCode,
+  endName,
+  endGeoCode,
+  transferType,
   startDateTime,
-  passengers,
-  transferType
+  passengers
 ) => {
+  console.log("params: ", startLocationCode,
+    endAddressLine,
+    endCityName,
+    endZipCode,
+    endCountryCode,
+    endName,
+    endGeoCode,
+    transferType,
+    startDateTime,
+    passengers)
+
   try {
-    console.log("params: ", startCode, endCode, startDateTime, passengers);
-
     const response = await amadeus.shopping.transferOffers.post({
-      startLocationCode: startCode,
-      endLocationCode: endCode,
-      startDateTime,
-      passengers,
+      startLocationCode,
+      endAddressLine,
+      endCityName,
+      endZipCode,
+      endCountryCode,
+      endName,
+      endGeoCode,
       // transferType,
-      // currency: "USD",
+      startDateTime,
+      passengers
     });
-
     return response.data || [];
   } catch (error) {
-    console.error(error);
     return [];
   }
 };

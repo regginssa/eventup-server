@@ -134,10 +134,26 @@ const getHotelOffers = async (req, res) => {
       });
     }
 
+    const mappedOffers = offers.map((offer) => {
+      let hotel = list.find((h) => h.hotelId === offer.hotel.hotelId);
+
+      if (hotel) {
+        return {
+          ...offer,
+          hotel: {
+            ...offer.hotel,
+            address: hotel.address,
+          }
+        }
+      }
+    });
+
+    console.log("mapped offers length: ", mappedOffers.length, mappedOffers[0]);
+
     let data = [];
 
     if (type == "standard") {
-      data = offers
+      data = mappedOffers
         .slice()
         .sort(
           (a, b) =>
@@ -145,8 +161,8 @@ const getHotelOffers = async (req, res) => {
             parseFloat(b.offers[0].price.total)
         );
     } else {
-      data = offers
-        .filter((o) => o.hotel.rating >= 4)
+      data = mappedOffers
+        .filter((o) => o.offers[0].rating >= 4)
         .sort(
           (a, b) =>
             parseFloat(b.offers[0].price.total) -
@@ -167,12 +183,16 @@ const getTransferOffers = async (req, res) => {
     const {
       eventId,
       airportCode,
-      hotelCode,
+      airportLeaveDateTime,
+      hotelAddressLine,
+      hotelCityName,
+      hotelZipCode,
+      hotelCountryCode,
+      hotelName,
       hotelGeoCode,
-      startAirportLeaveDateTime,
-      startHotelLeaveDateTime,
-      passengers,
       transferType,
+      hotelLeaveDateTime,
+      passengers,
     } = req.query;
 
     const event = await Event.findById(eventId);
@@ -188,32 +208,25 @@ const getTransferOffers = async (req, res) => {
       hotelToEvent: [],
     };
 
-    const airportToHotelOffers = await fetchTransferOffers(
+    // Airport to Hotel
+    const airportToHotel = await fetchTransferOffers(
       airportCode,
-      hotelCode,
-      startAirportLeaveDateTime,
+      hotelAddressLine,
+      hotelCityName,
+      hotelZipCode,
+      hotelCountryCode,
+      hotelName,
+      hotelGeoCode,
+      transferType,
+      airportLeaveDateTime,
       passengers,
-      transferType
     );
 
-    data.airportToHotel = airportToHotelOffers.slice(0, 5);
+    data.airportToHotel = airportToHotel;
 
-    // if (eventLocationCode) {
-    //   const hotelToEventOffers = await fetchTransferOffers(
-    //     hotelGeoCode,
-    //     eventLocationCode,
-    //     startHotelLeaveDateTime,
-    //     adults,
-    //     transferType
-    //   );
+    console.log("airportToHotel: ", airportToHotel);
 
-    //   data.hotelToEvent = hotelToEventOffers;
-    // }
-
-    res.status(200).json({
-      ok: true,
-      data,
-    });
+    res.status(200).json({ ok: true, data });
   } catch (error) {
     console.error("get transfer offers error: ", error);
     res.status(500).json({ ok: false, message: "Internal server error" });
@@ -222,7 +235,7 @@ const getTransferOffers = async (req, res) => {
 
 const updateBooking = async (req, res) => {
   try {
-  } catch (error) {}
+  } catch (error) { }
 };
 
 const getBooking = async (req, res) => {
