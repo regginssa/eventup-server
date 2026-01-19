@@ -1,11 +1,15 @@
 const Event = require("../../models/Event");
 const Booking = require("../../models/Booking");
 const {
-  fetchFlightOfferSearch,
+  fetchFlightOffers,
   fetchAirportLocationCodeFromCoords,
   fetchHotelsList,
   fetchHotelOffers,
   fetchTransferOffers,
+  fetchFlightOffersPricing,
+  createFlightOrder,
+  fetchFlightOrder,
+  deleteFlightOrder,
 } = require("../../services/amadeus");
 
 //----------------- Flight Booking Engine -----------------
@@ -52,7 +56,7 @@ const getFlightOffers = async (req, res) => {
       });
     }
 
-    const result = await fetchFlightOfferSearch(
+    const result = await fetchFlightOffers(
       type,
       originLocationCode,
       destinationLocationCode,
@@ -69,6 +73,59 @@ const getFlightOffers = async (req, res) => {
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
 };
+
+const getFlightOffersPricing = async (req, res) => {
+  try {
+    const { offers } = req.body;
+
+    const pricing = await fetchFlightOffersPricing(offers);
+
+    res.status(200).json({ ok: true, data: pricing });
+  } catch (error) {
+    console.error("get flights offers pricing error: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+}
+
+const flightOrder = async (req, res) => {
+  try {
+    const { flightOffers, travelers, remarks, contacts } = req.body;
+
+    const order = await createFlightOrder(flightOffers, travelers, remarks, contacts);
+
+    res.status(200).json({ ok: true, data: order });
+  } catch (error) {
+    console.error("flight order error: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+}
+
+const getFlightOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await fetchFlightOrder(orderId);
+
+    res.status(200).json({ ok: true, data: order });
+  } catch (error) {
+    console.error("get flight order error: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+}
+
+const cancelFlightOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await deleteFlightOrder(orderId);
+
+    res.status(200).json({ ok: true, data: order });
+  } catch (error) {
+    console.error("cancel flight order error: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+}
+
 
 //----------------- Hotel Booking Engine -----------------
 const getHotelOffers = async (req, res) => {
@@ -295,8 +352,15 @@ const getAllBookingsByUserId = async (req, res) => {
 
 module.exports = {
   getFlightOffers,
+  getFlightOffersPricing,
+  flightOrder,
+  getFlightOrder,
+  cancelFlightOrder,
+
   getHotelOffers,
+
   getTransferOffers,
+
   updateBooking,
   getBooking,
   getAllBookingsByUserId,

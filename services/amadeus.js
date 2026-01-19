@@ -43,23 +43,18 @@ const fetchAirportLocationCodeFromCoords = async (latitude, longitude) => {
   }
 };
 
-const fetchPointOfInterest = async (latitude, longitude) => {
-  try {
-    const pois = await amadeus.referenceData.locations.pointsOfInterest.get({
-      latitude,
-      longitude,
-      radius: 2,
-    });
-
-    return pois.data[0].id;
-  } catch (error) {
-    return null;
-  }
-};
 
 //----------------- Flight Booking Engine -----------------
 
-const fetchFlightOfferSearch = async (
+/**
+ * Fetch flight offers from Amadeus API
+ * @param {string} type - Flight type (standard or gold)
+ * @param {string} originLocationCode - Origin location code
+ * @param {string} destinationLocationCode - Destination location code
+ * @param {string} departureDate - Departure date
+ * @param {number} adults - Number of adults
+ */
+const fetchFlightOffers = async (
   type = "standard",
   originLocationCode,
   destinationLocationCode,
@@ -81,6 +76,79 @@ const fetchFlightOfferSearch = async (
     return [];
   }
 };
+
+/**
+ * Fetch flight offers pricing from Amadeus API
+ * @param {array} flightOffers - Flight offers
+ */
+const fetchFlightOffersPricing = async (flightOffers) => {
+  try {
+    const response = await amadeus.shopping.flightOffers.pricing.post({
+      data: {
+        type: "flight-offers-pricing",
+        flightOffers
+      },
+    });
+
+    return response.data?.flightOffers || [];
+  } catch (error) {
+    return [];
+  }
+}
+
+/**
+ * Create flight order from Amadeus API
+ * @param {array} flightOffers - Flight offers
+ * @param {array} travelers - Travelers
+ * @param {string} remarks - Remarks
+ * @param {array} contacts - Contacts
+ */
+const createFlightOrder = async (flightOffers, travelers, remarks, contacts) => {
+  try {
+    const response = await amadeus.shopping.flightOrders.post({
+      data: {
+        type: "flight-order",
+        flightOffers,
+        travelers,
+        remarks,
+        contacts,
+      },
+    });
+
+    return response.data || null;
+  } catch (error) {
+    return null;
+  }
+}
+
+
+/**
+ * Fetch flight order from Amadeus API
+ * @param {string} orderId - Order ID
+ */
+const fetchFlightOrder = async (orderId) => {
+  try {
+    const response = await amadeus.shopping.flightOrders.get(orderId);
+    return response.data || null;
+  } catch (error) {
+    return null;
+  }
+}
+
+
+/**
+ * Cancel flight order from Amadeus API
+ * @param {string} orderId - Order ID
+ */
+const deleteFlightOrder = async (orderId) => {
+  try {
+    const response = await amadeus.shopping.flightOrders.delete(orderId);
+    return response.data || null;
+  } catch (error) {
+    return null;
+  }
+}
+
 
 //----------------- Hotel Booking Engine -----------------
 
@@ -199,8 +267,12 @@ const fetchTransferOffers = async (
 
 module.exports = {
   fetchAirportLocationCodeFromCoords,
-  fetchPointOfInterest,
-  fetchFlightOfferSearch,
+  fetchFlightOffers,
+  fetchFlightOffersPricing,
+  createFlightOrder,
+  fetchFlightOrder,
+  deleteFlightOrder,
+
   fetchHotelsList,
   fetchHotelOffers,
   fetchTransferOffers,
