@@ -2,11 +2,10 @@ const Event = require("../../models/Event");
 const Booking = require("../../models/Booking");
 const {
   fetchFlightOfferSearch,
-  fetchLocationCodeFromCoords,
+  fetchAirportLocationCodeFromCoords,
   fetchHotelsList,
   fetchHotelOffers,
   fetchTransferOffers,
-  fetchPointOfInterest,
 } = require("../../services/amadeus");
 
 //----------------- Flight Booking Engine -----------------
@@ -32,8 +31,8 @@ const getFlightOffers = async (req, res) => {
     // Get location codes from coordinates using Amadeus API
     // This will return airport/city IATA codes that Amadeus accepts
     const [destinationLocationCode, originLocationCode] = await Promise.all([
-      fetchLocationCodeFromCoords(eventCoords.latitude, eventCoords.longitude),
-      fetchLocationCodeFromCoords(
+      fetchAirportLocationCodeFromCoords(eventCoords.latitude, eventCoords.longitude),
+      fetchAirportLocationCodeFromCoords(
         originLocationCoordsLatitude,
         originLocationCoordsLongitude
       ),
@@ -190,6 +189,7 @@ const getTransferOffers = async (req, res) => {
       hotelCountryCode,
       hotelName,
       hotelGeoCode,
+      hotelCode,
       transferType,
       hotelLeaveDateTime,
       passengers,
@@ -200,8 +200,6 @@ const getTransferOffers = async (req, res) => {
     if (!event) {
       return res.status(404).json({ ok: false, message: "Event not found" });
     }
-
-    const { coordinate: eventCoords } = event;
 
     let data = {
       airportToHotel: [],
@@ -224,7 +222,32 @@ const getTransferOffers = async (req, res) => {
 
     data.airportToHotel = airportToHotel;
 
-    console.log("airportToHotel: ", airportToHotel);
+    const hotelCoordinate = hotelGeoCode.split(",").map(Number);
+
+    const hotelLocationCode = await fetchAirportLocationCodeFromCoords(hotelCoordinate[0], hotelCoordinate[1]);
+
+    console.log("hotelLocationCode: ", hotelLocationCode);
+
+    if (hotelLocationCode) {
+      const { name, city, postalCode, country_code, address_line1, coordinate } = event.venue
+
+      // Hotel to Event
+      const hotelToEvent = await fetchTransferOffers(
+        hotelLocationCode,
+        address_line1,
+        city,
+        postalCode,
+        country_code,
+        name,
+        `${coordinate.latitude},${coordinate.longitude}`,
+        transferType,
+        hotelLeaveDateTime,
+        passengers
+      )
+
+      data.hotelToEvent = hotelToEvent;
+
+    }
 
     res.status(200).json({ ok: true, data });
   } catch (error) {

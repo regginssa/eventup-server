@@ -19,7 +19,7 @@ const amadeus = new Amadeus({
  * @param {number} longitude - Longitude coordinate
  * @returns {Promise<string|null>} - Location code (IATA) or null if not found
  */
-const fetchLocationCodeFromCoords = async (latitude, longitude) => {
+const fetchAirportLocationCodeFromCoords = async (latitude, longitude) => {
   try {
     const response = await amadeus.referenceData.locations.airports.get({
       latitude,
@@ -198,7 +198,7 @@ const fetchTransferOffers = async (
 };
 
 module.exports = {
-  fetchLocationCodeFromCoords,
+  fetchAirportLocationCodeFromCoords,
   fetchPointOfInterest,
   fetchFlightOfferSearch,
   fetchHotelsList,
