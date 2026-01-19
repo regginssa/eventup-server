@@ -233,7 +233,6 @@ const createHotelOrder = async (guests, travelAgent, roomAssociations, payment) 
 }
 
 
-
 //----------------- Transfer Booking Engine -----------------
 
 /**
@@ -291,6 +290,40 @@ const fetchTransferOffers = async (
   }
 };
 
+/**
+ * Create transfer order from Amadeus API
+ * @param {string} offerId - Offer ID
+ * @param {string} note - Note
+ * @param {number} passengers - Number of passengers
+ * @param {object} agency - Agency
+ * @param {object} payment - Payment
+ * @param {array} extraServices - Extra services
+ * @param {object} corporation - Corporation
+ * @param {object} startConnectedSegment - Start connected segment
+ * @param {object} endConnectedSegment - End connected segment
+ */
+const createTransferOrder = async (offerId, note, passengers, agency, payment, extraServices, corporation, startConnectedSegment, endConnectedSegment) => {
+  try {
+    const response = await amadeus.shopping.transferOrders.post({
+      offerId,
+      data: {
+        note,
+        passengers,
+        agency,
+        payment,
+        extraServices,
+        corporation,
+        startConnectedSegment,
+        endConnectedSegment,
+      },
+    });
+    return response.data || null;
+  } catch (error) {
+    return null;
+  }
+
+}
+
 module.exports = {
   fetchAirportLocationCodeFromCoords,
   fetchFlightOffers,
@@ -304,4 +337,5 @@ module.exports = {
   createHotelOrder,
 
   fetchTransferOffers,
+  createTransferOrder
 };

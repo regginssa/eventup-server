@@ -12,6 +12,7 @@ const {
   getFlightOrder,
   cancelFlightOrder,
   hotelOrder,
+  transferOrder,
 } = require("../../controllers/user/booking");
 
 
@@ -28,6 +29,7 @@ router.post("/hotel-order", hotelOrder);
 
 // ------------ Transfer Booking Engine ------------
 router.get("/transfer-offers", getTransferOffers);
+router.post("/transfer-order", transferOrder);
 
 // ------------ Booking Engine ------------
 router.patch("/:id", updateBooking);
