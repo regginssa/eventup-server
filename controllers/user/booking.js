@@ -10,6 +10,7 @@ const {
   createFlightOrder,
   fetchFlightOrder,
   deleteFlightOrder,
+  createHotelOrder,
 } = require("../../services/amadeus");
 
 //----------------- Flight Booking Engine -----------------
@@ -233,6 +234,19 @@ const getHotelOffers = async (req, res) => {
   }
 };
 
+const hotelOrder = async (req, res) => {
+  try {
+    const { guests, travelAgent, roomAssociations, payment } = req.body;
+
+    const order = await createHotelOrder(guests, travelAgent, roomAssociations, payment);
+
+    res.status(200).json({ ok: true, data: order });
+  } catch (error) {
+    console.error("hotel order error: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+}
+
 //----------------- Transfer Booking Engine -----------------
 const getTransferOffers = async (req, res) => {
   try {
@@ -358,6 +372,7 @@ module.exports = {
   cancelFlightOrder,
 
   getHotelOffers,
+  hotelOrder,
 
   getTransferOffers,
 

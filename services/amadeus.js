@@ -208,6 +208,32 @@ const fetchHotelOffers = async (
   }
 };
 
+/**
+ * Create hotel order from Amadeus API
+ * @param {array} guests - Guests
+ * @param {string} travelAgent - Travel agent
+ * @param {array} roomAssociations - Room associations
+ * @param {object} payment - Payment
+ */
+const createHotelOrder = async (guests, travelAgent, roomAssociations, payment) => {
+  try {
+    const response = await amadeus.shopping.hotelOrders.post({
+      data: {
+        type: "hotel-order",
+        guests,
+        travelAgent,
+        roomAssociations,
+        payment,
+      },
+    });
+    return response.data || null;
+  } catch (error) {
+    return null;
+  }
+}
+
+
+
 //----------------- Transfer Booking Engine -----------------
 
 /**
@@ -275,5 +301,7 @@ module.exports = {
 
   fetchHotelsList,
   fetchHotelOffers,
+  createHotelOrder,
+
   fetchTransferOffers,
 };

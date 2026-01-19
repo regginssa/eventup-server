@@ -11,6 +11,7 @@ const {
   flightOrder,
   getFlightOrder,
   cancelFlightOrder,
+  hotelOrder,
 } = require("../../controllers/user/booking");
 
 
@@ -23,6 +24,7 @@ router.delete("/flight-order/:orderId", cancelFlightOrder);
 
 // ------------ Hotel Booking Engine ------------
 router.get("/hotel-offers", getHotelOffers);
+router.post("/hotel-order", hotelOrder);
 
 // ------------ Transfer Booking Engine ------------
 router.get("/transfer-offers", getTransferOffers);
