@@ -237,6 +237,19 @@ const fetchHotelOffers = async (
 };
 
 /**
+ * Fetch hotel offer pricing from Amadeus API
+ * @param {string} offerId - Offer ID
+ */
+const fetchHotelOfferPricing = async (offerId) => {
+  try {
+    const response = await amadeus.shopping.hotelOffers.get(offerId);
+    return response.data || null;
+  } catch (error) {
+    return null;
+  }
+};
+
+/**
  * Create hotel order from Amadeus API
  * @param {array} guests - Guests
  * @param {string} travelAgent - Travel agent
@@ -378,6 +391,7 @@ module.exports = {
 
   fetchHotelsList,
   fetchHotelOffers,
+  fetchHotelOfferPricing,
   createHotelOrder,
 
   fetchTransferOffers,

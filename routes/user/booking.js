@@ -13,8 +13,8 @@ const {
   cancelFlightOrder,
   hotelOrder,
   transferOrder,
+  getHotelOfferPricing,
 } = require("../../controllers/user/booking");
-
 
 // ------------ Flight Booking Engine ------------
 router.get("/flight-offers", getFlightOffers);
@@ -25,6 +25,7 @@ router.delete("/flight-order/:orderId", cancelFlightOrder);
 
 // ------------ Hotel Booking Engine ------------
 router.get("/hotel-offers", getHotelOffers);
+router.get("/hotel-offer-pricing/:offerId", getHotelOfferPricing);
 router.post("/hotel-order", hotelOrder);
 
 // ------------ Transfer Booking Engine ------------

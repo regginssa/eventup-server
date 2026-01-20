@@ -237,6 +237,19 @@ const getHotelOffers = async (req, res) => {
   }
 };
 
+const getHotelOfferPricing = async (req, res) => {
+  try {
+    const { offerId } = req.params;
+
+    const pricing = await fetchHotelOfferPricing(offerId);
+
+    res.status(200).json({ ok: true, data: pricing });
+  } catch (error) {
+    console.error("get hotel offer pricing error: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
 const hotelOrder = async (req, res) => {
   try {
     const { guests, travelAgent, roomAssociations, payment } = req.body;
@@ -422,6 +435,7 @@ module.exports = {
   cancelFlightOrder,
 
   getHotelOffers,
+  getHotelOfferPricing,
   hotelOrder,
 
   getTransferOffers,
