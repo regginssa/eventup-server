@@ -43,7 +43,6 @@ const fetchAirportLocationCodeFromCoords = async (latitude, longitude) => {
   }
 };
 
-
 //----------------- Flight Booking Engine -----------------
 
 /**
@@ -86,7 +85,7 @@ const fetchFlightOffersPricing = async (flightOffers) => {
     const response = await amadeus.shopping.flightOffers.pricing.post({
       data: {
         type: "flight-offers-pricing",
-        flightOffers
+        flightOffers,
       },
     });
 
@@ -94,17 +93,49 @@ const fetchFlightOffersPricing = async (flightOffers) => {
   } catch (error) {
     return [];
   }
-}
+};
 
 /**
  * Create flight order from Amadeus API
  * @param {array} flightOffers - Flight offers
  * @param {array} travelers - Travelers
- * @param {string} remarks - Remarks
- * @param {array} contacts - Contacts
  */
-const createFlightOrder = async (flightOffers, travelers, remarks, contacts) => {
+const createFlightOrder = async (flightOffers, travelers) => {
   try {
+    const remarks = {
+      general: [
+        {
+          subType: "GENERAL_MISCELLANEOUS",
+          text: "ONLINE BOOKING FROM CHARLIE UNICORN AI",
+        },
+      ],
+    };
+
+    const contacts = [
+      {
+        addresseeName: {
+          firstName: "Lukasz",
+          lastName: "Szymborski",
+        },
+        companyName: "CHARLIE UNICORN AI",
+        purpose: "STANDARD",
+        phones: [
+          {
+            deviceType: "MOBILE",
+            countryCallingCode: "48",
+            number: "504412991",
+          },
+        ],
+        emailAddress: "team@charlieunicornai.eu",
+        address: {
+          lines: ["Calle Prado, 16"],
+          postalCode: "28014",
+          cityName: "Madrid",
+          countryCode: "ES",
+        },
+      },
+    ];
+
     const response = await amadeus.shopping.flightOrders.post({
       data: {
         type: "flight-order",
@@ -119,8 +150,7 @@ const createFlightOrder = async (flightOffers, travelers, remarks, contacts) => 
   } catch (error) {
     return null;
   }
-}
-
+};
 
 /**
  * Fetch flight order from Amadeus API
@@ -133,8 +163,7 @@ const fetchFlightOrder = async (orderId) => {
   } catch (error) {
     return null;
   }
-}
-
+};
 
 /**
  * Cancel flight order from Amadeus API
@@ -147,8 +176,7 @@ const deleteFlightOrder = async (orderId) => {
   } catch (error) {
     return null;
   }
-}
-
+};
 
 //----------------- Hotel Booking Engine -----------------
 
@@ -215,7 +243,12 @@ const fetchHotelOffers = async (
  * @param {array} roomAssociations - Room associations
  * @param {object} payment - Payment
  */
-const createHotelOrder = async (guests, travelAgent, roomAssociations, payment) => {
+const createHotelOrder = async (
+  guests,
+  travelAgent,
+  roomAssociations,
+  payment
+) => {
   try {
     const response = await amadeus.shopping.hotelOrders.post({
       data: {
@@ -230,8 +263,7 @@ const createHotelOrder = async (guests, travelAgent, roomAssociations, payment) 
   } catch (error) {
     return null;
   }
-}
-
+};
 
 //----------------- Transfer Booking Engine -----------------
 
@@ -260,7 +292,9 @@ const fetchTransferOffers = async (
   startDateTime,
   passengers
 ) => {
-  console.log("params: ", startLocationCode,
+  console.log(
+    "params: ",
+    startLocationCode,
     endAddressLine,
     endCityName,
     endZipCode,
@@ -269,7 +303,8 @@ const fetchTransferOffers = async (
     endGeoCode,
     transferType,
     startDateTime,
-    passengers)
+    passengers
+  );
 
   try {
     const response = await amadeus.shopping.transferOffers.post({
@@ -282,7 +317,7 @@ const fetchTransferOffers = async (
       endGeoCode,
       // transferType,
       startDateTime,
-      passengers
+      passengers,
     });
     return response.data || [];
   } catch (error) {
@@ -302,7 +337,17 @@ const fetchTransferOffers = async (
  * @param {object} startConnectedSegment - Start connected segment
  * @param {object} endConnectedSegment - End connected segment
  */
-const createTransferOrder = async (offerId, note, passengers, agency, payment, extraServices, corporation, startConnectedSegment, endConnectedSegment) => {
+const createTransferOrder = async (
+  offerId,
+  note,
+  passengers,
+  agency,
+  payment,
+  extraServices,
+  corporation,
+  startConnectedSegment,
+  endConnectedSegment
+) => {
   try {
     const response = await amadeus.shopping.transferOrders.post({
       offerId,
@@ -321,8 +366,7 @@ const createTransferOrder = async (offerId, note, passengers, agency, payment, e
   } catch (error) {
     return null;
   }
-
-}
+};
 
 module.exports = {
   fetchAirportLocationCodeFromCoords,
@@ -337,5 +381,5 @@ module.exports = {
   createHotelOrder,
 
   fetchTransferOffers,
-  createTransferOrder
+  createTransferOrder,
 };

@@ -37,7 +37,10 @@ const getFlightOffers = async (req, res) => {
     // Get location codes from coordinates using Amadeus API
     // This will return airport/city IATA codes that Amadeus accepts
     const [destinationLocationCode, originLocationCode] = await Promise.all([
-      fetchAirportLocationCodeFromCoords(eventCoords.latitude, eventCoords.longitude),
+      fetchAirportLocationCodeFromCoords(
+        eventCoords.latitude,
+        eventCoords.longitude
+      ),
       fetchAirportLocationCodeFromCoords(
         originLocationCoordsLatitude,
         originLocationCoordsLongitude
@@ -87,20 +90,20 @@ const getFlightOffersPricing = async (req, res) => {
     console.error("get flights offers pricing error: ", error);
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
-}
+};
 
 const flightOrder = async (req, res) => {
   try {
-    const { flightOffers, travelers, remarks, contacts } = req.body;
+    const { offers, travelers } = req.body;
 
-    const order = await createFlightOrder(flightOffers, travelers, remarks, contacts);
+    const order = await createFlightOrder(offers, travelers);
 
     res.status(200).json({ ok: true, data: order });
   } catch (error) {
     console.error("flight order error: ", error);
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
-}
+};
 
 const getFlightOrder = async (req, res) => {
   try {
@@ -113,7 +116,7 @@ const getFlightOrder = async (req, res) => {
     console.error("get flight order error: ", error);
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
-}
+};
 
 const cancelFlightOrder = async (req, res) => {
   try {
@@ -126,8 +129,7 @@ const cancelFlightOrder = async (req, res) => {
     console.error("cancel flight order error: ", error);
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
-}
-
+};
 
 //----------------- Hotel Booking Engine -----------------
 const getHotelOffers = async (req, res) => {
@@ -201,8 +203,8 @@ const getHotelOffers = async (req, res) => {
           hotel: {
             ...offer.hotel,
             address: hotel.address,
-          }
-        }
+          },
+        };
       }
     });
 
@@ -239,14 +241,19 @@ const hotelOrder = async (req, res) => {
   try {
     const { guests, travelAgent, roomAssociations, payment } = req.body;
 
-    const order = await createHotelOrder(guests, travelAgent, roomAssociations, payment);
+    const order = await createHotelOrder(
+      guests,
+      travelAgent,
+      roomAssociations,
+      payment
+    );
 
     res.status(200).json({ ok: true, data: order });
   } catch (error) {
     console.error("hotel order error: ", error);
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
-}
+};
 
 //----------------- Transfer Booking Engine -----------------
 const getTransferOffers = async (req, res) => {
@@ -289,19 +296,29 @@ const getTransferOffers = async (req, res) => {
       hotelGeoCode,
       transferType,
       airportLeaveDateTime,
-      passengers,
+      passengers
     );
 
     data.airportToHotel = airportToHotel;
 
     const hotelCoordinate = hotelGeoCode.split(",").map(Number);
 
-    const hotelLocationCode = await fetchAirportLocationCodeFromCoords(hotelCoordinate[0], hotelCoordinate[1]);
+    const hotelLocationCode = await fetchAirportLocationCodeFromCoords(
+      hotelCoordinate[0],
+      hotelCoordinate[1]
+    );
 
     console.log("hotelLocationCode: ", hotelLocationCode);
 
     if (hotelLocationCode) {
-      const { name, city, postalCode, country_code, address_line1, coordinate } = event.venue
+      const {
+        name,
+        city,
+        postalCode,
+        country_code,
+        address_line1,
+        coordinate,
+      } = event.venue;
 
       // Hotel to Event
       const hotelToEvent = await fetchTransferOffers(
@@ -315,10 +332,9 @@ const getTransferOffers = async (req, res) => {
         transferType,
         hotelLeaveDateTime,
         passengers
-      )
+      );
 
       data.hotelToEvent = hotelToEvent;
-
     }
 
     res.status(200).json({ ok: true, data });
@@ -330,20 +346,40 @@ const getTransferOffers = async (req, res) => {
 
 const transferOrder = async (req, res) => {
   try {
-    const { offerId, note, passengers, agency, payment, extraServices, corporation, startConnectedSegment, endConnectedSegment } = req.body;
+    const {
+      offerId,
+      note,
+      passengers,
+      agency,
+      payment,
+      extraServices,
+      corporation,
+      startConnectedSegment,
+      endConnectedSegment,
+    } = req.body;
 
-    const order = await createTransferOrder(offerId, note, passengers, agency, payment, extraServices, corporation, startConnectedSegment, endConnectedSegment);
+    const order = await createTransferOrder(
+      offerId,
+      note,
+      passengers,
+      agency,
+      payment,
+      extraServices,
+      corporation,
+      startConnectedSegment,
+      endConnectedSegment
+    );
 
     res.status(200).json({ ok: true, data: order });
   } catch (error) {
     console.error("transfer order error: ", error);
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
-}
+};
 
 const updateBooking = async (req, res) => {
   try {
-  } catch (error) { }
+  } catch (error) {}
 };
 
 const getBooking = async (req, res) => {
