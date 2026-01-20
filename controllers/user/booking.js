@@ -95,9 +95,7 @@ const getFlightOffersPricing = async (req, res) => {
 
 const flightOrder = async (req, res) => {
   try {
-    const { offers, travelers } = req.body;
-
-    const order = await createFlightOrder(offers, travelers);
+    const order = await createFlightOrder(req.body);
 
     res.status(200).json({ ok: true, data: order });
   } catch (error) {
@@ -253,14 +251,7 @@ const getHotelOfferPricing = async (req, res) => {
 
 const hotelOrder = async (req, res) => {
   try {
-    const { guests, travelAgent, roomAssociations, payment } = req.body;
-
-    const order = await createHotelOrder(
-      guests,
-      travelAgent,
-      roomAssociations,
-      payment
-    );
+    const order = await createHotelOrder(req.body);
 
     res.status(200).json({ ok: true, data: order });
   } catch (error) {

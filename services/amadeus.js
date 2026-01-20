@@ -97,44 +97,15 @@ const fetchFlightOffersPricing = async (flightOffers) => {
 
 /**
  * Create flight order from Amadeus API
- * @param {array} flightOffers - Flight offers
- * @param {array} travelers - Travelers
+ * @param {object} params - Parameters
+ * @param {array} params.flightOffers - Flight offers
+ * @param {array} params.travelers - Travelers
+ * @param {object} params.remarks - Remarks
+ * @param {array} params.contacts - Contacts
  */
-const createFlightOrder = async (flightOffers, travelers) => {
+const createFlightOrder = async (params) => {
   try {
-    const remarks = {
-      general: [
-        {
-          subType: "GENERAL_MISCELLANEOUS",
-          text: "ONLINE BOOKING FROM CHARLIE UNICORN AI",
-        },
-      ],
-    };
-
-    const contacts = [
-      {
-        addresseeName: {
-          firstName: "Lukasz",
-          lastName: "Szymborski",
-        },
-        companyName: "CHARLIE UNICORN AI",
-        purpose: "STANDARD",
-        phones: [
-          {
-            deviceType: "MOBILE",
-            countryCallingCode: "48",
-            number: "504412991",
-          },
-        ],
-        emailAddress: "team@charlieunicornai.eu",
-        address: {
-          lines: ["Calle Prado, 16"],
-          postalCode: "28014",
-          cityName: "Madrid",
-          countryCode: "ES",
-        },
-      },
-    ];
+    const { flightOffers, travelers, remarks, contacts } = params;
 
     const response = await amadeus.shopping.flightOrders.post({
       data: {
@@ -242,7 +213,10 @@ const fetchHotelOffers = async (
  */
 const fetchHotelOfferPricing = async (offerId) => {
   try {
-    const response = await amadeus.shopping.hotelOffer(offerId).get();
+    const response = await amadeus.client.get(
+      `/v3/shopping/hotel-offers/${offerId}`
+    );
+
     return response.data || null;
   } catch (error) {
     console.error("fetch hotel offer pricing error: ", error);
@@ -252,18 +226,16 @@ const fetchHotelOfferPricing = async (offerId) => {
 
 /**
  * Create hotel order from Amadeus API
- * @param {array} guests - Guests
- * @param {string} travelAgent - Travel agent
- * @param {array} roomAssociations - Room associations
- * @param {object} payment - Payment
+ * @param {object} params - Parameters
+ * @param {array} params.guests - Guests
+ * @param {string} params.travelAgent - Travel agent
+ * @param {array} params.roomAssociations - Room associations
+ * @param {object} params.payment - Payment
  */
-const createHotelOrder = async (
-  guests,
-  travelAgent,
-  roomAssociations,
-  payment
-) => {
+const createHotelOrder = async (params) => {
   try {
+    const { guests, travelAgent, roomAssociations, payment } = params;
+
     const response = await amadeus.shopping.hotelOrders.post({
       data: {
         type: "hotel-order",
