@@ -12,6 +12,7 @@ const {
   deleteFlightOrder,
   createHotelOrder,
   createTransferOrder,
+  fetchHotelOfferPricing,
 } = require("../../services/amadeus");
 
 //----------------- Flight Booking Engine -----------------

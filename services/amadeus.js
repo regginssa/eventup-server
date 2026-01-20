@@ -242,9 +242,10 @@ const fetchHotelOffers = async (
  */
 const fetchHotelOfferPricing = async (offerId) => {
   try {
-    const response = await amadeus.shopping.hotelOffers.get(offerId);
+    const response = await amadeus.shopping.hotelOffer(offerId).get();
     return response.data || null;
   } catch (error) {
+    console.error("fetch hotel offer pricing error: ", error);
     return null;
   }
 };
