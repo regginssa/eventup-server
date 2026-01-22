@@ -97,8 +97,4 @@ server.listen(PORT, async () => {
   console.log(`Server is running on ${PORT}`);
 });
 
-// Initialize Ticketmaster service - cron jobs start automatically when module loads
-// The service includes:
-// - Daily reset at midnight (resets API request counter)
-// - Fetch events every 2 minutes (max 720 requests/day, under 1000 limit)
-// require("./services/ticketmaster");
+require("./services/ticketmaster");
