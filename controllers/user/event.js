@@ -1,31 +1,57 @@
 const User = require("../../models/User");
 const Event = require("../../models/Event");
+const { filterPreferredEvents } = require("../../utils/preferred");
 
 const getFeeds = async (req, res) => {
   try {
-    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
-    const limit = Math.min(
-      50,
-      Math.max(1, parseInt(req.query.limit, 10) || 20)
-    );
+    const { userId, page, limit } = req.query;
+    const pageNum = parseInt(page) || 0;
+    const lim = parseInt(limit) || 10;
 
-    const userId = req.query.userId || req.user?.id;
-    if (!userId)
-      return res.status(400).json({ ok: false, message: "Missing userId" });
+    if (!userId) {
+      const events = await Event.find()
+        .skip(pageNum * lim)
+        .limit(lim)
+        .lean();
+      return res.status(200).json({
+        ok: true,
+        data: {
+          events,
+          pagination: {
+            page: pageNum,
+            limit: lim,
+            total: events.length,
+            filtered: events.length,
+          },
+        },
+      });
+    }
 
     const user = await User.findById(userId).lean();
     if (!user)
       return res.status(404).json({ ok: false, message: "User not found" });
 
+    // Fetch all events first (we'll paginate after filtering)
+    const allEvents = await Event.find().lean();
+
+    // Filter events based on user preferences
+    const preferredEvents = await filterPreferredEvents(
+      user.preferred,
+      allEvents,
+      user.location,
+      pageNum,
+      lim
+    );
+
     res.status(200).json({
       ok: true,
       data: {
-        events: items,
+        events: preferredEvents,
         pagination: {
-          page,
-          limit,
-          total,
-          hasMore: page * limit < total,
+          page: pageNum,
+          limit: lim,
+          total: allEvents.length,
+          filtered: preferredEvents.length,
         },
       },
     });
