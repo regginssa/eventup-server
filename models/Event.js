@@ -75,6 +75,7 @@ const EventSchema = new mongoose.Schema({
   location: LocationSchema,
   classifications: ClassificationsSchema,
   seatmap: { type: String, default: null },
+  images: [String],
 });
 
 module.exports = mongoose.model("Event", EventSchema);

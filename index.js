@@ -97,4 +97,4 @@ server.listen(PORT, async () => {
   console.log(`Server is running on ${PORT}`);
 });
 
-require("./services/ticketmaster");
+// require("./services/ticketmaster");

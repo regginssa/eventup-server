@@ -430,6 +430,7 @@ const mapEvent = (event) => {
     },
     classifications: mapClassifications(classifications),
     seatmap: event.seatmap?.staticUrl || null,
+    images: event.images?.map((image) => image.url) || [],
   };
 };
 
