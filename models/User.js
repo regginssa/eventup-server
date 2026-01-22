@@ -65,17 +65,6 @@ const UserSchema = new mongoose.Schema({
       default: "nearby",
     },
   },
-  nearest_airports: [
-    {
-      name: String,
-      city: String,
-      country: String,
-      iata: String,
-      latitude: Number,
-      longitude: Number,
-      distance_km: Number,
-    },
-  ],
   stripe: {
     customer_id: { type: String, default: null },
     payment_methods: [

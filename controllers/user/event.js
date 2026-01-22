@@ -1,8 +1,5 @@
-const { findPersonalizedEvents } = require("../../utils/feed-query");
 const User = require("../../models/User");
 const Event = require("../../models/Event");
-const { fetchEventDetailsFromTM } = require("../../services/ticketmaster");
-const { upsertEventFromDiscovery } = require("../../utils/tm-update");
 
 const getFeeds = async (req, res) => {
   try {
@@ -19,12 +16,6 @@ const getFeeds = async (req, res) => {
     const user = await User.findById(userId).lean();
     if (!user)
       return res.status(404).json({ ok: false, message: "User not found" });
-
-    const { items, total } = await findPersonalizedEvents({
-      user,
-      page,
-      limit,
-    });
 
     res.status(200).json({
       ok: true,

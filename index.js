@@ -97,9 +97,8 @@ server.listen(PORT, async () => {
   console.log(`Server is running on ${PORT}`);
 });
 
-// const cron = require("node-cron");
-// const { runGlobalHarvest } = require("./services/tm-harvester");
-
-// cron.schedule("*/2 * * * *", async () => {
-//   await runGlobalHarvest({ pageSize: 200 });
-// });
+// Initialize Ticketmaster service - cron jobs start automatically when module loads
+// The service includes:
+// - Daily reset at midnight (resets API request counter)
+// - Fetch events every 2 minutes (max 720 requests/day, under 1000 limit)
+// require("./services/ticketmaster");
