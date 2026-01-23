@@ -1,4 +1,5 @@
 const Event = require("../../models/Event");
+const mongoose = require("mongoose");
 
 const getFeeds = async (req, res) => {
   try {
@@ -56,7 +57,14 @@ const getEvent = async (req, res) => {
         .json({ ok: false, message: "Something went wrong" });
     }
 
-    let event = await Event.findById(id);
+    // Validate that id is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res
+        .status(400)
+        .json({ ok: false, message: "Invalid event ID format" });
+    }
+
+    let event = await Event.findById(id).populate("hoster");
 
     if (!event) {
       return res.status(404).json({ ok: false, message: "Event not found" });
@@ -75,6 +83,21 @@ const getEvent = async (req, res) => {
   }
 };
 
+const getEventsByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { status } = req.query;
+
+    const events = await Event.find({ hoster: userId, status })
+      .populate("hoster")
+      .lean();
+    res.status(200).json({ ok: true, data: events });
+  } catch (error) {
+    console.error("get event by user id error: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
 const createEvent = async (req, res) => {
   try {
     const newEvent = await Event.create(req.body);
@@ -85,4 +108,10 @@ const createEvent = async (req, res) => {
   }
 };
 
-module.exports = { getFeeds, getAllEvents, getEvent, createEvent };
+module.exports = {
+  getFeeds,
+  getAllEvents,
+  getEvent,
+  getEventsByUser,
+  createEvent,
+};

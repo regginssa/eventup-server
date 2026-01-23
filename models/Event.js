@@ -83,6 +83,16 @@ const EventSchema = new mongoose.Schema({
   seatmap: { type: String, default: null },
   images: [String],
   fee: FeeSchema,
+  hoster: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+  status: {
+    type: String,
+    enum: ["open", "closed", "pending", "completed", "cancelled"],
+    default: "open",
+  },
 });
 
 module.exports = mongoose.model("Event", EventSchema);
