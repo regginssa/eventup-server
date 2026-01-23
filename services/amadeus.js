@@ -107,7 +107,7 @@ const createFlightOrder = async (params) => {
   try {
     const { flightOffers, travelers, remarks, contacts } = params;
 
-    const response = await amadeus.shopping.flightOrders.post({
+    const response = await amadeus.booking.flightOrders.post({
       data: {
         type: "flight-order",
         flightOffers,
