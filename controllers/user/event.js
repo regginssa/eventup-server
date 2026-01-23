@@ -1,6 +1,4 @@
-const User = require("../../models/User");
 const Event = require("../../models/Event");
-const { filterPreferredEvents } = require("../../utils/preferred");
 
 const getFeeds = async (req, res) => {
   try {
@@ -8,50 +6,23 @@ const getFeeds = async (req, res) => {
     const pageNum = parseInt(page) || 0;
     const lim = parseInt(limit) || 10;
 
-    if (!userId) {
-      const events = await Event.find()
+    const [events, total] = await Promise.all([
+      Event.find()
         .skip(pageNum * lim)
         .limit(lim)
-        .lean();
-      return res.status(200).json({
-        ok: true,
-        data: {
-          events,
-          pagination: {
-            page: pageNum,
-            limit: lim,
-            total: events.length,
-            filtered: events.length,
-          },
-        },
-      });
-    }
+        .lean(),
+      Event.countDocuments(),
+    ]);
 
-    const user = await User.findById(userId).lean();
-    if (!user)
-      return res.status(404).json({ ok: false, message: "User not found" });
-
-    // Fetch all events first (we'll paginate after filtering)
-    const allEvents = await Event.find().lean();
-
-    // Filter events based on user preferences
-    const preferredEvents = await filterPreferredEvents(
-      user.preferred,
-      allEvents,
-      user.location,
-      pageNum,
-      lim
-    );
-
-    res.status(200).json({
+    return res.status(200).json({
       ok: true,
       data: {
-        events: preferredEvents,
+        events,
         pagination: {
           page: pageNum,
           limit: lim,
-          total: allEvents.length,
-          filtered: preferredEvents.length,
+          total,
+          hasMore: (pageNum + 1) * lim < total,
         },
       },
     });

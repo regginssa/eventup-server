@@ -66,6 +66,12 @@ const ClassificationsSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const FeeSchema = new mongoose.Schema({
+  type: { type: String, enum: ["free", "paid"], default: "free" },
+  amount: { type: String, default: null },
+  currency: { type: String, default: "USD" },
+});
+
 const EventSchema = new mongoose.Schema({
   type: { type: String, enum: ["ai", "user"], default: "ai" },
   name: { type: String, default: null },
@@ -76,6 +82,7 @@ const EventSchema = new mongoose.Schema({
   classifications: ClassificationsSchema,
   seatmap: { type: String, default: null },
   images: [String],
+  fee: FeeSchema,
 });
 
 module.exports = mongoose.model("Event", EventSchema);

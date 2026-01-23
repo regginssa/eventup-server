@@ -33,7 +33,7 @@ const getFlightOffers = async (req, res) => {
       return res.status(404).json({ ok: false, message: "Event not found" });
     }
 
-    const { coordinate: eventCoords } = event;
+    const { coordinate: eventCoords } = event.location;
 
     // Get location codes from coordinates using Amadeus API
     // This will return airport/city IATA codes that Amadeus accepts
@@ -142,7 +142,7 @@ const getHotelOffers = async (req, res) => {
       return res.status(404).json({ ok: false, message: "Event not found" });
     }
 
-    const { coordinate: eventCoords } = event;
+    const { coordinate: eventCoords } = event.location;
 
     const list = await fetchHotelsList(
       eventCoords.latitude,
@@ -316,23 +316,17 @@ const getTransferOffers = async (req, res) => {
     console.log("hotelLocationCode: ", hotelLocationCode);
 
     if (hotelLocationCode) {
-      const {
-        name,
-        city,
-        postalCode,
-        country_code,
-        address_line1,
-        coordinate,
-      } = event.venue;
+      const { name, city, postalCode, country, address, coordinate } =
+        event.location;
 
       // Hotel to Event
       const hotelToEvent = await fetchTransferOffers(
         hotelLocationCode,
-        address_line1,
-        city,
+        address,
+        city.name,
         postalCode,
-        country_code,
-        name,
+        country.code,
+        country.name,
         `${coordinate.latitude},${coordinate.longitude}`,
         transferType,
         hotelLeaveDateTime,
