@@ -2,16 +2,20 @@ const Event = require("../../models/Event");
 
 const getFeeds = async (req, res) => {
   try {
-    const { userId, page, limit } = req.query;
-    const pageNum = parseInt(page) || 0;
+    const { userId, page, limit, type } = req.query;
+
+    const pageNum = Math.max(0, (parseInt(page) || 1) - 1);
     const lim = parseInt(limit) || 10;
 
+    const query = type && type.trim() ? { type: type.trim() } : {};
+
     const [events, total] = await Promise.all([
-      Event.find()
+      Event.find(query)
+        .sort({ _id: -1 })
         .skip(pageNum * lim)
         .limit(lim)
         .lean(),
-      Event.countDocuments(),
+      Event.countDocuments(query),
     ]);
 
     return res.status(200).json({
@@ -19,7 +23,7 @@ const getFeeds = async (req, res) => {
       data: {
         events,
         pagination: {
-          page: pageNum,
+          page: pageNum + 1,
           limit: lim,
           total,
           hasMore: (pageNum + 1) * lim < total,
@@ -71,4 +75,14 @@ const getEvent = async (req, res) => {
   }
 };
 
-module.exports = { getFeeds, getAllEvents, getEvent };
+const createEvent = async (req, res) => {
+  try {
+    const newEvent = await Event.create(req.body);
+    res.status(200).json({ ok: true, data: newEvent });
+  } catch (error) {
+    console.error("create event error: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
+module.exports = { getFeeds, getAllEvents, getEvent, createEvent };
