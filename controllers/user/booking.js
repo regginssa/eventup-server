@@ -253,7 +253,11 @@ const hotelOrder = async (req, res) => {
   try {
     const order = await createHotelOrder(req.body);
 
-    res.status(200).json({ ok: true, data: order });
+    if (!order.ok) {
+      return res.status(400).json({ ok: false, message: order.message });
+    }
+
+    res.status(200).json({ ok: true, data: order.data });
   } catch (error) {
     console.error("hotel order error: ", error);
     res.status(500).json({ ok: false, message: "Internal server error" });

@@ -236,7 +236,7 @@ const createHotelOrder = async (params) => {
   try {
     const { guests, travelAgent, roomAssociations, payment } = params;
 
-    const response = await amadeus.shopping.hotelOrders.post({
+    const response = await amadeus.client.post("/v2/booking/hotel-orders", {
       data: {
         type: "hotel-order",
         guests,
@@ -245,9 +245,15 @@ const createHotelOrder = async (params) => {
         payment,
       },
     });
-    return response.data || null;
+    return {
+      ok: true,
+      data: response.data,
+    };
   } catch (error) {
-    return null;
+    return {
+      ok: false,
+      message: error.response.result.errors[0].title,
+    };
   }
 };
 
