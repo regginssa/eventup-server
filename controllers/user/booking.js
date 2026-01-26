@@ -349,31 +349,13 @@ const getTransferOffers = async (req, res) => {
 
 const transferOrder = async (req, res) => {
   try {
-    const {
-      offerId,
-      note,
-      passengers,
-      agency,
-      payment,
-      extraServices,
-      corporation,
-      startConnectedSegment,
-      endConnectedSegment,
-    } = req.body;
+    const order = await createTransferOrder(req.body);
 
-    const order = await createTransferOrder(
-      offerId,
-      note,
-      passengers,
-      agency,
-      payment,
-      extraServices,
-      corporation,
-      startConnectedSegment,
-      endConnectedSegment
-    );
+    if (!order.ok) {
+      return res.status(400).json({ ok: false, message: order.message });
+    }
 
-    res.status(200).json({ ok: true, data: order });
+    res.status(200).json({ ok: true, data: order.data });
   } catch (error) {
     console.error("transfer order error: ", error);
     res.status(500).json({ ok: false, message: "Internal server error" });

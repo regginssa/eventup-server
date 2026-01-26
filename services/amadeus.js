@@ -319,44 +319,38 @@ const fetchTransferOffers = async (
 
 /**
  * Create transfer order from Amadeus API
- * @param {string} offerId - Offer ID
- * @param {string} note - Note
- * @param {number} passengers - Number of passengers
- * @param {object} agency - Agency
- * @param {object} payment - Payment
- * @param {array} extraServices - Extra services
- * @param {object} corporation - Corporation
- * @param {object} startConnectedSegment - Start connected segment
- * @param {object} endConnectedSegment - End connected segment
+ * @param {object} params - Parameters
+ * @param {string} params.offerId - Offer ID
+ * @param {string} params.note - Note
+ * @param {number} params.passengers - Number of passengers
+ * @param {object} params.agency - Agency
+ * @param {object} params.payment - Payment
+ * @param {array} params.extraServices - Extra services
+ * @param {object} params.corporation - Corporation
+ * @param {object} params.startConnectedSegment - Start connected segment
+ * @param {object} params.endConnectedSegment - End connected segment
  */
-const createTransferOrder = async (
-  offerId,
-  note,
-  passengers,
-  agency,
-  payment,
-  extraServices,
-  corporation,
-  startConnectedSegment,
-  endConnectedSegment
-) => {
+const createTransferOrder = async (params) => {
   try {
-    const response = await amadeus.shopping.transferOrders.post({
-      offerId,
-      data: {
-        note,
-        passengers,
-        agency,
-        payment,
-        extraServices,
-        corporation,
-        startConnectedSegment,
-        endConnectedSegment,
-      },
-    });
-    return response.data || null;
+    const { id: offerId } = params;
+
+    const response = await amadeus.client.post(
+      `/v1/ordering/transfer-orders/${offerId}`,
+      {
+        data: { ...params, note: "" },
+      }
+    );
+
+    return {
+      ok: true,
+      data: response.data,
+    };
   } catch (error) {
-    return null;
+    console.error("create transfer order error: ", error);
+    return {
+      ok: false,
+      message: error.response.result.errors[0].title,
+    };
   }
 };
 
