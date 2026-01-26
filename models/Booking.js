@@ -13,7 +13,7 @@ const FlightBookingSchema = new mongoose.Schema({
   },
   class: { type: String, enum: ["standard", "gold"], required: true },
   confirmationCode: { type: String, required: true },
-});
+}, {_id: false});
 
 const HotelBookingSchema = new mongoose.Schema({
   orderId: { type: String, required: true },
@@ -32,11 +32,32 @@ const HotelBookingSchema = new mongoose.Schema({
   checkOut: { type: String, required: true },
   providerCode: { type: String, default: null },
   confirmationCode: { type: String, required: true },
-});
+}, {_id: false});
+
+const AddressSchema = new mongoose.Schema({
+      line: { type: String, default: null },
+      zip: { type: String, default: null },
+      countryCode: { type: String, default: null },
+      cityName: { type: String, default: null },
+      latitude: { type: Number, default: null },
+      longitude: { type: Number, default: null },
+      uicCode: { type: String, default: null },
+}, {_id: false})
+
 
 const TransferBookingSchema = new mongoose.Schema({
   orderId: { type: String, required: true },
   type: { type: String, required: true },
+  start: {
+    locationCode: { type: String, required: true },
+    datetime: { type: String, required: true },
+  },
+  end: {
+    googlePlaceId: { type: String, default: null },
+    name: { type: String, default: null },
+    locationCode: { type: String, default: null },
+    address: AddressSchema,
+  },
   provider: {
     name: { type: String, required: true },
     logo: { type: String, required: true },
@@ -61,14 +82,14 @@ const TransferBookingSchema = new mongoose.Schema({
     value: { type: Number, required: true },
     unit: { type: String, required: true },
   },
-});
+}, {_id: false});
 
 const BillingAddressSchema = new mongoose.Schema({
   line: { type: String, required: true },
   zip: { type: String, required: true },
   countryCode: { type: String, required: true },
   cityName: { type: String, required: true },
-});
+}, {_id: false});
 const BillingPaymentSchema = new mongoose.Schema({
   method: { type: String, required: true },
   cardNumber: { type: String, required: true },
@@ -76,12 +97,15 @@ const BillingPaymentSchema = new mongoose.Schema({
   holderName: { type: String, required: true },
   vendorCode: { type: String, required: true },
   cvv: { type: String, required: true },
-});
+}, {_id: false});
 
 const BookingSchema = new mongoose.Schema({
   flight: FlightBookingSchema,
   hotel: HotelBookingSchema,
-  transfer: TransferBookingSchema,
+  transfer: {
+    ah:  TransferBookingSchema,
+    he:  TransferBookingSchema
+  },
   timezone: { type: String, required: true },
   event: { type: mongoose.Schema.Types.ObjectId, ref: "Event", required: true },
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
