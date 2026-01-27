@@ -11,7 +11,7 @@ const FlightBookingSchema = new mongoose.Schema({
     airport: { type: String, required: true },
     datetime: { type: String, required: true },
   },
-  class: { type: String, enum: ["standard", "gold"], required: true },
+  class: { type: String, default: "ECONOMY" },
   confirmationCode: { type: String, required: true },
 }, {_id: false});
 
@@ -82,6 +82,7 @@ const TransferBookingSchema = new mongoose.Schema({
     value: { type: Number, required: true },
     unit: { type: String, required: true },
   },
+  confirmationCode: { type: String, default: null },
 }, {_id: false});
 
 const BillingAddressSchema = new mongoose.Schema({
