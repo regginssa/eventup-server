@@ -362,11 +362,6 @@ const transferOrder = async (req, res) => {
   }
 };
 
-const updateBooking = async (req, res) => {
-  try {
-  } catch (error) {}
-};
-
 const getBooking = async (req, res) => {
   try {
     const { id } = req.params;
@@ -399,6 +394,23 @@ const getAllBookingsByUserId = async (req, res) => {
   }
 };
 
+const createBooking = async (req, res) => {
+  try {
+    const booking = await Booking.create(req.body);
+
+    res.status(200).json({ ok: true, data: booking });
+  } catch (error) {
+    console.error("create booking error: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+}
+
+const updateBooking = async (req, res) => {
+  try {
+  } catch (error) {}
+};
+
+
 module.exports = {
   getFlightOffers,
   getFlightOffersPricing,
@@ -413,7 +425,8 @@ module.exports = {
   getTransferOffers,
   transferOrder,
 
-  updateBooking,
   getBooking,
   getAllBookingsByUserId,
+  createBooking,
+  updateBooking,
 };

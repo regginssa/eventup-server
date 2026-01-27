@@ -14,6 +14,7 @@ const {
   hotelOrder,
   transferOrder,
   getHotelOfferPricing,
+  createBooking,
 } = require("../../controllers/user/booking");
 
 // ------------ Flight Booking Engine ------------
@@ -33,8 +34,9 @@ router.get("/transfer-offers", getTransferOffers);
 router.post("/transfer-order", transferOrder);
 
 // ------------ Booking Engine ------------
-router.patch("/:id", updateBooking);
 router.get("/:id", getBooking);
 router.get("/all/:userId", getAllBookingsByUserId);
+router.post("/create", createBooking);
+router.patch("/:id", updateBooking);
 
 module.exports = router;
