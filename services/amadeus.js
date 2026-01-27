@@ -117,9 +117,15 @@ const createFlightOrder = async (params) => {
       },
     });
 
-    return response.data || null;
+    return {
+      ok: true,
+      data: response.data,
+    }
   } catch (error) {
-    return null;
+    return {
+      ok: false,
+      message: error.title,
+    };
   }
 };
 
@@ -252,7 +258,7 @@ const createHotelOrder = async (params) => {
   } catch (error) {
     return {
       ok: false,
-      message: error.response.result.errors[0].title,
+      message: error.title,
     };
   }
 };
