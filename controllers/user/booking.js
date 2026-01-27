@@ -386,10 +386,13 @@ const getBooking = async (req, res) => {
 const getAllBookingsByUserId = async (req, res) => {
   try {
     const userId = req.params.userId;
-    const bookings = await Booking.find({ userId }).populate({
-      path: "eventId",
-      as: "event",
-    });
+    const bookings = await Booking.find({ user: userId }).populate({
+      path: "event",
+      populate: {
+        path: "hoster",
+        select: "name email avatar",
+      },
+    }).lean();
 
     res.status(200).json({ ok: true, data: bookings });
   } catch (error) {

@@ -91,6 +91,7 @@ const BillingAddressSchema = new mongoose.Schema({
   countryCode: { type: String, required: true },
   cityName: { type: String, required: true },
 }, {_id: false});
+
 const BillingPaymentSchema = new mongoose.Schema({
   method: { type: String, required: true },
   cardNumber: { type: String, required: true },
@@ -111,9 +112,9 @@ const BookingSchema = new mongoose.Schema({
   event: { type: mongoose.Schema.Types.ObjectId, ref: "Event", required: true },
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   price: {
-    total: { type: Number, required: true },
-    base: { type: Number, required: true },
-    comission: { type: Number, required: true },
+    total: { type: Number, default: 0 },
+    base: { type: Number, default: 0 },
+    comission: { type: Number, default: 0 },
     currency: { type: String, required: true },
   },
   billingAddress: BillingAddressSchema,
