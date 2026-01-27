@@ -59,8 +59,8 @@ const TransferBookingSchema = new mongoose.Schema({
     address: AddressSchema,
   },
   provider: {
-    name: { type: String, required: true },
-    logo: { type: String, required: true },
+    name: { type: String, default: null },
+    logo: { type: String, default: null },
     contacts: {
       phoneNumber: { type: String, default: null },
       email: { type: String, default: null },
@@ -68,19 +68,19 @@ const TransferBookingSchema = new mongoose.Schema({
     vatRegistrationNumber: { type: String, default: null },
   },
   vehicle: {
-    description: { type: String, required: true },
-    seats: { type: Number, required: true },
+    description: { type: String, default: null },
+    seats: { type: Number, default: 0 },
     baggages: [
       {
-        count: { type: Number, required: true },
-        size: { type: String, required: true },
+        count: { type: Number, default: 0 },
+        size: { type: String, default: null },
       },
     ],
     image: { type: String, default: null },
   },
   distance: {
-    value: { type: Number, required: true },
-    unit: { type: String, required: true },
+    value: { type: Number, default: 0 },
+    unit: { type: String, default: "KM" },
   },
   confirmationCode: { type: String, default: null },
 }, {_id: false});
