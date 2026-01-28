@@ -174,7 +174,7 @@ const getHotelOffers = async (req, res) => {
       .join(",");
 
     if (hotelIds.length === 0) {
-      return res.status(400).json({
+      return res.status(404).json({
         ok: false,
         message: "No hotels found",
       });
@@ -386,13 +386,15 @@ const getBooking = async (req, res) => {
 const getAllBookingsByUserId = async (req, res) => {
   try {
     const userId = req.params.userId;
-    const bookings = await Booking.find({ user: userId }).populate({
-      path: "event",
-      populate: {
-        path: "hoster",
-        select: "name email avatar",
-      },
-    }).lean();
+    const bookings = await Booking.find({ user: userId })
+      .populate({
+        path: "event",
+        populate: {
+          path: "hoster",
+          select: "name email avatar",
+        },
+      })
+      .lean();
 
     res.status(200).json({ ok: true, data: bookings });
   } catch (error) {
@@ -410,13 +412,12 @@ const createBooking = async (req, res) => {
     console.error("create booking error: ", error);
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
-}
+};
 
 const updateBooking = async (req, res) => {
   try {
   } catch (error) {}
 };
-
 
 module.exports = {
   getFlightOffers,
