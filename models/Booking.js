@@ -127,7 +127,7 @@ const TransferBookingSchema = new mongoose.Schema(
         phoneNumber: { type: String, default: null },
         email: { type: String, default: null },
       },
-      vatRegistrationNumber: { type: String, default: null1 },
+      vatRegistrationNumber: { type: String, default: null },
     },
     vehicle: {
       code: { type: String, required: true },
