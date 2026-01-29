@@ -20,29 +20,31 @@ const FlightBookingSchema = new mongoose.Schema(
         lastName: { type: String, required: true },
       },
     ],
-    itineraries: {
-      segments: [
-        {
-          departure: {
-            airport: { type: String, required: true },
-            datetime: { type: String, required: true },
+    itineraries: [
+      {
+        segments: [
+          {
+            departure: {
+              airport: { type: String, required: true },
+              datetime: { type: String, required: true },
+            },
+            arrival: {
+              airport: { type: String, required: true },
+              datetime: { type: String, required: true },
+            },
+            marketingCarrier: { type: String, default: null },
+            operatingCarrier: { type: String, default: null },
+            flightNumber: { type: String, required: true },
+            cabin: { type: String, required: true },
+            baggage: {
+              quantity: { type: Number, default: 0 },
+              weight: { type: Number, default: 0 },
+              unit: { type: String, default: null },
+            },
           },
-          arrival: {
-            airport: { type: String, required: true },
-            datetime: { type: String, required: true },
-          },
-          marketingCarrier: { type: String, default: null },
-          operatingCarrier: { type: String, default: null },
-          flightNumber: { type: String, required: true },
-          cabin: { type: String, required: true },
-          baggage: {
-            quantity: { type: Number, default: 0 },
-            weight: { type: Number, default: 0 },
-            unit: { type: String, default: null },
-          },
-        },
-      ],
-    },
+        ],
+      },
+    ],
   },
   { _id: false }
 );
