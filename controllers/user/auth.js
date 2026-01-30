@@ -94,7 +94,7 @@ const emailLogin = async (req, res) => {
       data: { token: `Bearer ${token}`, user },
     });
   } catch (error) {
-    console.error("user google login error: ", error);
+    console.error("user email login error: ", error);
     res.status(500).json({ ok: false, message: "Something went wrong" });
   }
 };
