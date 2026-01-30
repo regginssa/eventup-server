@@ -25,6 +25,7 @@ const userUserRoutes = require("./routes/user/user");
 const userCallbacksRoutes = require("./routes/user/callbacks");
 const userDiditRoutes = require("./routes/user/didit");
 const userEventRoutes = require("./routes/user/event");
+const userReviewRoutes = require("./routes/user/review");
 const userAirportsRoutes = require("./routes/user/airports");
 const userBookingRoutes = require("./routes/user/booking");
 const userStripeRoutes = require("./routes/user/stripe");
@@ -54,6 +55,7 @@ app.use("/api/user", userUserRoutes);
 app.use("/api/callbacks", userCallbacksRoutes);
 app.use("/api/didit", userDiditRoutes);
 app.use("/api/events", userEventRoutes);
+app.use("/api/reviews", userReviewRoutes);
 app.use("/api/airports", userAirportsRoutes);
 
 app.use(

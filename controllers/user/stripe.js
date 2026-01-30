@@ -25,7 +25,10 @@ const getCustomerId = async (req, res) => {
         .json({ ok: false, message: "Failed to create Stripe customer" });
     }
 
-    user.stripe.customer_id = customerId;
+    user.stripe = {
+      customerId,
+      paymentMethods: [],
+    };
     await user.save();
 
     res.status(200).json({ ok: true, data: customerId });
@@ -37,7 +40,7 @@ const getCustomerId = async (req, res) => {
 
 const getClientSecret = async (req, res) => {
   try {
-    const customerId = req.user.stripe.customer_id;
+    const customerId = req.user.stripe.customerId;
     const clientSecret = await setupIntents(customerId);
     res.status(200).json({ ok: true, data: clientSecret });
   } catch (error) {
@@ -67,8 +70,8 @@ const saveStripePaymentMethod = async (req, res) => {
         .json({ ok: false, message: "Failed to retrieve payment method" });
     }
 
-    user.stripe.payment_methods.push({
-      payment_method_id: paymentMethod.id,
+    user.stripe.paymentMethods.push({
+      id: paymentMethod.id,
       brand: paymentMethod.card.brand,
       expiryMonth: paymentMethod.card.exp_month,
       expiryYear: paymentMethod.card.exp_year,
@@ -101,7 +104,7 @@ const createStripePaymentIntent = async (req, res) => {
       packageType,
     };
 
-    const customerId = user.stripe.customer_id;
+    const customerId = user.stripe.customerId;
 
     if (!customerId) {
       return res
