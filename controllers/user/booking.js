@@ -14,6 +14,7 @@ const {
   createTransferOrder,
   fetchHotelOfferPricing,
 } = require("../../services/amadeus");
+const mongoose = require("mongoose");
 
 //----------------- Flight Booking Engine -----------------
 const getFlightOffers = async (req, res) => {
@@ -391,7 +392,10 @@ const getBookingByUserIdAndEventId = async (req, res) => {
       return res.status(401).json({ ok: false, message: "Invalid params" });
     }
 
-    const booking = await Booking.findOne({ user: userId, event: eventId });
+    const booking = await Booking.findOne({
+      user: new mongoose.Types.ObjectId(userId),
+      event: new mongoose.Types.ObjectId(eventId),
+    });
 
     res.status(200).json({ ok: true, data: booking });
   } catch (error) {
