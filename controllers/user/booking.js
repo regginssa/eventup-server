@@ -40,11 +40,11 @@ const getFlightOffers = async (req, res) => {
     const [destinationLocationCode, originLocationCode] = await Promise.all([
       fetchAirportLocationCodeFromCoords(
         eventCoords.latitude,
-        eventCoords.longitude
+        eventCoords.longitude,
       ),
       fetchAirportLocationCodeFromCoords(
         originLocationCoordsLatitude,
-        originLocationCoordsLongitude
+        originLocationCoordsLongitude,
       ),
     ]);
 
@@ -67,7 +67,7 @@ const getFlightOffers = async (req, res) => {
       originLocationCode,
       destinationLocationCode,
       departureDate,
-      adults
+      adults,
     );
 
     res.status(200).json({
@@ -154,7 +154,7 @@ const getHotelOffers = async (req, res) => {
       checkInDate,
       checkOutDate,
       adults,
-      roomQuantity
+      roomQuantity,
     );
 
     if (list.length === 0) {
@@ -187,7 +187,7 @@ const getHotelOffers = async (req, res) => {
       adults,
       roomQuantity,
       "USD",
-      type
+      type,
     );
 
     if (offers.length === 0) {
@@ -221,7 +221,7 @@ const getHotelOffers = async (req, res) => {
         .sort(
           (a, b) =>
             parseFloat(a.offers[0].price.total) -
-            parseFloat(b.offers[0].price.total)
+            parseFloat(b.offers[0].price.total),
         );
     } else {
       data = mappedOffers
@@ -229,7 +229,7 @@ const getHotelOffers = async (req, res) => {
         .sort(
           (a, b) =>
             parseFloat(b.offers[0].price.total) -
-            parseFloat(a.offers[0].price.total)
+            parseFloat(a.offers[0].price.total),
         );
     }
 
@@ -309,7 +309,7 @@ const getTransferOffers = async (req, res) => {
       hotelGeoCode,
       transferType,
       airportLeaveDateTime,
-      passengers
+      passengers,
     );
 
     data.airportToHotel = airportToHotel;
@@ -318,7 +318,7 @@ const getTransferOffers = async (req, res) => {
 
     const hotelLocationCode = await fetchAirportLocationCodeFromCoords(
       hotelCoordinate[0],
-      hotelCoordinate[1]
+      hotelCoordinate[1],
     );
 
     console.log("hotelLocationCode: ", hotelLocationCode);
@@ -338,7 +338,7 @@ const getTransferOffers = async (req, res) => {
         `${coordinate.latitude},${coordinate.longitude}`,
         transferType,
         hotelLeaveDateTime,
-        passengers
+        passengers,
       );
 
       data.hotelToEvent = hotelToEvent;
@@ -379,6 +379,23 @@ const getBooking = async (req, res) => {
     res.status(200).json({ ok: true, data: booking });
   } catch (error) {
     console.error("get booking error: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
+const getBookingByUserIdAndEventId = async (req, res) => {
+  try {
+    const { userId, eventId } = req.params;
+
+    if (!userId || !eventId) {
+      return res.status(401).json({ ok: false, message: "Invalid params" });
+    }
+
+    const booking = await Booking.findOne({ user: userId, event: eventId });
+
+    res.status(200).json({ ok: true, data: booking });
+  } catch (error) {
+    console.error("[get booking by userId and eventId error]: ", error);
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
 };
@@ -434,6 +451,7 @@ module.exports = {
   transferOrder,
 
   getBooking,
+  getBookingByUserIdAndEventId,
   getAllBookingsByUserId,
   createBooking,
   updateBooking,
