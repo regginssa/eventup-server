@@ -46,7 +46,7 @@ const FlightBookingSchema = new mongoose.Schema(
       },
     ],
   },
-  { _id: false }
+  { _id: false },
 );
 
 const HotelBookingSchema = new mongoose.Schema(
@@ -87,7 +87,7 @@ const HotelBookingSchema = new mongoose.Schema(
       originSystemCode: { type: String, default: null },
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const AddressSchema = new mongoose.Schema(
@@ -100,7 +100,7 @@ const AddressSchema = new mongoose.Schema(
     longitude: { type: Number, default: null },
     uicCode: { type: String, default: null },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const TransferBookingSchema = new mongoose.Schema(
@@ -171,7 +171,7 @@ const TransferBookingSchema = new mongoose.Schema(
       },
     ],
   },
-  { _id: false }
+  { _id: false },
 );
 
 const BillingAddressSchema = new mongoose.Schema(
@@ -181,7 +181,7 @@ const BillingAddressSchema = new mongoose.Schema(
     countryCode: { type: String, required: true },
     cityName: { type: String, required: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const BillingPaymentSchema = new mongoose.Schema(
@@ -193,7 +193,7 @@ const BillingPaymentSchema = new mongoose.Schema(
     vendorCode: { type: String, required: true },
     cvv: { type: String, required: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const BookingSchema = new mongoose.Schema({
@@ -214,6 +214,7 @@ const BookingSchema = new mongoose.Schema({
   },
   billingAddress: BillingAddressSchema,
   billingPayment: BillingPaymentSchema,
+  package: { type: String, enum: ["standard", "gold"], default: "standard" },
 });
 
 module.exports = mongoose.model("Booking", BookingSchema);
