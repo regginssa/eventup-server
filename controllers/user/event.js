@@ -3,12 +3,31 @@ const mongoose = require("mongoose");
 
 const getFeeds = async (req, res) => {
   try {
-    const { userId, page, limit, type } = req.query;
+    const {
+      userId,
+      type,
+      startDate,
+      countryCode,
+      regionCode,
+      category,
+      page,
+      limit,
+    } = req.query;
 
     const pageNum = Math.max(0, (parseInt(page) || 1) - 1);
     const lim = parseInt(limit) || 10;
 
-    const query = type && type.trim() ? { type: type.trim() } : {};
+    const query = {};
+
+    const isValid = (v) =>
+      v !== undefined && v !== null && v !== "" && v !== "undefined";
+
+    if (type) query.type = type;
+
+    if (isValid(startDate)) query["dates.start.date"] = startDate;
+    if (isValid(countryCode)) query["location.country.code"] = countryCode;
+    if (isValid(regionCode)) query["location.region.code"] = regionCode;
+    if (isValid(category)) query["classifications.category"] = category;
 
     const [events, total] = await Promise.all([
       Event.find(query)
