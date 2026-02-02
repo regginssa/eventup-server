@@ -6,6 +6,40 @@ const {
   createPaymentIntent,
   refundPayment,
 } = require("../../services/stripe");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
+const webhook = async (req, res) => {
+  const sig = req.headers["stripe-signature"];
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+  } catch (err) {
+    console.log(`⚠️  Webhook signature verification failed.`, err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  switch (event.type) {
+    case "payment_intent.succeeded":
+      const paymentIntent = event.data.object;
+      console.log("PaymentIntent was successful!", paymentIntent.id);
+      // ✅ Update user membership / ticket in your DB
+      break;
+
+    case "payment_intent.payment_failed":
+      const failedIntent = event.data.object;
+      console.log("Payment failed:", failedIntent.last_payment_error?.message);
+      // ❌ Optional: notify user
+      break;
+
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  res.json({ received: true });
+};
 
 const getCustomerId = async (req, res) => {
   try {
@@ -153,6 +187,7 @@ const refundStripePaymentIntent = async (req, res) => {
 };
 
 module.exports = {
+  webhook,
   getCustomerId,
   getClientSecret,
   saveStripePaymentMethod,
