@@ -22,7 +22,7 @@ const KycSchema = new mongoose.Schema(
     },
     url: { type: String, default: null },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const PreferredSchema = new mongoose.Schema(
@@ -37,7 +37,7 @@ const PreferredSchema = new mongoose.Schema(
       default: "nearby",
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const StripePaymentMethodSchema = new mongoose.Schema(
@@ -49,7 +49,7 @@ const StripePaymentMethodSchema = new mongoose.Schema(
     last4: { type: Number, default: 0 },
     postalCode: { type: String, default: null },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const StripeSchema = new mongoose.Schema(
@@ -57,7 +57,7 @@ const StripeSchema = new mongoose.Schema(
     customerId: { type: String, default: null },
     paymentMethods: [StripePaymentMethodSchema],
   },
-  { _id: false }
+  { _id: false },
 );
 
 const LocationSchema = new mongoose.Schema({
@@ -107,6 +107,16 @@ const UserSchema = new mongoose.Schema({
   kyc: KycSchema,
   preferred: PreferredSchema,
   stripe: StripeSchema,
+  tickets: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "Ticket", default: null },
+  ],
+});
+
+UserSchema.pre("save", function (next) {
+  if (this.tickets && this.tickets.length > 15) {
+    return next(new Error("A user cannot have more than 15 tickets."));
+  }
+  next();
 });
 
 module.exports = mongoose.model("User", UserSchema);
