@@ -29,6 +29,7 @@ const userReviewRoutes = require("./routes/user/review");
 const userAirportsRoutes = require("./routes/user/airports");
 const userBookingRoutes = require("./routes/user/booking");
 const userStripeRoutes = require("./routes/user/stripe");
+const userTicketRoutes = require("./routes/user/ticket");
 
 app.use(cors());
 app.use(passport.initialize());
@@ -43,7 +44,7 @@ app.use(
       }
     },
   }),
-  userDiditRoutes
+  userDiditRoutes,
 );
 
 // Middlewares
@@ -57,16 +58,17 @@ app.use("/api/didit", userDiditRoutes);
 app.use("/api/events", userEventRoutes);
 app.use("/api/reviews", userReviewRoutes);
 app.use("/api/airports", userAirportsRoutes);
+app.use("/api/ticket", userTicketRoutes);
 
 app.use(
   "/api/booking",
   passport.authenticate("jwt", { session: false }),
-  userBookingRoutes
+  userBookingRoutes,
 );
 app.use(
   "/api/stripe",
   passport.authenticate("jwt", { session: false }),
-  userStripeRoutes
+  userStripeRoutes,
 );
 
 // File upload
