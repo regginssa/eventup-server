@@ -13,7 +13,7 @@ const zeroDecimalCurrencies = [
 
 function calculateStripeAmount(amount, currency) {
   if (zeroDecimalCurrencies.includes(currency.toUpperCase())) {
-    return Math.round(amount); // no * 100
+    return Math.round(amount);
   }
   return Math.round(amount * 100);
 }

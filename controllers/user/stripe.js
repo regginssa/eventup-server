@@ -61,7 +61,7 @@ const saveStripePaymentMethod = async (req, res) => {
     }
 
     const paymentMethod = await retrieveSetupIntentPaymentMethod(
-      setupIntentClientSecret
+      setupIntentClientSecret,
     );
 
     if (!paymentMethod) {
@@ -89,8 +89,7 @@ const saveStripePaymentMethod = async (req, res) => {
 const createStripePaymentIntent = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { paymentMethodId, bookingOption, packageType, amount, currency } =
-      req.body;
+    const { paymentMethodId, metadata: bodyMeta, amount, currency } = req.body;
 
     const user = await User.findById(userId);
 
@@ -100,8 +99,7 @@ const createStripePaymentIntent = async (req, res) => {
     const metadata = {
       userId: user._id.toString(),
       email: user.email,
-      bookingOption,
-      packageType,
+      ...bodyMeta,
     };
 
     const customerId = user.stripe.customerId;
@@ -117,7 +115,7 @@ const createStripePaymentIntent = async (req, res) => {
       paymentMethodId,
       amount,
       currency,
-      metadata
+      metadata,
     );
 
     if (!result?.clientSecret) {

@@ -22,7 +22,7 @@ const setupIntents = async (customerId) => {
 const retrieveSetupIntentPaymentMethod = async (setupIntentId) => {
   const setupIntent = await stripe.setupIntents.retrieve(
     setupIntentId.split("_secret")[0], // Extract ID
-    { expand: ["payment_method"] }
+    { expand: ["payment_method"] },
   );
 
   return setupIntent.payment_method;
@@ -33,12 +33,12 @@ const createPaymentIntent = async (
   paymentMethodId,
   amount,
   currency,
-  metadata
+  metadata,
 ) => {
-  const stripeAmount = calculateStripeAmount(amount, "USD");
+  const stripeAmount = calculateStripeAmount(amount, currency);
   const paymentIntent = await stripe.paymentIntents.create({
     amount: stripeAmount,
-    currency: currency,
+    currency: currency.toUpperCase(),
     customer: customerId,
     payment_method: paymentMethodId,
     setup_future_usage: "off_session",
