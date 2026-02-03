@@ -1,4 +1,5 @@
 const User = require("../../models/User");
+const Transaction = require("../../models/Transaction");
 const {
   createCustomer,
   setupIntents,
@@ -23,9 +24,22 @@ const webhook = async (req, res) => {
 
   switch (event.type) {
     case "payment_intent.succeeded":
-      const paymentIntent = event.data.object;
-      console.log("PaymentIntent was successful!", paymentIntent.id);
-      // ✅ Update user membership / ticket in your DB
+      const {
+        id,
+        metadata,
+        currency,
+        amount,
+        status,
+        amount_received: amountReceived,
+      } = event.data.object;
+
+      if (metadata.type === "ticket") {
+        const user = await User.findById(metadata.userId);
+        if (!user) return;
+        user.tickets.push(metadata.ticketId);
+        await user.save();
+      }
+
       break;
 
     case "payment_intent.payment_failed":

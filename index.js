@@ -30,11 +30,12 @@ const userAirportsRoutes = require("./routes/user/airports");
 const userBookingRoutes = require("./routes/user/booking");
 const userStripeRoutes = require("./routes/user/stripe");
 const userTicketRoutes = require("./routes/user/ticket");
+const userTransactionRoutes = require("./routes/user/transaction");
 
 app.use(cors());
 app.use(passport.initialize());
 
-// Special middleware for Didit webhook (raw body needed)
+// Special middleware for Didit webhook (raw body)
 app.use(
   "/api/didit/webhook",
   bodyParser.json({
@@ -45,6 +46,14 @@ app.use(
     },
   }),
   userDiditRoutes,
+);
+
+// Special middleware for Stripe webhook (raw body)
+const userStripeController = require("./controllers/user/stripe");
+app.use(
+  "/api/stripe/webhook",
+  bodyParser.raw({ type: "application/json" }),
+  userStripeController.webhook,
 );
 
 // Middlewares
@@ -59,6 +68,7 @@ app.use("/api/events", userEventRoutes);
 app.use("/api/reviews", userReviewRoutes);
 app.use("/api/airports", userAirportsRoutes);
 app.use("/api/ticket", userTicketRoutes);
+app.use("/api/tx", userTransactionRoutes);
 
 app.use(
   "/api/booking",
