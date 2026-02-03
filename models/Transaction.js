@@ -7,6 +7,11 @@ const TransactionSchema = new mongoose.Schema(
       enum: ["credit", "crypto", "token"],
       default: "credit",
     },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     txId: { type: String, required: true },
     amount: { type: Number, default: 0 },
     amountReceived: { type: Number, default: 0 },
