@@ -7,7 +7,7 @@ const TransactionSchema = new mongoose.Schema(
       enum: ["credit", "crypto", "token"],
       default: "credit",
     },
-    trasactionId: { type: String, required: true },
+    txId: { type: String, required: true },
     amount: { type: Number, default: 0 },
     amountReceived: { type: Number, default: 0 },
     currency: { type: String, required: true },
