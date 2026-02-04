@@ -110,6 +110,14 @@ const UserSchema = new mongoose.Schema({
   tickets: [
     { type: mongoose.Schema.Types.ObjectId, ref: "Ticket", default: null },
   ],
+  subscription: {
+    id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subscription",
+      default: mongoose.Types.ObjectId("698344ad855e2bb5feee2bb0"),
+    },
+    startedAt: { type: String, default: null },
+  },
 });
 
 UserSchema.pre("save", function (next) {

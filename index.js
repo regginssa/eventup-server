@@ -26,12 +26,12 @@ const userCallbacksRoutes = require("./routes/user/callbacks");
 const userDiditRoutes = require("./routes/user/didit");
 const userEventRoutes = require("./routes/user/event");
 const userReviewRoutes = require("./routes/user/review");
-const userAirportsRoutes = require("./routes/user/airports");
 const userBookingRoutes = require("./routes/user/booking");
 const userStripeRoutes = require("./routes/user/stripe");
 const userTicketRoutes = require("./routes/user/ticket");
 const userTransactionRoutes = require("./routes/user/transaction");
 const userWeb3Routes = require("./routes/user/web3");
+const userSubscriptionRoutes = require("./routes/user/subscription");
 
 app.use(cors());
 app.use(passport.initialize());
@@ -61,16 +61,15 @@ app.use(
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use("/api/auth", userAuthRoutes);
-app.use("/api/user", userUserRoutes);
-app.use("/api/callbacks", userCallbacksRoutes);
-app.use("/api/didit", userDiditRoutes);
-app.use("/api/events", userEventRoutes);
-app.use("/api/reviews", userReviewRoutes);
-app.use("/api/airports", userAirportsRoutes);
-app.use("/api/ticket", userTicketRoutes);
-app.use("/api/tx", userTransactionRoutes);
-app.use("/api/web3", userWeb3Routes);
+app.use("/api/v1/auth", userAuthRoutes);
+app.use("/api/v1/user", userUserRoutes);
+app.use("/api/v1/callbacks", userCallbacksRoutes);
+app.use("/api/v1/didit", userDiditRoutes);
+app.use("/api/v1/events", userEventRoutes);
+app.use("/api/v1/reviews", userReviewRoutes);
+app.use("/api/v1/ticket", userTicketRoutes);
+app.use("/api/v1/subscription", userSubscriptionRoutes);
+app.use("/api/v1/tx", userTransactionRoutes);
 
 app.use(
   "/api/booking",
@@ -81,6 +80,11 @@ app.use(
   "/api/stripe",
   passport.authenticate("jwt", { session: false }),
   userStripeRoutes,
+);
+app.use(
+  "/api/v1/web3",
+  passport.authenticate("jwt", { session: false }),
+  userWeb3Routes,
 );
 
 // File upload

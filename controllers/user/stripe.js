@@ -1,5 +1,6 @@
 const User = require("../../models/User");
 const Transaction = require("../../models/Transaction");
+const mongoose = require("mongoose");
 const {
   createCustomer,
   setupIntents,
@@ -33,11 +34,51 @@ const webhook = async (req, res) => {
         amount_received: amountReceived,
       } = event.data.object;
 
-      if (metadata.type === "ticket") {
-        const user = await User.findById(metadata.userId);
-        if (!user) return;
-        user.tickets.push(metadata.ticketId);
-        await user.save();
+      if (!metadata.userId) break;
+
+      const user = await User.findById(metadata.userId);
+
+      if (!user) break;
+
+      switch (metadata.type) {
+        case "ticket":
+          user.tickets.push(metadata.ticketId);
+          await user.save();
+
+          await Transaction.create({
+            type: "buy",
+            service: "ticket",
+            amount,
+            currency,
+            status,
+            amountReceived,
+            metadata,
+            txId: id,
+            paymentMethod: "credit",
+            userId: user._id,
+          });
+          break;
+
+        case "subscription":
+          user.subscription = {
+            id: mongoose.Types.ObjectId(metadata.subscriptionId),
+            startedAt: new Date().toISOString().split("T")[0],
+          };
+          await user.save();
+
+          await Transaction.create({
+            type: "buy",
+            service: "subscription",
+            amount,
+            currency,
+            status,
+            amountReceived,
+            metadata,
+            txId: id,
+            paymentMethod: "credit",
+            userId: user._id,
+          });
+          break;
       }
 
       break;

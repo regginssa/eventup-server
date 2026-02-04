@@ -1,20 +1,21 @@
-const {
-  getAssociatedTokenAddress,
-  createTransferInstruction,
-  TOKEN_PROGRAM_ID,
-} = require("@solana/spl-token");
-const {
-  Connection,
-  Keypair,
-  PublicKey,
-  Transaction,
-} = require("@solana/web3.js");
+// const {
+//   getAssociatedTokenAddress,
+//   createTransferInstruction,
+//   TOKEN_PROGRAM_ID,
+// } = require("@solana/spl-token");
+// const {
+//   Connection,
+//   Keypair,
+//   PublicKey,
+//   Transaction,
+// } = require("@solana/web3.js");
+// require("dotenv").config();
 
-const connection = new Connection(process.env.RPC_URL, "confirmed");
+// const connection = new Connection(process.env.SOLANA_RPC_URL, "confirmed");
 
-const appWallet = Keypair.fromSecretKey(
-  Uint8Array.from(JSON.parse(process.env.APP_WALLET_PRIVATE)),
-);
+// const appWallet = Keypair.fromSecretKey(
+//   Uint8Array.from(JSON.parse(process.env.APP_WALLET_PRIVATE)),
+// );
 
 const fetchTokenPrices = async () => {
   try {
@@ -57,49 +58,49 @@ const fetchTokenPrices = async () => {
   }
 };
 
-const transferToken = async (userWallet, token, amount) => {
-  try {
-    const mint =
-      token === "chrle"
-        ? process.env.CHRLE_TOKEN_ADDRESS
-        : process.env.BABYU_TOKEN_ADDRESS;
+// const transferToken = async (userWallet, token, amount) => {
+//   try {
+//     const mint =
+//       token === "chrle"
+//         ? process.env.CHRLE_TOKEN_ADDRESS
+//         : process.env.BABYU_TOKEN_ADDRESS;
 
-    const mintKey = new PublicKey(mint);
-    const toWallet = new PublicKey(userWallet);
+//     const mintKey = new PublicKey(mint);
+//     const toWallet = new PublicKey(userWallet);
 
-    const fromTokenAccount = await getAssociatedTokenAddress(
-      mintKey,
-      appWallet.publicKey,
-    );
+//     const fromTokenAccount = await getAssociatedTokenAddress(
+//       mintKey,
+//       appWallet.publicKey,
+//     );
 
-    const toTokenAccount = await getAssociatedTokenAddress(mintKey, toWallet);
+//     const toTokenAccount = await getAssociatedTokenAddress(mintKey, toWallet);
 
-    const tx = new Transaction().add(
-      createTransferInstruction(
-        fromTokenAccount,
-        toTokenAccount,
-        appWallet.publicKey,
-        amount,
-        [],
-        TOKEN_PROGRAM_ID,
-      ),
-    );
+//     const tx = new Transaction().add(
+//       createTransferInstruction(
+//         fromTokenAccount,
+//         toTokenAccount,
+//         appWallet.publicKey,
+//         amount,
+//         [],
+//         TOKEN_PROGRAM_ID,
+//       ),
+//     );
 
-    tx.feePayer = appWallet.publicKey;
+//     tx.feePayer = appWallet.publicKey;
 
-    const latestBlockhash = await connection.getLatestBlockhash();
-    tx.recentBlockhash = latestBlockhash.blockhash;
+//     const latestBlockhash = await connection.getLatestBlockhash();
+//     tx.recentBlockhash = latestBlockhash.blockhash;
 
-    const signedTx = await appWallet.signTransaction(tx);
-    const signature = await connection.sendRawTransaction(signedTx.serialize());
+//     const signedTx = await appWallet.signTransaction(tx);
+//     const signature = await connection.sendRawTransaction(signedTx.serialize());
 
-    await connection.confirmTransaction(signature, "confirmed");
+//     await connection.confirmTransaction(signature, "confirmed");
 
-    return signature;
-  } catch (error) {
-    console.error("[transfer token error]: ", error);
-    return null;
-  }
-};
+//     return signature;
+//   } catch (error) {
+//     console.error("[transfer token error]: ", error);
+//     return null;
+//   }
+// };
 
-module.exports = { fetchTokenPrices, transferToken };
+module.exports = { fetchTokenPrices };
