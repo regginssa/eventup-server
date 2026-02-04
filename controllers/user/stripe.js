@@ -1,6 +1,5 @@
 const User = require("../../models/User");
 const Transaction = require("../../models/Transaction");
-const mongoose = require("mongoose");
 const {
   createCustomer,
   setupIntents,
