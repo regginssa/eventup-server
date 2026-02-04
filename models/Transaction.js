@@ -2,11 +2,13 @@ const mongoose = require("mongoose");
 
 const TransactionSchema = new mongoose.Schema(
   {
-    type: {
+    type: { type: String, enum: ["buy", "sell"], default: "buy" },
+    paymentMethod: {
       type: String,
       enum: ["credit", "crypto", "token"],
       default: "credit",
     },
+    payoutToken: { type: String, default: null },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

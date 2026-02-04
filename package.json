@@ -16,6 +16,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@solana/spl-token": "^0.4.14",
+    "@solana/web3.js": "^1.98.4",
     "amadeus": "^11.0.0",
     "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",

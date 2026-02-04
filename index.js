@@ -31,6 +31,7 @@ const userBookingRoutes = require("./routes/user/booking");
 const userStripeRoutes = require("./routes/user/stripe");
 const userTicketRoutes = require("./routes/user/ticket");
 const userTransactionRoutes = require("./routes/user/transaction");
+const userWeb3Routes = require("./routes/user/web3");
 
 app.use(cors());
 app.use(passport.initialize());
@@ -69,6 +70,7 @@ app.use("/api/reviews", userReviewRoutes);
 app.use("/api/airports", userAirportsRoutes);
 app.use("/api/ticket", userTicketRoutes);
 app.use("/api/tx", userTransactionRoutes);
+app.use("/api/web3", userWeb3Routes);
 
 app.use(
   "/api/booking",
