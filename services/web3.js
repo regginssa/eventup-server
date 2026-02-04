@@ -22,6 +22,8 @@ const fetchTokenPrices = async () => {
     //
     // 1) Fetch BABYU price from Raydium swap API
     //
+    const BABYU_TOKEN_ADDRESS = process.env.BABYU_TOKEN_ADDRESS;
+    const CHRLE_TOKEN_ADDRESS = process.env.CHRLE_TOKEN_ADDRESS;
     const babyuURL = `https://api-v3.raydium.io/mint/price?mints=${BABYU_TOKEN_ADDRESS}`;
     const babyuRes = await fetch(babyuURL);
     const babyuJson = await babyuRes.json();
