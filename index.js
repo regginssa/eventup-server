@@ -38,7 +38,7 @@ app.use(passport.initialize());
 
 // Special middleware for Didit webhook (raw body)
 app.use(
-  "/api/didit/webhook",
+  "/api/v1/didit/webhook",
   bodyParser.json({
     verify: (req, res, buf, encoding) => {
       if (buf && buf.length) {
@@ -52,7 +52,7 @@ app.use(
 // Special middleware for Stripe webhook (raw body)
 const userStripeController = require("./controllers/user/stripe");
 app.use(
-  "/api/stripe/webhook",
+  "/api/v1/stripe/webhook",
   bodyParser.raw({ type: "application/json" }),
   userStripeController.webhook,
 );
@@ -72,12 +72,12 @@ app.use("/api/v1/subscription", userSubscriptionRoutes);
 app.use("/api/v1/tx", userTransactionRoutes);
 
 app.use(
-  "/api/booking",
+  "/api/v1/booking",
   passport.authenticate("jwt", { session: false }),
   userBookingRoutes,
 );
 app.use(
-  "/api/stripe",
+  "/api/v1/stripe",
   passport.authenticate("jwt", { session: false }),
   userStripeRoutes,
 );
@@ -90,7 +90,7 @@ app.use(
 // File upload
 const upload = multer({ dest: "uploads/" });
 const { uploadToCloudinary } = require("./services/cloudinary");
-app.post("/api/upload", upload.single("file"), async (req, res) => {
+app.post("/api/v1/upload", upload.single("file"), async (req, res) => {
   try {
     if (!req.file)
       return res.status(400).json({ ok: false, message: "File not found" });
