@@ -114,7 +114,7 @@ const UserSchema = new mongoose.Schema({
     id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Subscription",
-      default: mongoose.Types.ObjectId("698344ad855e2bb5feee2bb0"),
+      default: "698344ad855e2bb5feee2bb0",
     },
     startedAt: { type: String, default: null },
   },

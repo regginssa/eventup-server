@@ -61,7 +61,7 @@ const webhook = async (req, res) => {
 
         case "subscription":
           user.subscription = {
-            id: mongoose.Types.ObjectId(metadata.subscriptionId),
+            id: metadata.subscriptionId,
             startedAt: new Date().toISOString().split("T")[0],
           };
           await user.save();
