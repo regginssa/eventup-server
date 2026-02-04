@@ -98,6 +98,7 @@ const webhook = async (req, res) => {
 const getCustomerId = async (req, res) => {
   try {
     const userId = req.user.id;
+    console.log("[passport user id]: ", userId);
 
     const user = await User.findById(userId);
 
