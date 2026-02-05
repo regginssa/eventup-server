@@ -26,12 +26,14 @@ const webhook = async (req, res) => {
     case "payment_intent.succeeded":
       const {
         id,
-        metadata,
+        metadata: jsonMetadata,
         currency,
         amount,
         status,
         amount_received: amountReceived,
       } = event.data.object;
+
+      const metadata = JSON.parse(jsonMetadata);
 
       if (!metadata.userId) break;
 

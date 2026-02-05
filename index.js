@@ -1,6 +1,6 @@
 const express = require("express");
 const http = require("http");
-const { Server } = require("socket.io");
+const { initSocket } = require("./socket");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const passport = require("passport");
@@ -12,12 +12,9 @@ require("./config/passport")(passport);
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST", "PATCH", "DELETE"],
-  },
-});
+
+// Initialize socket.io
+initSocket(server);
 
 // User routes
 const userAuthRoutes = require("./routes/user/auth");
@@ -32,6 +29,8 @@ const userTicketRoutes = require("./routes/user/ticket");
 const userTransactionRoutes = require("./routes/user/transaction");
 const userWeb3Routes = require("./routes/user/web3");
 const userSubscriptionRoutes = require("./routes/user/subscription");
+const userConversationRoutes = require("./routes/user/conversation");
+const userMessageRoutes = require("./routes/user/message");
 
 app.use(cors());
 app.use(passport.initialize());
@@ -70,6 +69,8 @@ app.use("/api/v1/reviews", userReviewRoutes);
 app.use("/api/v1/ticket", userTicketRoutes);
 app.use("/api/v1/subscription", userSubscriptionRoutes);
 app.use("/api/v1/tx", userTransactionRoutes);
+app.use("/api/v1/conversations", userConversationRoutes);
+app.use("/api/v1/messages", userMessageRoutes);
 
 app.use(
   "/api/v1/booking",
