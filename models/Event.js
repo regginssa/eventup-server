@@ -13,7 +13,7 @@ const TMSchema = new mongoose.Schema(
     venueId: { type: String, default: null },
     ticketLimitInfo: { type: String, default: null },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const DatesSchema = new mongoose.Schema(
@@ -28,7 +28,7 @@ const DatesSchema = new mongoose.Schema(
     },
     timezone: { type: String, default: null },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const LocationSchema = new mongoose.Schema(
@@ -53,7 +53,7 @@ const LocationSchema = new mongoose.Schema(
       latitude: { type: Number, default: 0 },
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const ClassificationsSchema = new mongoose.Schema(
@@ -63,7 +63,7 @@ const ClassificationsSchema = new mongoose.Schema(
     vibe: [{ type: String }],
     venue: [{ type: String }],
   },
-  { _id: false }
+  { _id: false },
 );
 
 const FeeSchema = new mongoose.Schema({
@@ -93,6 +93,26 @@ const EventSchema = new mongoose.Schema({
     enum: ["open", "closed", "pending", "completed", "cancelled"],
     default: "open",
   },
+  applications: [
+    {
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+
+      ticket: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Ticket",
+        default: null,
+      },
+      status: {
+        type: String,
+        enum: ["approved", "blocked"],
+        default: "approved",
+      },
+    },
+  ],
 });
 
 module.exports = mongoose.model("Event", EventSchema);

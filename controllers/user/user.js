@@ -4,7 +4,9 @@ const getUser = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const user = await User.findById(id).populate("tickets");
+    const user = await User.findById(id)
+      .select("-password")
+      .populate("tickets");
 
     if (!user) {
       return res.status(404).json({ ok: false, message: "User not found" });
