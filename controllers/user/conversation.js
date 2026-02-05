@@ -7,7 +7,8 @@ const getUserConversations = async (req, res) => {
     })
       .populate("participants", "name avatar")
       .populate("lastMessage")
-      .sort({ updatedAt: -1 });
+      .sort({ updatedAt: -1 })
+      .lean();
 
     res.status(200).json({ ok: true, data: conversations });
   } catch (err) {
