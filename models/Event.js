@@ -93,7 +93,7 @@ const EventSchema = new mongoose.Schema({
     enum: ["open", "closed", "pending", "completed", "cancelled"],
     default: "open",
   },
-  applications: [
+  attendees: [
     {
       user: {
         type: mongoose.Schema.Types.ObjectId,
