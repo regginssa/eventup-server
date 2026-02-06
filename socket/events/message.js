@@ -20,8 +20,8 @@ module.exports = (io, socket) => {
       // Increment unread count for everyone except sender
       convo.participants.forEach((userId) => {
         if (userId.toString() !== senderId) {
-          const current = convo.unreadCounts.get(userId.toString()) || 0;
-          convo.unreadCounts.set(userId.toString(), current + 1);
+          const current = convo.unread.get(userId.toString()) || 0;
+          convo.unread.set(userId.toString(), current + 1);
         }
       });
 
