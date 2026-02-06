@@ -17,7 +17,12 @@ module.exports = (io, socket) => {
         });
       }
 
-      socket.emit("dm_created", convo);
+      const populated = await Conversation.findById(convo._id)
+        .populate("participants", "name avatar status")
+        .populate("lastMessage")
+        .lean();
+
+      socket.emit("dm_created", populated);
     } catch (err) {
       console.log("DM error:", err);
     }
@@ -50,17 +55,5 @@ module.exports = (io, socket) => {
     } catch (err) {
       console.log("Fetch messages error:", err);
     }
-  });
-
-  // --- Join the conversation room ---
-  socket.on("join_conversation", (conversationId) => {
-    socket.join(conversationId);
-    console.log(`User joined conversation: ${conversationId}`);
-  });
-
-  // --- Leave the conversation room ---
-  socket.on("leave_conversation", (conversationId) => {
-    socket.leave(conversationId);
-    console.log(`User left conversation: ${conversationId}`);
   });
 };

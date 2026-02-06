@@ -19,8 +19,12 @@ module.exports = (io, socket) => {
         lastMessage: message._id,
       });
 
+      const populated = await Message.findById(message._id)
+        .populate("sender")
+        .lean();
+
       // 3. Emit to room
-      io.to(conversationId).emit("new_message", message);
+      io.to(conversationId).emit("new_message", populated);
     } catch (err) {
       console.log("Message Error:", err);
       socket.emit("message_error", "Failed to send message");
