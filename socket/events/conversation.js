@@ -3,17 +3,17 @@ const Message = require("../../models/Message");
 
 module.exports = (io, socket) => {
   // --- Create DM conversation ---
-  socket.on("create_dm", async ({ user1, user2 }) => {
+  socket.on("create_dm", async ({ user1Id, user2Id }) => {
     try {
       let convo = await Conversation.findOne({
         type: "dm",
-        participants: { $all: [user1, user2] },
+        participants: { $all: [user1Id, user2Id] },
       });
 
       if (!convo) {
         convo = await Conversation.create({
           type: "dm",
-          participants: [user1, user2],
+          participants: [user1Id, user2Id],
         });
       }
 
@@ -50,5 +50,17 @@ module.exports = (io, socket) => {
     } catch (err) {
       console.log("Fetch messages error:", err);
     }
+  });
+
+  // --- Join the conversation room ---
+  socket.on("join_conversation", (conversationId) => {
+    socket.join(conversationId);
+    console.log(`User joined conversation: ${conversationId}`);
+  });
+
+  // --- Leave the conversation room ---
+  socket.on("leave_conversation", (conversationId) => {
+    socket.leave(conversationId);
+    console.log(`User left conversation: ${conversationId}`);
   });
 };
