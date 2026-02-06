@@ -6,7 +6,6 @@ const ConversationSchema = new mongoose.Schema(
       enum: ["dm", "group"],
       required: true,
     },
-
     participants: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 
     // Groups only
@@ -15,6 +14,12 @@ const ConversationSchema = new mongoose.Schema(
 
     // Latest message for preview list
     lastMessage: { type: mongoose.Schema.Types.ObjectId, ref: "Message" },
+
+    unread: {
+      type: Map,
+      of: Number, // key: userId, value: unread count
+      default: {},
+    },
   },
   { timestamps: true },
 );

@@ -15,9 +15,18 @@ module.exports = (io, socket) => {
       });
 
       // 2. Update Conversation lastMessage
-      await Conversation.findByIdAndUpdate(conversationId, {
-        lastMessage: message._id,
+      const convo = await Conversation.findById(conversationId);
+
+      // Increment unread count for everyone except sender
+      convo.participants.forEach((userId) => {
+        if (userId.toString() !== senderId) {
+          const current = convo.unreadCounts.get(userId.toString()) || 0;
+          convo.unreadCounts.set(userId.toString(), current + 1);
+        }
       });
+
+      convo.lastMessage = message._id;
+      await convo.save();
 
       const populated = await Message.findById(message._id)
         .populate("sender")
@@ -43,8 +52,13 @@ module.exports = (io, socket) => {
         { status: "seen" },
       );
 
+      // reset unread count
+      await Conversation.findByIdAndUpdate(conversationId, {
+        $set: { [`unread.${userId}`]: 0 },
+      });
+
       // notify sender
-      io.to(conversationId).emit("messages_seen", { conversationId });
+      io.to(conversationId).emit("messages_seen", { conversationId, userId });
     } catch (err) {
       console.log("Seen update error:", err);
     }
