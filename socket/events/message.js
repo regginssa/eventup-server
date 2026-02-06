@@ -31,21 +31,22 @@ module.exports = (io, socket) => {
     }
   });
 
-  // Update message status - delivered & seen
-  socket.on("update_message_status", async ({ messageId, status }) => {
+  // Update message status - seen
+  socket.on("mark_message_seen", async ({ conversationId, userId }) => {
     try {
-      const message = await Message.findByIdAndUpdate(
-        messageId,
-        { status },
-        { new: true },
+      await Message.updateMany(
+        {
+          conversation: conversationId,
+          sender: { $ne: userId },
+          status: "sent",
+        },
+        { status: "seen" },
       );
 
-      io.to(message.conversation.toString()).emit(
-        "message_status_updated",
-        message,
-      );
+      // notify sender
+      io.to(conversationId).emit("messages_seen", { conversationId });
     } catch (err) {
-      console.log("Status update error:", err);
+      console.log("Seen update error:", err);
     }
   });
 };
