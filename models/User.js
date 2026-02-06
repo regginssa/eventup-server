@@ -118,6 +118,7 @@ const UserSchema = new mongoose.Schema({
     },
     startedAt: { type: String, default: null },
   },
+  status: { type: String, enum: ["online", "offline"], default: "online" },
 });
 
 UserSchema.pre("save", function (next) {
