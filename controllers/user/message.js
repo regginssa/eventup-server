@@ -40,4 +40,32 @@ const markSeen = async (req, res) => {
   }
 };
 
-module.exports = { getConversationMessages, markSeen };
+const update = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const message = await Message.findById(id);
+    message.set(updates);
+    await message.save();
+
+    res.status(200).json({ ok: true, data: message });
+  } catch (error) {
+    console.error("[message update error]: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
+const remove = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Message.findByIdAndDelete(id);
+
+    res.status(200).json({ ok: true, data: true });
+  } catch (error) {
+    console.error("[message delete error]: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
+module.exports = { getConversationMessages, markSeen, update, remove };

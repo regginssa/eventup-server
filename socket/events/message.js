@@ -2,6 +2,7 @@ const Message = require("../../models/Message");
 const Conversation = require("../../models/Conversation");
 
 module.exports = (io, socket) => {
+  // Send new message
   socket.on("send_message", async (data) => {
     try {
       const { conversationId, senderId, text, files } = data;
@@ -61,6 +62,44 @@ module.exports = (io, socket) => {
       io.to(conversationId).emit("messages_seen", { conversationId, userId });
     } catch (err) {
       console.log("Seen update error:", err);
+    }
+  });
+
+  socket.on("update_message", async ({ updates, conversationId }) => {
+    try {
+      const message = await Message.findById(updates._id);
+
+      if (!message.isEdited) {
+        message.set(updates);
+        await message.save();
+      }
+
+      const populated = await Message.findById(message._id)
+        .populate("sender")
+        .lean();
+
+      io.to(conversationId).emit("message_updated", populated);
+    } catch (error) {
+      console.error("[update message error]: ", error);
+    }
+  });
+
+  socket.on("remove_message", async ({ messageId, conversationId }) => {
+    try {
+      // Check if message is existed
+      const message = await Message.findById(messageId);
+
+      if (message) {
+        await message.deleteOne();
+      }
+
+      // notify all
+      io.to(conversationId).emit("message_removed", {
+        messageId,
+        conversationId,
+      });
+    } catch (error) {
+      console.error("[socket remove message error]: ", error);
     }
   });
 };

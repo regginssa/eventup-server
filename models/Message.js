@@ -32,6 +32,8 @@ const MessageSchema = new mongoose.Schema(
       enum: ["sent", "seen"],
       default: "sent",
     },
+
+    isEdited: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
