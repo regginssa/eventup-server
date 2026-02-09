@@ -51,25 +51,25 @@ module.exports = (io, socket) => {
       try {
         const conversation = await Conversation.findById(conversationId);
 
-        if (conversation) {
-          if (action === "me") {
-            const alreadyHidden = conversation.hiddenFor.includes(userId);
+        if (!conversation) return;
 
-            if (!alreadyHidden) {
-              conversation.hiddenFor.push(userId);
-              await conversation.save();
-            }
+        if (action === "me") {
+          const alreadyHidden = conversation.hiddenFor.includes(userId);
 
-            io.to(userId).emit("conversation_dm_deleted", conversationId);
-          } else {
-            await conversation.deleteOne();
-
-            conversation.participants.forEach((uid) =>
-              io
-                .to(uid.toString())
-                .emit("conversation_dm_deleted", conversationId),
-            );
+          if (!alreadyHidden) {
+            conversation.hiddenFor.push(userId);
+            await conversation.save();
           }
+
+          io.to(userId).emit("conversation_dm_deleted", conversationId);
+        } else {
+          await conversation.deleteOne();
+
+          conversation.participants.forEach((uid) =>
+            io
+              .to(uid.toString())
+              .emit("conversation_dm_deleted", conversationId),
+          );
         }
       } catch (err) {
         console.error("[socket delete conversation for me error]: ", err);
