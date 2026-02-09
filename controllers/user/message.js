@@ -56,7 +56,7 @@ const update = async (req, res) => {
   }
 };
 
-const remove = async (req, res) => {
+const removeOne = async (req, res) => {
   try {
     const { id } = req.params;
     await Message.findByIdAndDelete(id);
@@ -68,4 +68,21 @@ const remove = async (req, res) => {
   }
 };
 
-module.exports = { getConversationMessages, markSeen, update, remove };
+const removeMany = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    await Message.deleteMany({ _id: { $in: ids } });
+    res.status(200).json({ ok: true, data: true });
+  } catch (error) {
+    console.error("[remove many messages error]: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
+module.exports = {
+  getConversationMessages,
+  markSeen,
+  update,
+  removeOne,
+  removeMany,
+};

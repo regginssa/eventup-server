@@ -6,6 +6,7 @@ router.get("/:conversationId", controllers.getConversationMessages);
 router.post("/:conversationId/seen", controllers.markSeen);
 
 router.patch("/:id", controllers.update);
-router.delete("/:id", controllers.remove);
+router.delete("/:id", controllers.removeOne);
+router.delete("/many", controllers.removeMany);
 
 module.exports = router;

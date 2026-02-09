@@ -20,6 +20,8 @@ const ConversationSchema = new mongoose.Schema(
       of: Number, // key: userId, value: unread count
       default: {},
     },
+
+    hiddenFor: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true },
 );
