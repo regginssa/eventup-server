@@ -44,9 +44,9 @@ module.exports = (io, socket) => {
     }
   });
 
-  // -- Remove a conversation
+  // -- Delete a conversation
   socket.on(
-    "remove_dm_conversation_for_me",
+    "delete_dm_conversation",
     async ({ conversationId, action, userId }) => {
       try {
         const conversation = await Conversation.findById(conversationId);
@@ -60,15 +60,19 @@ module.exports = (io, socket) => {
               await conversation.save();
             }
 
-            io.to(userId).emit("conversation_hidden", {
-              conversationId,
-            });
+            io.to(userId).emit("conversation_dm_deleted", conversationId);
           } else {
             await conversation.deleteOne();
+
+            conversation.participants.forEach((uid) =>
+              io
+                .to(uid.toString())
+                .emit("conversation_dm_deleted", conversationId),
+            );
           }
         }
       } catch (err) {
-        console.error("[socket remove conversation for me error]: ", err);
+        console.error("[socket delete conversation for me error]: ", err);
       }
     },
   );
