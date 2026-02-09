@@ -69,7 +69,6 @@ app.use("/api/v1/reviews", userReviewRoutes);
 app.use("/api/v1/ticket", userTicketRoutes);
 app.use("/api/v1/subscription", userSubscriptionRoutes);
 app.use("/api/v1/tx", userTransactionRoutes);
-app.use("/api/v1/conversations", userConversationRoutes);
 
 app.use(
   "/api/v1/booking",
@@ -85,6 +84,11 @@ app.use(
   "/api/v1/web3",
   passport.authenticate("jwt", { session: false }),
   userWeb3Routes,
+);
+app.use(
+  "/api/v1/conversations",
+  passport.authenticate("jwt", { session: false }),
+  userConversationRoutes,
 );
 app.use(
   "/api/v1/messages",

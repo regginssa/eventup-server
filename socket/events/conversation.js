@@ -44,16 +44,32 @@ module.exports = (io, socket) => {
     }
   });
 
-  // --- Fetch messages ---
-  socket.on("get_messages", async (conversationId) => {
-    try {
-      const messages = await Message.find({ conversation: conversationId })
-        .populate("sender")
-        .sort({ createdAt: 1 });
+  // -- Remove a conversation
+  socket.on(
+    "remove_dm_conversation_for_me",
+    async ({ conversationId, action, userId }) => {
+      try {
+        const conversation = await Conversation.findById(conversationId);
 
-      socket.emit("messages_list", messages);
-    } catch (err) {
-      console.log("Fetch messages error:", err);
-    }
-  });
+        if (conversation) {
+          if (action === "me") {
+            const alreadyHidden = conversation.hiddenFor.includes(userId);
+
+            if (!alreadyHidden) {
+              conversation.hiddenFor.push(userId);
+              await conversation.save();
+            }
+
+            io.to(userId).emit("conversation_hidden", {
+              conversationId,
+            });
+          } else {
+            await conversation.deleteOne();
+          }
+        }
+      } catch (err) {
+        console.error("[socket remove conversation for me error]: ", err);
+      }
+    },
+  );
 };
