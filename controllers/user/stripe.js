@@ -26,14 +26,12 @@ const webhook = async (req, res) => {
     case "payment_intent.succeeded":
       const {
         id,
-        metadata: jsonMetadata,
+        metadata,
         currency,
         amount,
         status,
         amount_received: amountReceived,
       } = event.data.object;
-
-      const metadata = JSON.parse(jsonMetadata);
 
       if (!metadata.userId) break;
 
@@ -53,7 +51,7 @@ const webhook = async (req, res) => {
             currency,
             status: "completed",
             amountReceived,
-            metadata,
+            metadata: JSON.stringify(metadata),
             txId: id,
             paymentMethod: "credit",
             userId: user._id,
@@ -74,7 +72,7 @@ const webhook = async (req, res) => {
             currency,
             status: "completed",
             amountReceived,
-            metadata,
+            metadata: JSON.stringify(metadata),
             txId: id,
             paymentMethod: "credit",
             userId: user._id,

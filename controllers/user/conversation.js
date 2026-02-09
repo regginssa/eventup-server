@@ -2,8 +2,10 @@ const Conversation = require("../../models/Conversation");
 
 const getUserConversations = async (req, res) => {
   try {
+    const userId = req.params.userId;
+
     const conversations = await Conversation.find({
-      participants: req.params.userId,
+      participants: userId,
       hiddenFor: { $ne: userId },
     })
       .populate("participants", "name avatar status")
@@ -14,6 +16,7 @@ const getUserConversations = async (req, res) => {
 
     res.status(200).json({ ok: true, data: conversations });
   } catch (err) {
+    console.error("[get user conversations error]: ", err);
     res.status(500).json({ error: "Failed to fetch conversations" });
   }
 };
