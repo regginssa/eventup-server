@@ -5,7 +5,6 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const passport = require("passport");
 const connectDB = require("./config/db");
-const multer = require("multer");
 const fs = require("fs");
 require("dotenv").config();
 require("./config/passport")(passport);
@@ -95,27 +94,6 @@ app.use(
   passport.authenticate("jwt", { session: false }),
   userMessageRoutes,
 );
-
-// File upload
-const upload = multer({ dest: "uploads/" });
-const { uploadToCloudinary } = require("./services/cloudinary");
-app.post("/api/v1/upload", upload.single("file"), async (req, res) => {
-  try {
-    if (!req.file)
-      return res.status(400).json({ ok: false, message: "File not found" });
-
-    const fileLink = await uploadToCloudinary(req.file);
-
-    fs.unlink(req.file.path, (err) => {
-      if (err) console.error("Error deleting temp file:", err);
-    });
-
-    res.status(200).json({ ok: true, data: fileLink });
-  } catch (error) {
-    console.error("upload error: ", error);
-    res.status(500).json({ ok: false, message: "Upload failed" });
-  }
-});
 
 // Connect DB
 connectDB();
