@@ -11,6 +11,8 @@ const ConversationSchema = new mongoose.Schema(
     // Groups only
     name: String,
     avatar: String,
+    creator: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    event: { type: mongoose.Schema.Types.ObjectId, ref: "Event" },
 
     // Latest message for preview list
     lastMessage: { type: mongoose.Schema.Types.ObjectId, ref: "Message" },

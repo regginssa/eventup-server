@@ -10,6 +10,8 @@ const getUserConversations = async (req, res) => {
       hiddenFor: { $ne: userId },
     })
       .populate("participants", "name avatar status")
+      .populate("creator")
+      .populate("event")
       .populate("lastMessage")
 
       .sort({ updatedAt: -1 })
@@ -19,6 +21,23 @@ const getUserConversations = async (req, res) => {
   } catch (err) {
     console.error("[get user conversations error]: ", err);
     res.status(500).json({ error: "Failed to fetch conversations" });
+  }
+};
+
+const create = async (req, res) => {
+  try {
+    const newConv = await Conversation.create(req.body);
+
+    const populated = await Conversation.findById(newConv._id)
+      .populate("participants", "name avatar status")
+      .populate("creator")
+      .populate("event")
+      .populate("lastMessage");
+
+    res.status(200).json({ ok: true, data: populated });
+  } catch (err) {
+    console.error("[create a conversation error]: ", err);
+    res.status(500).json({ ok: false, message: "Internal server error" });
   }
 };
 
@@ -38,17 +57,17 @@ const removeForMe = async (req, res) => {
 
 const removeForAll = async (req, res) => {
   try {
-    const {id} = req.params;
+    const { id } = req.params;
 
     await Conversation.findByIdAndDelete(id);
 
-    await Message.deleteMany({conversation: id});
+    await Message.deleteMany({ conversation: id });
 
-    res.status(200).json({ok: true, data: true});
-  } catch(err) {
+    res.status(200).json({ ok: true, data: true });
+  } catch (err) {
     console.error("[remove conversations for all error]: ", err);
-    res.status(500).json({ok: false, message: "Internal server error"});
+    res.status(500).json({ ok: false, message: "Internal server error" });
   }
-}
+};
 
-module.exports = { getUserConversations, removeForMe, removeForAll };
+module.exports = { getUserConversations, create, removeForMe, removeForAll };
