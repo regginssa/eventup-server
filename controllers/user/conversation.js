@@ -10,7 +10,7 @@ const getUserConversations = async (req, res) => {
       hiddenFor: { $ne: userId },
     })
       .populate("participants", "name avatar status")
-      .populate("creator")
+      .populate("creator", "name avatar status")
       .populate("event")
       .populate("lastMessage")
 

@@ -80,46 +80,49 @@ const LocationSchema = new mongoose.Schema({
   },
 });
 
-const UserSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  password: { type: String, required: true },
-  avatar: { type: String, default: null },
-  title: { type: String, default: null },
-  description: { type: String, default: null },
-  rate: { type: Number, default: 0 },
-  location: LocationSchema,
-  accountType: {
-    type: String,
-    enum: ["individual", "company"],
-    default: "individual",
-  },
-  userType: { type: String, enum: ["user", "admin"], default: "user" },
-  signOption: {
-    type: String,
-    enum: ["email", "google", "apple"],
-    default: "email",
-  },
-  googleId: { type: String, default: null },
-  appleId: { type: String, default: null },
-  blocked: { type: Boolean, default: false },
-  idVerified: { type: Boolean, default: false },
-  kyc: KycSchema,
-  preferred: PreferredSchema,
-  stripe: StripeSchema,
-  tickets: [
-    { type: mongoose.Schema.Types.ObjectId, ref: "Ticket", default: null },
-  ],
-  subscription: {
-    id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Subscription",
-      default: "698344ad855e2bb5feee2bb0",
+const UserSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    password: { type: String, required: true },
+    avatar: { type: String, default: null },
+    title: { type: String, default: null },
+    description: { type: String, default: null },
+    rate: { type: Number, default: 0 },
+    location: LocationSchema,
+    accountType: {
+      type: String,
+      enum: ["individual", "company"],
+      default: "individual",
     },
-    startedAt: { type: String, default: null },
+    userType: { type: String, enum: ["user", "admin"], default: "user" },
+    signOption: {
+      type: String,
+      enum: ["email", "google", "apple"],
+      default: "email",
+    },
+    googleId: { type: String, default: null },
+    appleId: { type: String, default: null },
+    blocked: { type: Boolean, default: false },
+    idVerified: { type: Boolean, default: false },
+    kyc: KycSchema,
+    preferred: PreferredSchema,
+    stripe: StripeSchema,
+    tickets: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Ticket", default: null },
+    ],
+    subscription: {
+      id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Subscription",
+        default: "698344ad855e2bb5feee2bb0",
+      },
+      startedAt: { type: String, default: null },
+    },
+    status: { type: String, enum: ["online", "offline"], default: "online" },
   },
-  status: { type: String, enum: ["online", "offline"], default: "online" },
-});
+  { timestamps: true },
+);
 
 UserSchema.pre("save", function (next) {
   if (this.tickets && this.tickets.length > 15) {
