@@ -133,4 +133,29 @@ const emailRegister = async (req, res) => {
   }
 };
 
-module.exports = { googleLogin, googleRegister, emailLogin, emailRegister };
+const getMe = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    if (!userId) {
+      return res.status(400).json({ ok: false, message: "Unauthorized" });
+    }
+
+    const user = await User.findById(userId)
+      .select("-password")
+      .populate("tickets");
+
+    res.status(200).json({ ok: true, data: user });
+  } catch (error) {
+    console.error("[get me error]: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
+module.exports = {
+  googleLogin,
+  googleRegister,
+  emailLogin,
+  emailRegister,
+  getMe,
+};

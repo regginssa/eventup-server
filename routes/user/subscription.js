@@ -3,6 +3,6 @@ const router = express.Router();
 const controllers = require("../../controllers/user/subscription");
 
 router.get("/all", controllers.getAll);
-router.get("/:id", controllers.getById);
+router.get("/:id", controllers.get);
 
 module.exports = router;

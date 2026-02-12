@@ -1,15 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const {
-  googleLogin,
-  googleRegister,
-  emailLogin,
-  emailRegister,
-} = require("../../controllers/user/auth");
+const passport = require("passport");
+const controllers = require("../../controllers/user/auth");
 
-router.post("/login-google", googleLogin);
-router.post("/register-google", googleRegister);
-router.post("/login-email", emailLogin);
-router.post("/register-email", emailRegister);
+const requireAuth = passport.authenticate("jwt", { session: false });
+
+router.post("/login-google", controllers.googleLogin);
+router.post("/register-google", controllers.googleRegister);
+router.post("/login-email", controllers.emailLogin);
+router.post("/register-email", controllers.emailRegister);
+router.get("/me", requireAuth, controllers.getMe);
 
 module.exports = router;

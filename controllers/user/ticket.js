@@ -10,7 +10,7 @@ const getAll = async (req, res) => {
   }
 };
 
-const getById = async (req, res) => {
+const get = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -27,4 +27,4 @@ const getById = async (req, res) => {
   }
 };
 
-module.exports = { getAll, getById };
+module.exports = { getAll, get };

@@ -56,7 +56,7 @@ const getFeeds = async (req, res) => {
   }
 };
 
-const getAllEvents = async (req, res) => {
+const getAll = async (req, res) => {
   try {
     const events = await Event.find({}, "-__v").lean();
     res.status(200).json({ ok: true, data: events });
@@ -66,7 +66,7 @@ const getAllEvents = async (req, res) => {
   }
 };
 
-const getEvent = async (req, res) => {
+const get = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -102,7 +102,7 @@ const getEvent = async (req, res) => {
   }
 };
 
-const getEventsByUser = async (req, res) => {
+const getByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
     const { status } = req.query;
@@ -144,9 +144,9 @@ const update = async (req, res) => {
 
 module.exports = {
   getFeeds,
-  getAllEvents,
-  getEvent,
-  getEventsByUser,
+  getAll,
+  get,
+  getByUserId,
   create,
   update,
 };

@@ -1,6 +1,6 @@
 const User = require("../../models/User");
 
-const getUser = async (req, res) => {
+const get = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -19,12 +19,14 @@ const getUser = async (req, res) => {
   }
 };
 
-const updateUser = async (req, res) => {
+const update = async (req, res) => {
   try {
     const updates = req.body;
     const { id } = req.params;
 
-    const user = await User.findById(id);
+    const user = await User.findById(id)
+      .select("-password")
+      .populate("tickets");
 
     if (!user) {
       return res
@@ -42,4 +44,4 @@ const updateUser = async (req, res) => {
   }
 };
 
-module.exports = { getUser, updateUser };
+module.exports = { get, update };
