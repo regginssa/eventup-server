@@ -31,7 +31,6 @@ const userSubscriptionRoutes = require("./routes/user/subscription");
 const userConversationRoutes = require("./routes/user/conversation");
 const userMessageRoutes = require("./routes/user/message");
 const userUploadRoutes = require("./routes/user/upload");
-const userAttendeesRoutes = require("./routes/user/attendees");
 
 app.use(cors());
 app.use(passport.initialize());
@@ -71,7 +70,6 @@ app.use("/api/v1/ticket", userTicketRoutes);
 app.use("/api/v1/subscription", userSubscriptionRoutes);
 app.use("/api/v1/tx", userTransactionRoutes);
 app.use("/api/v1/upload", userUploadRoutes);
-app.use("/api/v1/attendees", userAttendeesRoutes);
 
 app.use(
   "/api/v1/booking",

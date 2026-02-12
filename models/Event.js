@@ -72,6 +72,31 @@ const FeeSchema = new mongoose.Schema({
   currency: { type: String, default: "USD" },
 });
 
+const TicketSchema = new mongoose.Schema(
+  {
+    ticketId: { type: mongoose.Schema.Types.ObjectId, ref: "Ticket" },
+    status: {
+      type: String,
+      enum: ["deposited", "released", "refunded"],
+      default: "deposited",
+    },
+  },
+  { _id: false },
+);
+
+const AttendeesSchema = new mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    ticket: TicketSchema,
+    status: {
+      type: String,
+      enum: ["approved", "blocked"],
+      default: "approved",
+    },
+  },
+  { _id: false, timestamps: true },
+);
+
 const EventSchema = new mongoose.Schema({
   type: { type: String, enum: ["ai", "user"], default: "ai" },
   name: { type: String, default: null },
@@ -93,26 +118,7 @@ const EventSchema = new mongoose.Schema({
     enum: ["open", "closed", "pending", "completed", "cancelled"],
     default: "open",
   },
-  attendees: [
-    {
-      user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        default: null,
-      },
-
-      ticket: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Ticket",
-        default: null,
-      },
-      status: {
-        type: String,
-        enum: ["approved", "blocked"],
-        default: "approved",
-      },
-    },
-  ],
+  attendees: [AttendeesSchema],
 });
 
 module.exports = mongoose.model("Event", EventSchema);

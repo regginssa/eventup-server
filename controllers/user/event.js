@@ -117,7 +117,7 @@ const getEventsByUser = async (req, res) => {
   }
 };
 
-const createEvent = async (req, res) => {
+const create = async (req, res) => {
   try {
     const newEvent = await Event.create(req.body);
     res.status(200).json({ ok: true, data: newEvent });
@@ -127,10 +127,26 @@ const createEvent = async (req, res) => {
   }
 };
 
+const update = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const event = await Event.findById(id).populate("hoster");
+    if (!event)
+      return res.status(404).json({ ok: false, message: "Event not found" });
+    event.set(req.body);
+    await event.save();
+    res.status(200).json({ ok: true, data: event });
+  } catch (error) {
+    console.error("[update event error]: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
 module.exports = {
   getFeeds,
   getAllEvents,
   getEvent,
   getEventsByUser,
-  createEvent,
+  create,
+  update,
 };
