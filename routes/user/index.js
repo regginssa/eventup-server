@@ -22,5 +22,6 @@ router.use("/stripe", requireAuth, require("./stripe"));
 router.use("/web3", requireAuth, require("./web3"));
 router.use("/conversations", requireAuth, require("./conversation"));
 router.use("/messages", requireAuth, require("./message"));
+router.use("/notifications", requireAuth, require("./notification"));
 
 module.exports = router;

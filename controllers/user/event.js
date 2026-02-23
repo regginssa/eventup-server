@@ -132,7 +132,6 @@ const create = async (req, res) => {
 const update = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("[event id]: ", id);
     const event = await Event.findById(id);
 
     if (!event)
@@ -140,11 +139,9 @@ const update = async (req, res) => {
     event.set(req.body);
     await event.save();
 
-    const populated = await Event.findById(id)
-      .populate("hoster")
-      .populate("attendees");
-
-    console.log("[updated event]: ", populated);
+    const populated = await Event.findById(id).populate("hoster").populate({
+      path: "attendees.user",
+    });
 
     res.status(200).json({ ok: true, data: populated });
   } catch (error) {

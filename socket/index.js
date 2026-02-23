@@ -2,6 +2,7 @@ const { Server } = require("socket.io");
 const registerConnectionEvents = require("./events/connection");
 const registerConversationEvents = require("./events/conversation");
 const registerMessageEvents = require("./events/message");
+const registerNotificationEvents = require("./events/notification");
 
 let io;
 
@@ -16,6 +17,7 @@ function initSocket(server) {
     registerConnectionEvents(io, socket);
     registerConversationEvents(io, socket);
     registerMessageEvents(io, socket);
+    registerNotificationEvents(io, socket);
 
     socket.on("disconnect", () => {
       console.log(`Socket disconnected: ${socket.id}`);

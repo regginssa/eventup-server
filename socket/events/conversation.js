@@ -1,5 +1,4 @@
 const Conversation = require("../../models/Conversation");
-const Message = require("../../models/Message");
 
 module.exports = (io, socket) => {
   // --- Create DM conversation ---
