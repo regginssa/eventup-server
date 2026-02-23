@@ -426,7 +426,10 @@ const getAllBookingsByUserId = async (req, res) => {
 
 const createBooking = async (req, res) => {
   try {
+    console.log("[create booking request body]: ", req.body);
     const booking = await Booking.create(req.body);
+
+    console.log("[booking created]: ", booking);
 
     res.status(200).json({ ok: true, data: booking });
   } catch (error) {

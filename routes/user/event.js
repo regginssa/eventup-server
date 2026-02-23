@@ -7,6 +7,6 @@ router.get("/all", controllers.getAll);
 router.get("/:id", controllers.get);
 router.get("/user/:userId", controllers.getByUserId);
 router.post("/", controllers.create);
-router.patch("/", controllers.update);
+router.patch("/:id", controllers.update);
 
 module.exports = router;

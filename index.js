@@ -45,6 +45,10 @@ app.use(
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// App user routes
+const userRoutes = require("./routes/user");
+app.use("/api/v1", userRoutes);
+
 // Connect DB
 connectDB();
 

@@ -83,7 +83,9 @@ const get = async (req, res) => {
         .json({ ok: false, message: "Invalid event ID format" });
     }
 
-    let event = await Event.findById(id).populate("hoster");
+    let event = await Event.findById(id).populate("hoster").populate({
+      path: "attendees.user",
+    });
 
     if (!event) {
       return res.status(404).json({ ok: false, message: "Event not found" });
@@ -130,12 +132,21 @@ const create = async (req, res) => {
 const update = async (req, res) => {
   try {
     const { id } = req.params;
-    const event = await Event.findById(id).populate("hoster");
+    console.log("[event id]: ", id);
+    const event = await Event.findById(id);
+
     if (!event)
       return res.status(404).json({ ok: false, message: "Event not found" });
     event.set(req.body);
     await event.save();
-    res.status(200).json({ ok: true, data: event });
+
+    const populated = await Event.findById(id)
+      .populate("hoster")
+      .populate("attendees");
+
+    console.log("[updated event]: ", populated);
+
+    res.status(200).json({ ok: true, data: populated });
   } catch (error) {
     console.error("[update event error]: ", error);
     res.status(500).json({ ok: false, message: "Internal server error" });

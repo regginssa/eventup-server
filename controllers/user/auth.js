@@ -16,13 +16,17 @@ const googleLogin = async (req, res) => {
       return res.status(404).json({ ok: false, message: "User not found" });
     }
 
+    const populated = await User.findById(user._id)
+      .select("-password")
+      .populate("tickets");
+
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "3d",
     });
 
     res.status(200).json({
       ok: true,
-      data: { token: `Bearer ${token}`, user },
+      data: { token: `Bearer ${token}`, user: populated },
     });
   } catch (error) {
     console.error("user google login error: ", error);
@@ -85,13 +89,17 @@ const emailLogin = async (req, res) => {
       return res.status(401).json({ ok: false, message: "Incorrect password" });
     }
 
+    const populated = await User.findById(user._id)
+      .select("-password")
+      .populate("tickets");
+
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "3d",
     });
 
     res.status(200).json({
       ok: true,
-      data: { token: `Bearer ${token}`, user },
+      data: { token: `Bearer ${token}`, user: populated },
     });
   } catch (error) {
     console.error("user email login error: ", error);
