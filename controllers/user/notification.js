@@ -73,10 +73,24 @@ const remove = async (req, res) => {
   }
 };
 
+const markRead = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    await Notification.updateMany(
+      { _id: { $in: ids } },
+      { $set: { isRead: true } },
+    );
+    res.status(200).json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
 module.exports = {
   get,
   getByUserId,
   create,
   update,
   remove,
+  markRead,
 };
