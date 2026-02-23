@@ -41,6 +41,27 @@ const create = async (req, res) => {
   }
 };
 
+const update = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const conversation = await Conversation.findById(id);
+    if (!conversation)
+      return res
+        .status(404)
+        .json({ ok: false, message: "Conversation not found" });
+    conversation.set(req.body);
+    await conversation.save();
+    const populated = await Conversation.findById(id)
+      .populate("participants", "name avatar status")
+      .populate("creator", "name avatar status")
+      .populate("event")
+      .populate("lastMessage");
+    res.status(200).json({ ok: true, data: populated });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
 const removeForMe = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -70,4 +91,10 @@ const removeForAll = async (req, res) => {
   }
 };
 
-module.exports = { getUserConversations, create, removeForMe, removeForAll };
+module.exports = {
+  getUserConversations,
+  create,
+  update,
+  removeForMe,
+  removeForAll,
+};

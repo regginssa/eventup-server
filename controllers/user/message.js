@@ -17,8 +17,9 @@ const getConversationMessages = async (req, res) => {
 
 const markSeen = async (req, res) => {
   try {
-    const conversationId = req.params.id;
-    const userId = req.user.id;
+    const { conversationId, userId } = req.body;
+
+    console.log(conversationId, userId);
 
     await Message.updateMany(
       {

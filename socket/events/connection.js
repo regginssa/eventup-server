@@ -1,17 +1,19 @@
+const User = require("../../models/User");
+
 module.exports = (io, socket) => {
   // --- User connects ---
-  socket.on("user_connected", (userId) => {
+  socket.on("user_connected", async (userId) => {
     socket.join(userId);
-    console.log(`User connected: ${userId}`);
+    await User.findByIdAndUpdate(userId, { $set: { status: "online" } });
   });
 
   // --- User disconnects ---
-  socket.on("disconnect", () => {
+  socket.on("disconnect", async () => {
     if (!socket.userId) return;
-    console.log("User disconnected:", socket.userId);
     socket.leave(socket.userId);
     io.emit("user_offline", socket.userId);
     socket.userId = null;
+    await User.findByIdAndUpdate(userId, { $set: { status: "offline" } });
   });
 
   // --- Join the conversation room ---

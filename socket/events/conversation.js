@@ -27,7 +27,7 @@ module.exports = (io, socket) => {
     }
   });
 
-  // --- Create Group Conversation ---
+  // --- Create GROUP conversation ---
   socket.on("create_group", async ({ name, avatar, participants }) => {
     try {
       const convo = await Conversation.create({
@@ -43,9 +43,34 @@ module.exports = (io, socket) => {
     }
   });
 
-  // -- Delete a conversation
+  // --- Update conversation ---
+  socket.on("update_conversation", async ({ conversationId, userId }) => {
+    try {
+      const conversation = await Conversation.findById(conversationId)
+        .populate("participants", "name avatar status")
+        .populate("creator", "name avatar status")
+        .populate("event")
+        .populate("lastMessage");
+
+      if (!conversation) return;
+
+      const participants = conversation.participants.map((p) =>
+        p._id.toString(),
+      );
+
+      participants.forEach((pid) => {
+        if (pid !== userId) {
+          io.to(pid).emit("conversation_updated", conversation);
+        }
+      });
+    } catch (err) {
+      console.error("[update conversation socket error]: ", err);
+    }
+  });
+
+  // --- Delete a conversation ---
   socket.on(
-    "delete_dm_conversation",
+    "delete_conversation",
     async ({ conversationId, action, userId }) => {
       try {
         const conversation = await Conversation.findById(conversationId);
@@ -60,14 +85,12 @@ module.exports = (io, socket) => {
             await conversation.save();
           }
 
-          io.to(userId).emit("conversation_dm_deleted", conversationId);
+          io.to(userId).emit("conversation_deleted", conversationId);
         } else {
           await conversation.deleteOne();
 
           conversation.participants.forEach((uid) =>
-            io
-              .to(uid.toString())
-              .emit("conversation_dm_deleted", conversationId),
+            io.to(uid.toString()).emit("conversation_deleted", conversationId),
           );
         }
       } catch (err) {
