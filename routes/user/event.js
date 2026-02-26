@@ -8,5 +8,6 @@ router.get("/:id", controllers.get);
 router.get("/user/:userId", controllers.getByUserId);
 router.post("/", controllers.create);
 router.patch("/:id", controllers.update);
+router.get("/:id/check-purchase-ticket", controllers.checkTicketPurchase);
 
 module.exports = router;

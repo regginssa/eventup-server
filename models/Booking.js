@@ -215,6 +215,8 @@ const BookingSchema = new mongoose.Schema({
   billingAddress: BillingAddressSchema,
   billingPayment: BillingPaymentSchema,
   package: { type: String, enum: ["standard", "gold"], default: "standard" },
+  userTicket: { type: mongoose.Schema.Types.ObjectId, ref: "Ticket" },
+  aiTicket: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model("Booking", BookingSchema);

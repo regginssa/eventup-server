@@ -1,5 +1,6 @@
 const Event = require("../../models/Event");
 const mongoose = require("mongoose");
+const { checkPurchases } = require("../../services/impact");
 
 const getFeeds = async (req, res) => {
   try {
@@ -150,6 +151,19 @@ const update = async (req, res) => {
   }
 };
 
+const checkTicketPurchase = async (req, res) => {
+  try {
+    const { id: eventId } = req.params;
+    const { userId } = req.query;
+
+    const result = await checkPurchases(userId);
+
+    res.status(200).json({ ok: true, data: result });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
 module.exports = {
   getFeeds,
   getAll,
@@ -157,4 +171,5 @@ module.exports = {
   getByUserId,
   create,
   update,
+  checkTicketPurchase,
 };
