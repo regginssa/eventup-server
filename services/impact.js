@@ -26,6 +26,8 @@ const checkPurchases = async (specificUserId = null) => {
       },
     });
 
+    console.log("[Impact response]: ", response);
+
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Impact API Error: ${errorText}`);

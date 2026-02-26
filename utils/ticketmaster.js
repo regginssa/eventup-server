@@ -435,6 +435,7 @@ const mapEvent = (event) => {
 };
 
 const filterAvailableEventsFromTM = (events) => {
+  console.log("[event]: ", events[0]);
   return events
     .filter((event) => {
       const { endDateTime } = event.sales.public;
