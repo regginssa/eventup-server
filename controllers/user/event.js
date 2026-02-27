@@ -156,27 +156,37 @@ const checkTicketPurchase = async (req, res) => {
     const { id: eventId } = req.params;
     const { userId } = req.query;
 
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ ok: false, message: "Event not found" });
+    }
+
     const MAX_WAIT = 120_000; // 2 minutes
     const INTERVAL = 10_000; // poll every 10 seconds
     const startTime = Date.now();
 
     const poll = async () => {
-      console.log("Polling Impact for user:", userId);
-
       const actions = await checkPurchasesOneShot(userId);
 
       if (actions.length > 0) {
         const action = actions[0];
 
-        // update database
-        // await updateDatabase(userId, action.Oid, "CONFIRMED");
+        const officialTicket = {
+          userId: action.SubId1,
+          ticketmasterOrderId: action.Oid,
+          impactActionId: action.Id,
+          status: action.ActionStatus,
+          amount: action.Amount,
+          currency: action.Currency,
+          purchasedAt: action.CreationDate,
+        };
 
-        console.log("FOUND purchase:", action.Oid);
+        event.officialTicket = officialTicket;
+        await event.save();
 
         return res.status(200).json({
           ok: true,
-          found: true,
-          action,
+          data: { found: true },
         });
       }
 
@@ -184,8 +194,7 @@ const checkTicketPurchase = async (req, res) => {
       if (Date.now() - startTime > MAX_WAIT) {
         return res.status(200).json({
           ok: true,
-          found: false,
-          message: "Not found yet",
+          data: { found: false, message: "Not found yet" },
         });
       }
 

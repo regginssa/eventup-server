@@ -72,7 +72,7 @@ const FeeSchema = new mongoose.Schema({
   currency: { type: String, default: "USD" },
 });
 
-const TicketSchema = new mongoose.Schema(
+const CommunityTicket = new mongoose.Schema(
   {
     ticketId: { type: mongoose.Schema.Types.ObjectId, ref: "Ticket" },
     status: {
@@ -87,7 +87,7 @@ const TicketSchema = new mongoose.Schema(
 const AttendeesSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    ticket: TicketSchema,
+    ticket: CommunityTicket,
     status: {
       type: String,
       enum: ["approved", "blocked"],
