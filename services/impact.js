@@ -3,66 +3,50 @@ const moment = require("moment");
 const ACCOUNT_SID = process.env.IMPACT_ACCOUNT_SID;
 const AUTH_TOKEN = process.env.IMPACT_AUTH_TOKEN;
 
-const checkPurchases = async (specificUserId = null) => {
+const checkPurchasesOneShot = async (specificUserId = null) => {
   try {
-    // 1. Define the time range (e.g., last 6 hours)
-    const startDate = moment()
-      .subtract(6, "hours")
-      .format("YYYY-MM-DDTHH:mm:ss");
-    const endDate = moment().format("YYYY-MM-DDTHH:mm:ss");
+    const startDate =
+      moment().subtract(24, "hours").toISOString().split(".")[0] + "Z";
+    const endDate = moment().toISOString().split(".")[0] + "Z";
 
-    // 2. Call Impact "Actions" API using fetch
-    const url = `https://api.impact.com${ACCOUNT_SID}/Actions`;
+    // FIX 1: Added /Mediapartners/
+    // FIX 2: Added $ before {ACCOUNT_SID}
+    const url = `https://api.impact.com/Mediapartners/${ACCOUNT_SID}/Actions`;
+
     const params = new URLSearchParams({
       ActionDateStart: startDate,
       ActionDateEnd: endDate,
-      ActionStatus: "APPROVED",
     });
 
     const response = await fetch(`${url}?${params.toString()}`, {
       method: "GET",
       headers: {
-        Authorization: "Basic " + btoa(`${ACCOUNT_SID}:${AUTH_TOKEN}`),
+        // Ensure "Basic " has a space after it
+        Authorization: `Basic ${Buffer.from(`${ACCOUNT_SID}:${AUTH_TOKEN}`).toString("base64")}`,
+        Accept: "application/json",
       },
     });
 
-    console.log("[Impact response]: ", response);
-
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Impact API Error: ${errorText}`);
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
+
+    // Impact API results are inside an "Actions" array
     const actions = data.Actions || [];
 
-    // 3. Match SubId1 (your userId)
-    actions.forEach(async (action) => {
-      const userId = action.SubId1;
-      const orderId = action.Oid;
-      const status = action.ActionStatus; // 'APPROVED', 'PENDING', or 'REVERSED'
+    console.log("[Impact actions]: ", actions);
 
-      if (userId && specificUserId && specificUserId === userId) {
-        if (status === "APPROVED") {
-          // FINAL CONFIRMATION
-          //   await updateDatabase(userId, orderId, "CONFIRMED");
-          console.log(`Order ${orderId} is now CONFIRMED for user ${userId}`);
-        } else if (status === "PENDING") {
-          // INITIAL TRACKING
-          //   await updateDatabase(userId, orderId, "PENDING");
-          console.log(`Order ${orderId} is PENDING for user ${userId}`);
-        } else if (status === "REVERSED") {
-          // CANCELLATION
-          //   await updateDatabase(userId, orderId, "CANCELLED");
-          console.log(`Order ${orderId} is REVERSED for user ${userId}`);
-        }
-      }
-    });
-
-    return actions;
-  } catch (error) {
-    console.error("Impact API Error:", error.message);
+    // Filter by the SubId1 you passed in the purchase link
+    // Note: Impact sometimes returns this as 'SubId1' (uppercase S)
+    return actions.filter((a) => String(a.SubId1) === String(specificUserId));
+  } catch (err) {
+    // If you see "fetch failed" here, it usually means the URL is wrong
+    console.error("Impact API error:", err.message);
+    return [];
   }
 };
 
-module.exports = { checkPurchases };
+module.exports = { checkPurchasesOneShot };

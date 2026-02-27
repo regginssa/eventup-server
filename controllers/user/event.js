@@ -1,6 +1,6 @@
 const Event = require("../../models/Event");
 const mongoose = require("mongoose");
-const { checkPurchases } = require("../../services/impact");
+const { checkPurchasesOneShot } = require("../../services/impact");
 
 const getFeeds = async (req, res) => {
   try {
@@ -156,10 +156,46 @@ const checkTicketPurchase = async (req, res) => {
     const { id: eventId } = req.params;
     const { userId } = req.query;
 
-    const result = await checkPurchases(userId);
+    const MAX_WAIT = 120_000; // 2 minutes
+    const INTERVAL = 10_000; // poll every 10 seconds
+    const startTime = Date.now();
 
-    res.status(200).json({ ok: true, data: result });
+    const poll = async () => {
+      console.log("Polling Impact for user:", userId);
+
+      const actions = await checkPurchasesOneShot(userId);
+
+      if (actions.length > 0) {
+        const action = actions[0];
+
+        // update database
+        // await updateDatabase(userId, action.Oid, "CONFIRMED");
+
+        console.log("FOUND purchase:", action.Oid);
+
+        return res.status(200).json({
+          ok: true,
+          found: true,
+          action,
+        });
+      }
+
+      // timeout?
+      if (Date.now() - startTime > MAX_WAIT) {
+        return res.status(200).json({
+          ok: true,
+          found: false,
+          message: "Not found yet",
+        });
+      }
+
+      // wait and poll again
+      setTimeout(poll, INTERVAL);
+    };
+
+    poll();
   } catch (err) {
+    console.error(err);
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
 };
