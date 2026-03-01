@@ -17,6 +17,7 @@ const {
   createBooking,
   getBookingByUserIdAndEventId,
 } = require("../../controllers/user/booking");
+const controllers = require("../../controllers/user/booking");
 
 // ------------ Flight Booking Engine ------------
 router.get("/flight-offers", getFlightOffers);
@@ -24,6 +25,9 @@ router.post("/flight-offers-pricing", getFlightOffersPricing);
 router.post("/flight-order", flightOrder);
 router.get("/flight-order/:orderId", getFlightOrder);
 router.delete("/flight-order/:orderId", cancelFlightOrder);
+
+router.get("/flights", controllers.getFlights);
+router.post("/flights/order", controllers.bookFlights);
 
 // ------------ Hotel Booking Engine ------------
 router.get("/hotel-offers", getHotelOffers);

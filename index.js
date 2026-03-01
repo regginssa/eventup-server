@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const passport = require("passport");
 const connectDB = require("./config/db");
+const crypto = require("crypto");
 require("dotenv").config();
 require("./config/passport")(passport);
 
@@ -40,6 +41,43 @@ app.use(
   bodyParser.raw({ type: "application/json" }),
   userStripeController.webhook,
 );
+app.use("/api/v1/duffel/webhook", async (req, res) => {
+  const signature = req.headers["x-duffel-signature"];
+
+  // 3. Get the raw body (as a string)
+  const body = JSON.stringify(req.body);
+
+  // 4. Create the HMAC SHA256 hash
+  const hmac = crypto.createHmac("sha256", process.env.DUFFEL_WEBHOOK_SECRET);
+  const digest = hmac.update(body).digest("hex");
+
+  // 5. Compare signatures
+  if (signature === digest) {
+    // Now handle the booking status
+    const { type, object } = req.body.data;
+
+    // 2. Act on the status
+    switch (type) {
+      case "order.created":
+        // The booking is finally done!
+        // Update your DB: findUserByOrderId(object.id) -> setStatus('Paid')
+        // await sendConfirmationEmail(object.id, object.booking_reference);
+        console.log(`Order ${object.id} confirmed via Webhook.`);
+        break;
+
+      case "order.creation_failed":
+        // Something went wrong in the background
+        // await notifyUserOfFailure(object.id);
+        console.log(`Order ${object.id} failed in background.`);
+        break;
+    }
+
+    res.status(200).send("OK");
+  } else {
+    console.error("❌ Security Alert: Invalid Signature!");
+    res.status(401).send("Unauthorized");
+  }
+});
 
 // Middlewares
 app.use(bodyParser.json());
