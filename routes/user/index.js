@@ -19,6 +19,7 @@ const requireAuth = passport.authenticate("jwt", { session: false });
 
 router.use("/flight", requireAuth, require("./flight"));
 router.use("/hotel", requireAuth, require("./hotel"));
+router.use("/transfer", requireAuth, require("./transfer"));
 router.use("/booking", requireAuth, require("./booking"));
 router.use("/stripe", requireAuth, require("./stripe"));
 router.use("/web3", requireAuth, require("./web3"));

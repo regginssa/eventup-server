@@ -90,7 +90,7 @@ async function search(
       image: hotel.images?.[0]?.path
         ? `http://photos.hotelbeds.com/giata/${hotel.images[0].path}`
         : "https://via.placeholder.com/300",
-      currency: data.hotels.currency,
+      currency: hotel.currency,
       netAmount: netPrice,
       totalAmount: parseFloat((netPrice * markup).toFixed(2)), // Final price for User
       rateKey: rate.rateKey,
