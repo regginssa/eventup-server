@@ -9,18 +9,24 @@ const get = async (req, res) => {
       destLng,
       departureDate,
       packageType,
-    } = req.params;
+    } = req.query; // MUST be query for GET requests
 
-    const flights = await duffelService.search(
-      originLat,
-      originLng,
-      destLat,
-      destLng,
+    // Convert to actual numbers here
+    const oLat = parseFloat(originLat);
+    const oLng = parseFloat(originLng);
+    const dLat = parseFloat(destLat);
+    const dLng = parseFloat(destLng);
+
+    const offers = await duffelService.search(
+      oLat,
+      oLng,
+      dLat,
+      dLng,
       departureDate,
       packageType,
     );
 
-    res.status(200).json({ ok: true, data: flights });
+    res.status(200).json({ ok: true, data: offers });
   } catch (err) {
     res.status(500).json({ ok: false, message: "Internal server error" });
   }

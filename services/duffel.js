@@ -1,23 +1,45 @@
 const BASE_URL = process.env.DUFFEL_BASE_URL;
 const ACCESS_TOKEN = process.env.DUFFEL_ACCESS_TOKEN;
 
+const formatDuration = (isoDuration) => {
+  const hours = isoDuration.match(/(\d+)H/)?.[1] || 0;
+  const minutes = isoDuration.match(/(\d+)M/)?.[1] || 0;
+  return `${hours}h ${minutes}m`;
+};
+
 async function nearestAirport(lat, lng) {
-  const response = await fetch(
-    `${BASE_URL}/air/places/suggestions?lat=${lat}&lng=${lng}`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-        "Duffel-Version": "v2",
-      },
+  const url = `${BASE_URL}/places/suggestions?lat=${lat}&lng=${lng}&rad=20000`; // Increased radius to 20km
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${ACCESS_TOKEN}`,
+      "Duffel-Version": "v2",
+      "Content-Type": "application/json",
     },
+  });
+
+  const json = await response.json();
+
+  if (json.errors || !json.data) {
+    console.error("[Duffel Error]:", json.errors);
+    return null;
+  }
+
+  // Find the first result that is an airport and has an IATA code
+  const airport = json.data.find(
+    (place) => place.type === "airport" && place.iata_code,
   );
 
-  const result = await response.json();
+  if (airport) {
+    return airport.iata_code;
+  }
 
-  // Filter for 'airport' types and return the IATA code of the first one
-  const airport = result.data.find((place) => place.type === "airport");
-  return airport ? airport.iata_code : null;
+  // Fallback: If no airport found, check if there's a city with an IATA code
+  const city = json.data.find(
+    (place) => place.type === "city" && place.iata_code,
+  );
+  return city ? city.iata_code : null;
 }
 
 async function search(
@@ -28,58 +50,108 @@ async function search(
   departureDate,
   packageType,
 ) {
-  // 1. Get IATA codes from Coordinates
-  const originIATA = await nearestAirport(originLat, originLng);
-  const destIATA = await nearestAirport(destLat, destLng);
+  try {
+    // 1. Get IATA codes from Coordinates
+    const originIATA = await nearestAirport(
+      Number(originLat),
+      Number(originLng),
+    );
+    const destIATA = await nearestAirport(Number(destLat), Number(destLng));
 
-  if (!originIATA || !destIATA)
-    throw new Error("Could not find nearby airports.");
+    if (!originIATA || !destIATA) {
+      console.log("Airports not found for coords:", { originLat, originLng });
+      return [];
+    }
 
-  // 2. Search Flights
-  const response = await fetch(
-    `${BASE_URL}/air/offer_requests?return_offers=true`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-        "Duffel-Version": "v2",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        data: {
-          slices: [
-            {
-              origin: originIATA,
-              destination: destIATA,
-              departure_date: departureDate,
-            },
-          ],
-          passengers: [{ type: "adult" }],
-          cabin_class: packageType === "gold" ? "business" : "economy",
+    // 2. Search Flights
+    const response = await fetch(
+      `${BASE_URL}/air/offer_requests?return_offers=true`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${ACCESS_TOKEN}`,
+          "Duffel-Version": "v2",
+          "Content-Type": "application/json",
         },
-      }),
-    },
-  );
+        body: JSON.stringify({
+          data: {
+            slices: [
+              {
+                origin: originIATA,
+                destination: destIATA,
+                departure_date: departureDate,
+              },
+            ],
+            passengers: [{ type: "adult" }],
+            cabin_class: packageType === "gold" ? "business" : "economy",
+          },
+        }),
+      },
+    );
 
-  const searchData = await response.json();
+    const json = await response.json();
 
-  // Return exactly 10 offers
-  return searchData.data.offers.slice(0, 10).map((offer) => ({
-    id: offer.id,
-    airlineName: offer.owner.name,
-    airlineLogo: offer.owner.logo_symbol_url,
-    totalAmount: offer.total_amount,
-    currency: offer.total_currency,
-    departureTime: offer.slices[0].segments[0].departing_at,
-    arrivalTime: offer.slices[0].segments[0].arriving_at,
-    duration: offer.slices[0].duration,
-    originIata: origin,
-    destinationIata: destination,
-    packageType:
-      offer.passenger_costs[0].cabin_class === "economy" ? "Standard" : "Gold",
-  }));
+    // Check if the API returned an error or if data.offers doesn't exist
+    if (json.errors || !json.data || !json.data.offers) {
+      console.log(
+        "[Duffel API Error Response]:",
+        JSON.stringify(json.errors || json),
+      );
+      return [];
+    }
+
+    const offers = json.data.offers
+      .slice(0, 10)
+      .map((offer) => {
+        const slice = offer.slices[0];
+        const segments = slice.segments;
+
+        return {
+          id: offer.id,
+          airlineName: offer.owner.name,
+          airlineLogo: offer.owner.logo_symbol_url,
+          totalAmount: offer.total_amount,
+          currency: offer.total_currency,
+          departureTime: segments[0].departing_at,
+          arrivalTime: segments[segments.length - 1].arriving_at,
+          duration: formatDuration(slice.duration),
+          originIata: segments[0].origin.iata_code,
+          destinationIata: segments[segments.length - 1].destination.iata_code,
+          flightNumbers: segments.map(
+            (s) =>
+              `${s.marketing_carrier.iata_code}${s.marketing_carrier_flight_number}`,
+          ),
+          // Changed the key to stopDetails to match common interface naming
+          // but keeping your logic for mapping the connections
+          stops: segments.slice(0, -1).map((segment, index) => {
+            const nextSegment = segments[index + 1];
+
+            const arrival = new Date(segment.arriving_at);
+            const departure = new Date(nextSegment.departing_at);
+            const diffMs = departure.getTime() - arrival.getTime();
+
+            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+            const minutes = Math.floor(
+              (diffMs % (1000 * 60 * 60)) / (1000 * 60),
+            );
+
+            return {
+              iataCode: segment.destination.iata_code,
+              arrivalTime: segment.arriving_at,
+              departureTime: nextSegment.departing_at,
+              duration: `${hours}h ${minutes}m`,
+            };
+          }),
+        };
+      })
+      .filter(Boolean);
+
+    return offers;
+  } catch (err) {
+    console.log("[duffel search flights error]: ", err);
+    return [];
+  }
 }
-
 async function book(offerId, passengers, payment) {
   const response = await fetch(`${BASE_URL}/air/orders`, {
     method: "POST",

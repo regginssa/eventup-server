@@ -78,7 +78,7 @@ const HotelSchema = new mongoose.Schema(
   { _id: false, timestamps: true },
 );
 
-const TransferSchema = new Schema(
+const TransferSchema = new mongoose.Schema(
   {
     // --- Identifiers ---
     orderId: { type: String, required: true, unique: true }, // Amadeus id
