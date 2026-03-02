@@ -1,48 +1,10 @@
-const express = require("express");
-const router = express.Router();
-const {
-  getFlightOffers,
-  getHotelOffers,
-  updateBooking,
-  getBooking,
-  getAllBookingsByUserId,
-  getTransferOffers,
-  getFlightOffersPricing,
-  flightOrder,
-  getFlightOrder,
-  cancelFlightOrder,
-  hotelOrder,
-  transferOrder,
-  getHotelOfferPricing,
-  createBooking,
-  getBookingByUserIdAndEventId,
-} = require("../../controllers/user/booking");
+const router = require("express").Router();
 const controllers = require("../../controllers/user/booking");
 
-// ------------ Flight Booking Engine ------------
-router.get("/flight-offers", getFlightOffers);
-router.post("/flight-offers-pricing", getFlightOffersPricing);
-router.post("/flight-order", flightOrder);
-router.get("/flight-order/:orderId", getFlightOrder);
-router.delete("/flight-order/:orderId", cancelFlightOrder);
-
-router.get("/flights", controllers.getFlights);
-router.post("/flights/order", controllers.bookFlights);
-
-// ------------ Hotel Booking Engine ------------
-router.get("/hotel-offers", getHotelOffers);
-router.get("/hotel-offer-pricing/:offerId", getHotelOfferPricing);
-router.post("/hotel-order", hotelOrder);
-
-// ------------ Transfer Booking Engine ------------
-router.get("/transfer-offers", getTransferOffers);
-router.post("/transfer-order", transferOrder);
-
-// ------------ Booking Engine ------------
-router.get("/:id", getBooking);
-router.get("/user-event/:userId/:eventId", getBookingByUserIdAndEventId);
-router.get("/all/:userId", getAllBookingsByUserId);
-router.post("/create", createBooking);
-router.patch("/:id", updateBooking);
+router.get("/:id", controllers.get);
+router.post("/create", controllers.create);
+router.patch("/:id", controllers.update);
+router.get("/user-event/:userId/:eventId", controllers.getByUserIdAndEventId);
+router.get("/all/:userId", controllers.getAllByUserId);
 
 module.exports = router;
