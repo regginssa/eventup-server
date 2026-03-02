@@ -3,23 +3,29 @@ const services = require("../../services/transfer");
 const get = async (req, res) => {
   try {
     const {
-      fromType, // "iata" | "gps"
-      fromValue,
+      fromType,
+      fromCode,
+      fromLat,
+      fromLng,
       toType,
-      toValue,
+      toCode,
+      toLat,
+      toLng,
       date,
       time,
-      packageType,
     } = req.query;
 
     const offer = await services.search(
       fromType,
-      fromValue,
+      fromCode,
+      fromLat,
+      fromLng,
       toType,
-      toValue,
+      toCode,
+      toLat,
+      toLng,
       date,
       time,
-      packageType,
     );
     res.json({ ok: true, data: offer });
   } catch (err) {

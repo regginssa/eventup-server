@@ -22,9 +22,13 @@ function getHeaders() {
 
 async function search(
   fromType, // "iata" | "gps"
-  fromValue,
+  fromCode,
+  fromLat,
+  fromLng,
   toType,
-  toValue,
+  toCode,
+  toLat,
+  toLng,
   date,
   time,
   packageType = "standard",
@@ -36,20 +40,21 @@ async function search(
       occupancy: { adults, children: 0, infants: 0 },
       from:
         fromType === "iata"
-          ? { type: "IATA", code: fromValue }
-          : { type: "GPS", latitude: fromValue.lat, longitude: fromValue.lng },
-      to: { type: "GPS", latitude: toValue.lat, longitude: toValue.lng },
+          ? { type: "IATA", code: fromCode }
+          : { type: "GPS", latitude: fromLat, longitude: fromLng },
+      to: { type: "GPS", latitude: toLat, longitude: toLng },
       outbound: { date, time },
     };
 
-    const response = await fetch(`${BASE_URL_TRANSFERS}/availability`, {
+    const response = await fetch(`${BASE_URL}/availability`, {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify(payload),
     });
 
     const data = await response.json();
-    if (!response.ok) return [];
+    console.log(response.ok, data);
+    if (!response.ok) return null;
 
     // Filter and Map based on Package Type
     const filteredServices = data.services.filter((service) => {
@@ -98,7 +103,7 @@ async function search(
   }
 }
 
-async function book(rateKey, holder, flightInfo, totalAmount) {
+async function book(rateKey, holder, transportInfo, totalAmount) {
   try {
     const payload = {
       language: "en",
@@ -113,10 +118,11 @@ async function book(rateKey, holder, flightInfo, totalAmount) {
           rateKey: rateKey,
           transferDetails: [
             {
-              type: "FLIGHT",
-              direction: "ARRIVAL",
-              code: flightInfo.flightNumber,
-              companyName: flightInfo.airlineName,
+              // Check if it's a flight or a general transfer
+              type: transportInfo.type || "FLIGHT",
+              direction: transportInfo.direction || "ARRIVAL",
+              code: transportInfo.code, // Flight number OR Event/Hotel name
+              companyName: transportInfo.companyName, // Airline OR Transport Co
             },
           ],
         },

@@ -146,7 +146,13 @@ async function search(
   }
 }
 
-async function book(offerId, passengers, payment) {
+async function book(offerId, passengers, totalAmount, currency) {
+  const payment = {
+    type: "balance",
+    amount: totalAmount,
+    currency: currency,
+  };
+
   const response = await fetch(`${BASE_URL}/air/orders`, {
     method: "POST",
     headers: HEADERS,
