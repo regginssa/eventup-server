@@ -1,4 +1,4 @@
-const duffelService = require("../../services/duffel");
+const services = require("../../services/flight");
 
 const get = async (req, res) => {
   try {
@@ -17,7 +17,7 @@ const get = async (req, res) => {
     const dLat = parseFloat(destLat);
     const dLng = parseFloat(destLng);
 
-    const offers = await duffelService.search(
+    const offer = await services.search(
       oLat,
       oLng,
       dLat,
@@ -26,7 +26,7 @@ const get = async (req, res) => {
       packageType,
     );
 
-    res.status(200).json({ ok: true, data: offers });
+    res.status(200).json({ ok: true, data: offer });
   } catch (err) {
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
@@ -36,7 +36,7 @@ const book = async (req, res) => {
   try {
     const { offerId, passengers, payment } = req.body;
 
-    const book = await duffelService.book(offerId, passengers, payment);
+    const book = await services.book(offerId, passengers, payment);
 
     if (!book.orderId) {
       return res.status(400).json({ ok: false, data: book });

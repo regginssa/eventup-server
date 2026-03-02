@@ -17,7 +17,8 @@ router.use("/upload", require("./upload"));
 // Protected routes
 const requireAuth = passport.authenticate("jwt", { session: false });
 
-router.use("/flights", requireAuth, require("./flights"));
+router.use("/flight", requireAuth, require("./flight"));
+router.use("/hotel", requireAuth, require("./hotel"));
 router.use("/booking", requireAuth, require("./booking"));
 router.use("/stripe", requireAuth, require("./stripe"));
 router.use("/web3", requireAuth, require("./web3"));

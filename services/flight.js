@@ -100,58 +100,52 @@ async function search(
       return [];
     }
 
-    const offers = json.data.offers
-      .slice(0, 10)
-      .map((offer) => {
-        const slice = offer.slices[0];
-        const segments = slice.segments;
+    const offer = json.data.offers[0];
+
+    const slice = offer.slices[0];
+    const segments = slice.segments;
+
+    return {
+      id: offer.id,
+      airlineName: offer.owner.name,
+      airlineLogo: offer.owner.logo_symbol_url,
+      totalAmount: offer.total_amount,
+      currency: offer.total_currency,
+      departureTime: segments[0].departing_at,
+      arrivalTime: segments[segments.length - 1].arriving_at,
+      duration: formatDuration(slice.duration),
+      originIata: segments[0].origin.iata_code,
+      destinationIata: segments[segments.length - 1].destination.iata_code,
+      flightNumbers: segments.map(
+        (s) =>
+          `${s.marketing_carrier.iata_code}${s.marketing_carrier_flight_number}`,
+      ),
+      // Changed the key to stopDetails to match common interface naming
+      // but keeping your logic for mapping the connections
+      stops: segments.slice(0, -1).map((segment, index) => {
+        const nextSegment = segments[index + 1];
+
+        const arrival = new Date(segment.arriving_at);
+        const departure = new Date(nextSegment.departing_at);
+        const diffMs = departure.getTime() - arrival.getTime();
+
+        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
 
         return {
-          id: offer.id,
-          airlineName: offer.owner.name,
-          airlineLogo: offer.owner.logo_symbol_url,
-          totalAmount: offer.total_amount,
-          currency: offer.total_currency,
-          departureTime: segments[0].departing_at,
-          arrivalTime: segments[segments.length - 1].arriving_at,
-          duration: formatDuration(slice.duration),
-          originIata: segments[0].origin.iata_code,
-          destinationIata: segments[segments.length - 1].destination.iata_code,
-          flightNumbers: segments.map(
-            (s) =>
-              `${s.marketing_carrier.iata_code}${s.marketing_carrier_flight_number}`,
-          ),
-          // Changed the key to stopDetails to match common interface naming
-          // but keeping your logic for mapping the connections
-          stops: segments.slice(0, -1).map((segment, index) => {
-            const nextSegment = segments[index + 1];
-
-            const arrival = new Date(segment.arriving_at);
-            const departure = new Date(nextSegment.departing_at);
-            const diffMs = departure.getTime() - arrival.getTime();
-
-            const hours = Math.floor(diffMs / (1000 * 60 * 60));
-            const minutes = Math.floor(
-              (diffMs % (1000 * 60 * 60)) / (1000 * 60),
-            );
-
-            return {
-              iataCode: segment.destination.iata_code,
-              arrivalTime: segment.arriving_at,
-              departureTime: nextSegment.departing_at,
-              duration: `${hours}h ${minutes}m`,
-            };
-          }),
+          iataCode: segment.destination.iata_code,
+          arrivalTime: segment.arriving_at,
+          departureTime: nextSegment.departing_at,
+          duration: `${hours}h ${minutes}m`,
         };
-      })
-      .filter(Boolean);
-
-    return offers;
+      }),
+    };
   } catch (err) {
     console.log("[duffel search flights error]: ", err);
-    return [];
+    return null;
   }
 }
+
 async function book(offerId, passengers, payment) {
   const response = await fetch(`${BASE_URL}/air/orders`, {
     method: "POST",
