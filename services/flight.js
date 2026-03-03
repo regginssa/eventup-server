@@ -1,4 +1,4 @@
-const BASE_URL = process.env.DUFFEL_BASE_URL;
+const BASE_URL = "https://api.duffel.com";
 const ACCESS_TOKEN = process.env.DUFFEL_ACCESS_TOKEN;
 
 const formatDuration = (isoDuration) => {
@@ -42,6 +42,27 @@ async function nearestAirport(lat, lng) {
   return city ? city.iata_code : null;
 }
 
+async function balance() {
+  try {
+    const response = await fetch(`${BASE_URL}/air/balance`, {
+      headers: {
+        "Duffel-Version": "v2",
+        Authorization: `Bearer ${process.env.DUFFEL_SECRET_KEY}`,
+      },
+    });
+
+    const data = await response.json();
+
+    // Duffel returns an array of balances for different currencies
+    const usdBalance = data.data.find((b) => b.currency === "USD");
+
+    return parseFloat(usdBalance.amount);
+  } catch (err) {
+    console.log("[get flight balance error]: ", err);
+    return 0;
+  }
+}
+
 async function search(
   originLat,
   originLng,
@@ -75,6 +96,7 @@ async function search(
         },
         body: JSON.stringify({
           data: {
+            selected_offers_currency: "USD",
             slices: [
               {
                 origin: originIATA,
@@ -111,6 +133,7 @@ async function search(
       airlineLogo: offer.owner.logo_symbol_url,
       totalAmount: offer.total_amount,
       currency: offer.total_currency,
+      passengerIds: json.data.passengers.map((p) => p.id),
       departureTime: segments[0].departing_at,
       arrivalTime: segments[segments.length - 1].arriving_at,
       duration: formatDuration(slice.duration),
@@ -146,7 +169,17 @@ async function search(
   }
 }
 
-async function book(offerId, passengers, totalAmount, currency) {
+async function book(offerId, passengers, totalAmount, currency = "USD") {
+  const bal = await balance();
+
+  if (bal < totalAmount) {
+    return {
+      status: "failed",
+      message:
+        "We're unable to process your payment at this moment. Please try again in a few minutes or contact support.",
+    };
+  }
+
   const payment = {
     type: "balance",
     amount: totalAmount,

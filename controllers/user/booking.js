@@ -4,7 +4,9 @@ const get = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const booking = await Booking.findById(id).populate("userTicket");
+    const booking = await Booking.findById(id)
+      .populate("user")
+      .populate("event");
 
     if (!booking) {
       return res.status(404).json({ ok: false, message: "Booking not found" });
