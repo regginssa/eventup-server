@@ -47,6 +47,7 @@ async function search(lat, lng, checkIn, checkOut, packageType) {
     const h = json.hotels.hotels[0];
     const firstRoom = h.rooms[0];
     const firstRate = firstRoom.rates[0];
+    const currencyCode = firstRate.currency || firstRoom.currency || h.currency;
 
     return {
       id: h.code.toString(),
@@ -56,7 +57,7 @@ async function search(lat, lng, checkIn, checkOut, packageType) {
       latitude: h.latitude.toString(),
       longitude: h.longitude.toString(),
       image: "https://via.placeholder.com/300",
-      currency: json.hotels.currency,
+      currency: currencyCode,
       totalAmount: parseFloat(firstRate.net),
       netAmount: parseFloat(firstRate.net),
       rateKey: firstRate.rateKey,
@@ -76,29 +77,27 @@ async function search(lat, lng, checkIn, checkOut, packageType) {
 }
 
 async function checkRates(rateKey) {
+  console.log("[rateKey]: ", rateKey);
   try {
+    const body = {
+      rooms: [
+        {
+          rateKey,
+        },
+      ],
+    };
+
     const response = await fetch(`${BASE_URL}/checkrates`, {
       method: "POST",
       headers: getHeaders(),
-      body: JSON.stringify({
-        rooms: [
-          {
-            rates: [
-              {
-                rateKey: rateKey.trim(),
-              },
-            ],
-          },
-        ],
-      }),
+      body: JSON.stringify(body),
     });
 
     const json = await response.json();
 
-    // Debugging: If it still fails, check if rateKey matches exactly what came from Search
     if (json.error) {
       console.error("[Hotelbeds CheckRates Error]:", json.error.message);
-      console.error("Payload Sent:", JSON.stringify(payload));
+      console.error("Payload Sent:", body);
       return null;
     }
 
@@ -135,7 +134,7 @@ async function checkRates(rateKey) {
 
 async function book(rateKey, paxes) {
   try {
-    const response = await fetch(`${HOTEL_BASE_URL}/bookings`, {
+    const response = await fetch(`${BASE_URL}/bookings`, {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify({
