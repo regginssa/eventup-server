@@ -26,8 +26,9 @@ const TransactionSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["created", "pending", "completed", "failed"],
+      default: "created",
     },
-    metadata: { type: String, required: true },
+    metadata: { type: Object },
   },
   { timestamps: true },
 );

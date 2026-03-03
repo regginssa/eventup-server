@@ -2,7 +2,7 @@ const router = require("express").Router();
 const controllers = require("../../controllers/user/booking");
 
 router.get("/:id", controllers.get);
-router.post("/create", controllers.create);
+router.post("/", controllers.create);
 router.patch("/:id", controllers.update);
 router.get("/user-event/:userId/:eventId", controllers.getByUserIdAndEventId);
 router.get("/all/:userId", controllers.getAllByUserId);

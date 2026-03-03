@@ -32,7 +32,7 @@ const createPaymentIntent = async (
   customerId,
   paymentMethodId,
   amount,
-  currency,
+  currency = "USD",
   metadata,
 ) => {
   const stripeAmount = calculateStripeAmount(amount, currency);

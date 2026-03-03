@@ -63,8 +63,6 @@ const create = async (req, res) => {
   try {
     const booking = await Booking.create(req.body);
 
-    console.log("[booking created]: ", booking);
-
     res.status(200).json({ ok: true, data: booking });
   } catch (error) {
     console.error("create booking error: ", error);
@@ -74,6 +72,20 @@ const create = async (req, res) => {
 
 const update = async (req, res) => {
   try {
+    const { id } = req.params;
+
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      return res.status(404).json({ ok: false, message: "Booking not found" });
+    }
+
+    booking.set(req.body);
+    await booking.save();
+
+    const populated = await Booking.findById(id)
+      .populate("user")
+      .populate("event");
+    res.status(200).json({ ok: true, data: populated });
   } catch (error) {}
 };
 

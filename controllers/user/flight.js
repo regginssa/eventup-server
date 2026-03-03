@@ -34,9 +34,14 @@ const get = async (req, res) => {
 
 const book = async (req, res) => {
   try {
-    const { offerId, passengers, payment } = req.body;
+    const { offerId, passengers, totalAmount, currency } = req.body;
 
-    const book = await services.book(offerId, passengers, payment);
+    const book = await services.book(
+      offerId,
+      passengers,
+      totalAmount,
+      currency,
+    );
 
     if (!book.orderId) {
       return res.status(400).json({ ok: false, data: book });

@@ -42,27 +42,6 @@ async function nearestAirport(lat, lng) {
   return city ? city.iata_code : null;
 }
 
-async function balance() {
-  try {
-    const response = await fetch(`${BASE_URL}/air/balance`, {
-      headers: {
-        "Duffel-Version": "v2",
-        Authorization: `Bearer ${process.env.DUFFEL_SECRET_KEY}`,
-      },
-    });
-
-    const data = await response.json();
-
-    // Duffel returns an array of balances for different currencies
-    const usdBalance = data.data.find((b) => b.currency === "USD");
-
-    return parseFloat(usdBalance.amount);
-  } catch (err) {
-    console.log("[get flight balance error]: ", err);
-    return 0;
-  }
-}
-
 async function search(
   originLat,
   originLng,
@@ -170,50 +149,52 @@ async function search(
 }
 
 async function book(offerId, passengers, totalAmount, currency = "USD") {
-  const bal = await balance();
+  try {
+    const payment = {
+      type: "balance",
+      amount: totalAmount,
+      currency: currency,
+    };
 
-  if (bal < totalAmount) {
+    const response = await fetch(`${BASE_URL}/air/orders`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+        "Duffel-Version": "v2",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        data: {
+          type: "instant",
+          selected_offers: [offerId],
+          passengers: passengers,
+          payments: [payment],
+        },
+      }),
+    });
+
+    const json = await response.json();
+
+    if (response.ok) {
+      return {
+        status: "confirmed",
+        orderId: json.data.id,
+        bookingReference: json.data.booking_reference,
+        message: "Flight booked successfully!",
+      };
+    }
+
     return {
       status: "failed",
-      message:
-        "We're unable to process your payment at this moment. Please try again in a few minutes or contact support.",
+      message: json.errors[0].message,
     };
-  }
-
-  const payment = {
-    type: "balance",
-    amount: totalAmount,
-    currency: currency,
-  };
-
-  const response = await fetch(`${BASE_URL}/air/orders`, {
-    method: "POST",
-    headers: HEADERS,
-    body: JSON.stringify({
-      data: {
-        type: "instant",
-        selected_offers: [offerId],
-        passengers: passengers,
-        payments: [payment],
-      },
-    }),
-  });
-
-  const json = await response.json();
-
-  if (response.ok) {
+  } catch (err) {
+    console.error("[flight book error]: ", err);
     return {
-      status: "confirmed",
-      orderId: json.data.id,
-      bookingReference: json.data.booking_reference,
-      message: "Flight booked successfully!",
+      status: "failed",
+      message: json.errors[0].message,
     };
   }
-
-  return {
-    status: "failed",
-    message: json.errors[0].message,
-  };
 }
 
 module.exports = { search, book };

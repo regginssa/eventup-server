@@ -1,5 +1,6 @@
 const User = require("../../models/User");
 const Transaction = require("../../models/Transaction");
+const Booking = require("../../models/Booking");
 const {
   createCustomer,
   setupIntents,
@@ -8,6 +9,7 @@ const {
   refundPayment,
 } = require("../../services/stripe");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const { getIO } = require("../../socket");
 
 const webhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
@@ -21,6 +23,8 @@ const webhook = async (req, res) => {
     console.log(`⚠️  Webhook signature verification failed.`, err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
+
+  console.log("[stripe webhook received]: ", event.type);
 
   switch (event.type) {
     case "payment_intent.succeeded":
@@ -51,7 +55,7 @@ const webhook = async (req, res) => {
             currency,
             status: "completed",
             amountReceived,
-            metadata: JSON.stringify(metadata),
+            metadata,
             txId: id,
             paymentMethod: "credit",
             userId: user._id,
@@ -72,12 +76,39 @@ const webhook = async (req, res) => {
             currency,
             status: "completed",
             amountReceived,
-            metadata: JSON.stringify(metadata),
+            metadata,
             txId: id,
             paymentMethod: "credit",
             userId: user._id,
           });
           break;
+
+        case "booking":
+          await Transaction.create({
+            type: "buy",
+            service: "booking",
+            amount,
+            currency,
+            status: "completed",
+            amountReceived,
+            metadata,
+            txId: id,
+            paymentMethod: "credit",
+            userId: user._id,
+          });
+
+          const booking = await Booking.findById(metadata.bookingId);
+          if (!booking) return;
+          booking.paymentStatus = "completed";
+          await booking.save();
+
+          console.log("[booking updated]: ", booking.paymentStatus);
+
+          const io = getIO();
+          io.to(user._id.toString()).emit("booking_payment_status_updated", {
+            bookingId: booking._id,
+            status: "completed",
+          });
       }
 
       break;

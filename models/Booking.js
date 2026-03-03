@@ -44,6 +44,12 @@ const BookingSchema = new Schema(
     },
 
     packageType: { type: String, required: true },
+
+    paymentStatus: {
+      type: String,
+      enum: ["created", "pending", "completed", "failed"],
+      default: "created",
+    },
   },
   { timestamps: true },
 );
