@@ -138,14 +138,14 @@ async function book(rateKey, paxes) {
       method: "POST",
       headers: getHeaders(),
       body: JSON.stringify({
-        holder: { name: user.firstName, surname: user.lastName },
+        holder: { name: paxes[0].name, surname: paxes[0].surname },
         rooms: [
           {
             rateKey: rateKey,
             paxes,
           },
         ],
-        clientReference: "EVENTUP_" + Date.now(), // e.g. BOK_12345
+        clientReference: `EVT_${Math.random().toString(36).slice(2, 10)}`,
       }),
     });
 
