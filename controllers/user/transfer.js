@@ -13,6 +13,7 @@ const get = async (req, res) => {
       toLng,
       date,
       time,
+      packageType,
     } = req.query;
 
     const offer = await services.search(
@@ -26,6 +27,8 @@ const get = async (req, res) => {
       toLng,
       date,
       time,
+      packageType,
+      1,
     );
     res.json({ ok: true, data: offer });
   } catch (err) {

@@ -20,6 +20,17 @@ function getHeaders() {
   };
 }
 
+async function checkStatus() {
+  const response = await fetch(
+    "https://api.test.hotelbeds.com/transfer-api/1.0/status",
+    {
+      method: "GET",
+      headers: getHeaders(),
+    },
+  );
+  console.log("Status Check:", await response.json());
+}
+
 async function search(
   fromType, // "iata" | "gps"
   fromCode,
@@ -34,17 +45,39 @@ async function search(
   packageType = "standard",
   adults = 1,
 ) {
+  await checkStatus();
   try {
+    // const payload = {
+    //   language: "en",
+    //   occupancy: { adults, children: 0, infants: 0 },
+    //   from:
+    //     fromType === "IATA" || fromType === "ATLAS"
+    //       ? { type: fromType, code: fromCode }
+    //       : {
+    //           type: "GPS",
+    //           latitude: Number(fromLat),
+    //           longitude: Number(fromLng),
+    //         },
+    //   to:
+    //     toType === "IATA" || toType === "ATLAS"
+    //       ? { type: toType, code: toCode }
+    //       : {
+    //           type: "GPS",
+    //           latitude: Number(toLat),
+    //           longitude: Number(toLng),
+    //         },
+    //   outbound: { date, time },
+    // };
+
     const payload = {
       language: "en",
-      occupancy: { adults, children: 0, infants: 0 },
-      from:
-        fromType === "iata"
-          ? { type: "IATA", code: fromCode }
-          : { type: "GPS", latitude: fromLat, longitude: fromLng },
-      to: { type: "GPS", latitude: toLat, longitude: toLng },
-      outbound: { date, time },
+      occupancy: { adults: 1, children: 0, infants: 0 },
+      from: { type: "IATA", code: "PMI" },
+      to: { type: "ATLAS", code: "1" },
+      outbound: { date: "2026-03-25", time: "12:00:00" },
     };
+
+    console.log("[payload]: ", payload);
 
     const response = await fetch(`${BASE_URL}/availability`, {
       method: "POST",
