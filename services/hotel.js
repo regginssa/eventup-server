@@ -1,170 +1,185 @@
-const BASE_URL = "https://api.duffel.com";
-const ACCESS_TOKEN = process.env.DUFFEL_ACCESS_TOKEN;
+const crypto = require("crypto");
 
-async function search(
-  lat,
-  lng,
-  checkIn,
-  checkOut,
-  packageType,
-  guestsCount = 1,
-) {
+const API_KEY = process.env.HOTELBEDS_HOTEL_API_KEY;
+const SECRET = process.env.HOTELBEDS_HOTEL_SECRET;
+const BASE_URL = "https://api.test.hotelbeds.com/hotel-api/1.0";
+
+function getHeaders() {
+  const timestamp = Math.floor(Date.now() / 1000);
+  const signature = crypto
+    .createHash("sha256")
+    .update(API_KEY + SECRET + timestamp)
+    .digest("hex");
+
+  return {
+    "Api-key": API_KEY,
+    "X-Signature": signature,
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    "Accept-Encoding": "gzip",
+  };
+}
+
+async function search(lat, lng, checkIn, checkOut, packageType) {
   try {
-    const isGold = packageType === "gold";
+    const minStars = packageType === "gold" ? 4 : 1;
+    const maxStars = packageType === "gold" ? 5 : 3;
 
-    const response = await fetch(`${BASE_URL}/stays/search`, {
+    const response = await fetch(`${BASE_URL}/hotels`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-        "Duffel-Version": "v1", // Use v1 or v2 depending on your current token access
-        "Content-Type": "application/json",
-      },
+      headers: getHeaders(),
       body: JSON.stringify({
-        data: {
-          check_in_date: checkIn,
-          check_out_date: checkOut,
-          rooms: 1,
-          guests: Array(guestsCount).fill({ type: "adult" }),
-          location: {
-            radius: 15, // Expanded radius for more options
-            geographic_coordinates: {
-              latitude: Number(lat),
-              longitude: Number(lng),
-            },
-          },
-          // We fetch rates immediately to find the room details
-          accommodation: { fetch_rates: true },
+        stay: { checkIn, checkOut },
+        occupancies: [{ rooms: 1, adults: 1, children: 0 }],
+        geolocation: {
+          latitude: parseFloat(lat),
+          longitude: parseFloat(lng),
+          radius: 20,
+          unit: "km",
         },
+        filter: { minStars, maxStars },
       }),
     });
 
     const json = await response.json();
+    if (!json.hotels || !json.hotels.hotels) return null;
 
-    if (json.errors || !json.data || !json.data.results) {
-      console.log("[Duffel Hotel Search Error]:", JSON.stringify(json.errors));
-      return null;
-    }
-
-    // --- Package Filtering Logic ---
-    let filteredResults = json.data.results;
-
-    if (isGold) {
-      // GOLD: Filter for 4-5 star hotels or rooms with "Luxury", "Suite", "Deluxe"
-      filteredResults = filteredResults.filter((res) => {
-        const rating = res.accommodation.rating || 0;
-        const roomName = res.rooms[0]?.name?.toLowerCase() || "";
-        return (
-          rating >= 4 ||
-          roomName.includes("deluxe") ||
-          roomName.includes("suite")
-        );
-      });
-    } else {
-      // STANDARD: Filter for 2-3 star hotels and avoid expensive suites
-      filteredResults = filteredResults.filter((res) => {
-        const rating = res.accommodation.rating || 0;
-        return rating > 0 && rating <= 3.5;
-      });
-    }
-
-    // If no specific match, fallback to the first available to avoid empty screen
-    const result =
-      filteredResults.length > 0 ? filteredResults[0] : json.data.results[0];
-
-    const hotel = result.accommodation;
-    const rate = result.rooms[0]?.rates[0];
+    const h = json.hotels.hotels[0];
+    const firstRoom = h.rooms[0];
+    const firstRate = firstRoom.rates[0];
 
     return {
-      id: result.id,
-      name: hotel.name,
-      // Logic to label category based on your app's packages
-      category: isGold ? "Gold (Luxury)" : "Standard",
-      address: `${hotel.location.address.line_one}, ${hotel.location.address.city_name}`,
-      latitude: hotel.location.geographic_coordinates.latitude.toString(),
-      longitude: hotel.location.geographic_coordinates.longitude.toString(),
-      image: hotel.photos[0]?.url || "",
-      currency: rate?.public_currency || "USD",
-      totalAmount: parseFloat(rate?.public_amount || 0),
-      netAmount: parseFloat(rate?.base_amount || 0),
-      rateId: rate?.id,
-      roomName:
-        result.rooms[0]?.name || (isGold ? "Luxury Suite" : "Standard Room"),
-      boardName: rate?.board_type || "Room Only",
-      cancellationPolicy: rate?.cancellation_timeline
+      id: h.code.toString(),
+      name: h.name,
+      category: h.categoryName, // e.g., "4 STARS"
+      address: h.address,
+      latitude: h.latitude.toString(),
+      longitude: h.longitude.toString(),
+      image: "https://via.placeholder.com/300",
+      currency: json.hotels.currency,
+      totalAmount: parseFloat(firstRate.net),
+      netAmount: parseFloat(firstRate.net),
+      rateKey: firstRate.rateKey,
+      roomName: firstRoom.name,
+      boardName: firstRate.boardName,
+      cancellationPolicy: firstRate.cancellationPolicies
         ? {
-            amount: parseFloat(
-              rate.cancellation_timeline[0]?.refund_amount || 0,
-            ),
-            from: rate.cancellation_timeline[0]?.before || "",
+            amount: parseFloat(firstRate.cancellationPolicies[0].amount),
+            from: firstRate.cancellationPolicies[0].from,
           }
-        : null,
+        : { amount: 0, from: null },
     };
   } catch (err) {
-    console.log("[duffel search hotels error]: ", err);
+    console.error("[hotel search error]: ", err);
     return null;
   }
 }
 
-async function book(rateId, guestDetails, email, phone) {
+async function checkRates(rateKey) {
   try {
-    // STEP 1: Create a Quote to lock the price
-    const quoteResponse = await fetch(`${BASE_URL}/stays/quotes`, {
+    const response = await fetch(`${BASE_URL}/checkrates`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-        "Duffel-Version": "v1",
-        "Content-Type": "application/json",
-      },
+      headers: getHeaders(),
       body: JSON.stringify({
-        data: { rate_id: rateId },
-      }),
-    });
-
-    const quoteJson = await quoteResponse.json();
-    if (!quoteResponse.ok) throw new Error(quoteJson.errors[0].message);
-
-    const quoteId = quoteJson.data.id;
-
-    // STEP 2: Create the Booking using your Duffel Balance
-    const response = await fetch(`${BASE_URL}/stays/bookings`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-        "Duffel-Version": "v1",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        data: {
-          quote_id: quoteId,
-          guests: guestDetails, // Array: [{ given_name, family_name, born_on }]
-          email: email,
-          phone_number: phone,
-          // Stays bookings automatically use your Duffel Balance if set up
-        },
+        rooms: [
+          {
+            rates: [
+              {
+                rateKey: rateKey.trim(),
+              },
+            ],
+          },
+        ],
       }),
     });
 
     const json = await response.json();
 
-    if (response.ok) {
-      return {
-        status: "confirmed",
-        bookingReference: json.data.reference, // The hotel's confirmation code
-        clientReference: json.data.id, // Your internal Duffel Booking ID
-        hotelName: json.data.accommodation?.name || "",
-        checkIn: json.data.check_in_date,
-        checkOut: json.data.check_out_date,
-        totalAmount: parseFloat(quoteJson.data.base_amount),
-        currency: quoteJson.data.base_currency,
-        message: "Hotel booked successfully!",
-      };
+    // Debugging: If it still fails, check if rateKey matches exactly what came from Search
+    if (json.error) {
+      console.error("[Hotelbeds CheckRates Error]:", json.error.message);
+      console.error("Payload Sent:", JSON.stringify(payload));
+      return null;
     }
 
-    return { status: "failed", message: json.errors[0].message };
+    const hotel = json.hotel;
+    const room = hotel.rooms[0];
+    const rate = room.rates[0];
+
+    return {
+      id: hotel.code.toString(),
+      name: hotel.name,
+      category: hotel.categoryName || "Hotel",
+      address: `${hotel.address}, ${hotel.city}`,
+      latitude: hotel.latitude.toString(),
+      longitude: hotel.longitude.toString(),
+      image: "https://via.placeholder.com/300",
+      currency: hotel.currency,
+      totalAmount: parseFloat(rate.net),
+      netAmount: parseFloat(rate.net),
+      rateKey: rate.rateKey,
+      roomName: room.name,
+      boardName: rate.boardName,
+      cancellationPolicy: rate.cancellationPolicies
+        ? {
+            amount: parseFloat(rate.cancellationPolicies[0].amount),
+            from: rate.cancellationPolicies[0].from,
+          }
+        : { amount: 0, from: null },
+    };
   } catch (err) {
-    console.error("[hotel book error]: ", err);
-    return { status: "failed", message: err.message };
+    console.error("[hotel check rates error]: ", err);
+    return null;
   }
 }
 
-module.exports = { search, book };
+async function book(rateKey, paxes) {
+  try {
+    const response = await fetch(`${HOTEL_BASE_URL}/bookings`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({
+        holder: { name: user.firstName, surname: user.lastName },
+        rooms: [
+          {
+            rateKey: rateKey,
+            paxes,
+          },
+        ],
+        clientReference: "EVENTUP_" + Date.now(), // e.g. BOK_12345
+      }),
+    });
+
+    const json = await response.json();
+
+    if (json.error) {
+      return {
+        status: "failed",
+        message: json.error.message,
+      };
+    }
+
+    // Matching IHotelBookingResponse
+    const booking = json.booking;
+    return {
+      status: "confirmed",
+      bookingReference: booking.reference,
+      clientReference: booking.clientReference,
+      hotelName: booking.hotel.name,
+      checkIn: booking.hotel.checkIn,
+      checkOut: booking.hotel.checkOut,
+      totalAmount: parseFloat(booking.totalNet),
+      currency: booking.currency,
+      vatNumber: "PL4990709239",
+      message: "Your stay is confirmed!",
+    };
+  } catch (err) {
+    console.error("[book hotel error]: ", err);
+    return {
+      status: "failed",
+      message: "Booking hotel failed",
+    };
+  }
+}
+
+module.exports = { search, checkRates, book };

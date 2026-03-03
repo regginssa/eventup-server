@@ -2,16 +2,26 @@ const services = require("../../services/hotel");
 
 const get = async (req, res) => {
   try {
-    const { lat, lng, checkIn, checkOut, packageType, guestsCount } = req.query;
-    const offers = await services.search(
+    const { lat, lng, checkIn, checkOut, packageType } = req.query;
+    const offer = await services.search(
       lat,
       lng,
       checkIn,
       checkOut,
       packageType,
-      guestsCount,
     );
-    res.status(200).json({ ok: true, data: offers });
+    res.status(200).json({ ok: true, data: offer });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
+const checkRates = async (req, res) => {
+  try {
+    const { rateKey } = req.query;
+
+    const offer = await services.checkRates(rateKey);
+    res.json({ ok: true, data: offer });
   } catch (err) {
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
@@ -19,12 +29,12 @@ const get = async (req, res) => {
 
 const book = async (req, res) => {
   try {
-    const { rateId, guestDetails, email, phone } = req.body;
-    const result = await services.book(rateId, guestDetails, email, phone);
+    const { rateKey, paxes } = req.body;
+    const result = await services.book(rateKey, paxes);
     res.json({ ok: true, data: result });
   } catch (err) {
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
 };
 
-module.exports = { get, book };
+module.exports = { get, checkRates, book };
