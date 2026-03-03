@@ -47,34 +47,26 @@ async function search(
 ) {
   await checkStatus();
   try {
-    // const payload = {
-    //   language: "en",
-    //   occupancy: { adults, children: 0, infants: 0 },
-    //   from:
-    //     fromType === "IATA" || fromType === "ATLAS"
-    //       ? { type: fromType, code: fromCode }
-    //       : {
-    //           type: "GPS",
-    //           latitude: Number(fromLat),
-    //           longitude: Number(fromLng),
-    //         },
-    //   to:
-    //     toType === "IATA" || toType === "ATLAS"
-    //       ? { type: toType, code: toCode }
-    //       : {
-    //           type: "GPS",
-    //           latitude: Number(toLat),
-    //           longitude: Number(toLng),
-    //         },
-    //   outbound: { date, time },
-    // };
-
     const payload = {
       language: "en",
-      occupancy: { adults: 1, children: 0, infants: 0 },
-      from: { type: "IATA", code: "PMI" },
-      to: { type: "ATLAS", code: "1" },
-      outbound: { date: "2026-03-25", time: "12:00:00" },
+      occupancy: { adults, children: 0, infants: 0 },
+      from:
+        fromType === "IATA" || fromType === "ATLAS"
+          ? { type: fromType, code: fromCode }
+          : {
+              type: "GPS",
+              latitude: Number(fromLat),
+              longitude: Number(fromLng),
+            },
+      to:
+        toType === "IATA" || toType === "ATLAS"
+          ? { type: toType, code: toCode }
+          : {
+              type: "GPS",
+              latitude: Number(toLat),
+              longitude: Number(toLng),
+            },
+      outbound: { date, time },
     };
 
     console.log("[payload]: ", payload);
