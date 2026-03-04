@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const API_KEY = process.env.HOTELBEDS_HOTEL_API_KEY;
 const SECRET = process.env.HOTELBEDS_HOTEL_SECRET;
 const BASE_URL = "https://api.test.hotelbeds.com/hotel-api/1.0";
+const BASE_URL_CONTENT = "https://api.test.hotelbeds.com/hotel-content-api/1.0";
 
 function getHeaders() {
   const timestamp = Math.floor(Date.now() / 1000);
@@ -18,6 +19,51 @@ function getHeaders() {
     "Content-Type": "application/json",
     "Accept-Encoding": "gzip",
   };
+}
+
+async function content(hotelCode) {
+  try {
+    const url = `${BASE_URL_CONTENT}/hotels/${hotelCode}/details?language=ENG&useSecondaryLanguage=False`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: getHeaders(),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.hotel) {
+      console.error("Content API Error:", data);
+      return null;
+    }
+
+    const h = data.hotel;
+
+    return {
+      id: h.code.toString(),
+      name: h.name.content,
+      category: h.categoryCode,
+
+      // Address Breakdown
+      address: h.address.content, // "123 Main St, Chicago, IL"
+      street: h.address.content, // Specific Street
+      city: h.city.content, // Town/City
+      postalCode: h.postalCode, // Zip
+      countryCode: h.countryCode, // e.g., "US"
+
+      latitude: h.coordinates.latitude.toString(),
+      longitude: h.coordinates.longitude.toString(),
+
+      // Images are usually in an array; taking the first one
+      image:
+        h.images && h.images.length > 0
+          ? `http://photos.hotelbeds.com/giata/${h.images[0].path}`
+          : "https://via.placeholder.com/300",
+    };
+  } catch (error) {
+    console.error("Failed to fetch hotel content:", error);
+    return null;
+  }
 }
 
 async function search(lat, lng, checkIn, checkOut, packageType) {
@@ -45,6 +91,13 @@ async function search(lat, lng, checkIn, checkOut, packageType) {
     if (!json.hotels || !json.hotels.hotels) return null;
 
     const h = json.hotels.hotels[0];
+
+    if (!h) return null;
+
+    const details = await content(h.code.toString());
+
+    if (!details) return null;
+
     const firstRoom = h.rooms[0];
     const firstRate = firstRoom.rates[0];
     const currencyCode = firstRate.currency || firstRoom.currency || h.currency;
@@ -69,6 +122,11 @@ async function search(lat, lng, checkIn, checkOut, packageType) {
             from: firstRate.cancellationPolicies[0].from,
           }
         : { amount: 0, from: null },
+      street: details.street,
+      city: details.city,
+      postalCode: details.postalCode,
+      countryCode: details.countryCode,
+      address: details.address,
     };
   } catch (err) {
     console.error("[hotel search error]: ", err);

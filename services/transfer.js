@@ -78,7 +78,7 @@ async function search(
     });
 
     const data = await response.json();
-    console.log(response.ok, data);
+    console.log(data);
     if (!response.ok) return null;
 
     // Filter and Map based on Package Type
@@ -128,8 +128,16 @@ async function search(
   }
 }
 
-async function book(rateKey, holder, transportInfo, totalAmount) {
+async function book(
+  rateKey,
+  holder,
+  transportInfo,
+  totalAmount,
+  addresses = {},
+) {
   try {
+    const isAirportTransfer = transportInfo.type === "FLIGHT";
+
     const payload = {
       language: "en",
       holder: {
@@ -141,13 +149,31 @@ async function book(rateKey, holder, transportInfo, totalAmount) {
       transfers: [
         {
           rateKey: rateKey,
+          // Mandatory for "Hotel -> Event" (Point-to-Point)
+          // Optional but highly recommended for "Airport -> Hotel" to avoid driver confusion
+          pickupInformation: {
+            description: addresses.pickupName || "Pickup Point",
+            address: addresses.pickupAddress || "",
+            town: addresses.pickupCity || "",
+            zip: addresses.pickupZip || "",
+            country: addresses.countryCode || "US",
+          },
+          dropoffInformation: {
+            description: addresses.dropoffName || "Destination",
+            address: addresses.dropoffAddress || "",
+            town: addresses.dropoffCity || "",
+            zip: addresses.dropoffZip || "",
+            country: addresses.countryCode || "US",
+          },
           transferDetails: [
             {
-              // Check if it's a flight or a general transfer
-              type: transportInfo.type || "FLIGHT",
-              direction: transportInfo.direction || "ARRIVAL",
-              code: transportInfo.code, // Flight number OR Event/Hotel name
-              companyName: transportInfo.companyName, // Airline OR Transport Co
+              type:
+                transportInfo.type || (isAirportTransfer ? "FLIGHT" : "OTHER"),
+              direction:
+                transportInfo.direction ||
+                (isAirportTransfer ? "ARRIVAL" : "DEPARTURE"),
+              code: transportInfo.code, // Flight Number or Event Code
+              companyName: transportInfo.companyName, // Airline or "Event Venue"
             },
           ],
         },
@@ -155,6 +181,7 @@ async function book(rateKey, holder, transportInfo, totalAmount) {
       clientReference: `EVENTUP_TR_${Date.now()}`,
     };
 
+    // Use the appropriate BASE_URL (test or live) configured in your environment
     const response = await fetch(`${BASE_URL}/bookings`, {
       method: "POST",
       headers: getHeaders(),
@@ -163,24 +190,31 @@ async function book(rateKey, holder, transportInfo, totalAmount) {
 
     const data = await response.json();
 
+    // Hotelbeds returns errors in an 'errors' array, not a single 'error' object
     if (!response.ok || !data.bookings) {
+      const errorMsg =
+        data.errors && data.errors.length > 0
+          ? data.errors[0].message
+          : "Transfer booking failed.";
+
       return {
         status: "failed",
         bookingReference: "",
         clientReference: payload.clientReference,
-        message: data.error?.message || "Transfer booking failed.",
+        message: errorMsg,
       };
     }
 
     const b = data.bookings[0];
+    const t = b.transfers[0];
 
     return {
-      status: b.status.toLowerCase(),
+      status: b.status.toLowerCase(), // 'confirmed' or 'pending'
       bookingReference: b.reference,
       clientReference: b.clientReference,
-      pickupDate: b.transfers[0].pickupInformation.date,
-      pickupTime: b.transfers[0].pickupInformation.time,
-      vehicleName: b.transfers[0].vehicle.name,
+      pickupDate: t.pickupInformation.date,
+      pickupTime: t.pickupInformation.time,
+      vehicleName: t.vehicle.name,
       totalAmount: parseFloat(totalAmount),
       currency: b.currency,
       message: "Your transfer has been successfully booked!",
