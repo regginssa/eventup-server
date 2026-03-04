@@ -38,12 +38,13 @@ const get = async (req, res) => {
 
 const book = async (req, res) => {
   try {
-    const { rateKey, holder, flightInfo, totalAmount } = req.body;
+    const { rateKey, holder, transportInfo, totalAmount, addresses } = req.body;
     const result = await services.book(
       rateKey,
       holder,
-      flightInfo,
+      transportInfo,
       totalAmount,
+      addresses,
     );
     res.json({ ok: true, data: result });
   } catch (err) {

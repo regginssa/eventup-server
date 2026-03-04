@@ -45,7 +45,6 @@ async function search(
   packageType = "standard",
   adults = 1,
 ) {
-  await checkStatus();
   try {
     const payload = {
       language: "en",
