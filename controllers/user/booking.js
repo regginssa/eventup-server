@@ -89,10 +89,22 @@ const update = async (req, res) => {
   } catch (error) {}
 };
 
+const remove = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Booking.findByIdAndDelete(id);
+    res.status(200).json({ ok: true, data: true });
+  } catch (err) {
+    console.error("[remove booking error]: ", err);
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
 module.exports = {
   get,
-  create,
-  update,
   getByUserIdAndEventId,
   getAllByUserId,
+  create,
+  update,
+  remove,
 };

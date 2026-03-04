@@ -88,6 +88,7 @@ async function search(lat, lng, checkIn, checkOut, packageType) {
     });
 
     const json = await response.json();
+    console.log("[hotel json]: ", json);
     if (!json.hotels || !json.hotels.hotels) return null;
 
     const h = json.hotels.hotels[0];
