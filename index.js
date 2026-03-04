@@ -97,3 +97,5 @@ server.listen(PORT, async () => {
 });
 
 // require("./services/ticketmaster");
+// const {fetchAllEventsFromTM} = require("./services/ticketmaster");
+// fetchAllEventsFromTM();

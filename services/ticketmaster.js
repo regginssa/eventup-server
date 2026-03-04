@@ -54,7 +54,7 @@ const fetchAllEventsFromTM = async () => {
   if (requestCount >= DAILY_REQUEST_LIMIT) {
     if (!isPaused) {
       console.log(
-        `Daily API limit reached (${DAILY_REQUEST_LIMIT}). Pausing until midnight.`
+        `Daily API limit reached (${DAILY_REQUEST_LIMIT}). Pausing until midnight.`,
       );
       isPaused = true;
     }
@@ -95,7 +95,7 @@ const fetchAllEventsFromTM = async () => {
     // Increment request counter only on successful requests
     requestCount++;
     console.log(
-      `[Ticketmaster API] Request ${requestCount}/${DAILY_REQUEST_LIMIT} - Page ${currentPage}/${totalPages}`
+      `[Ticketmaster API] Request ${requestCount}/${DAILY_REQUEST_LIMIT} - Page ${currentPage}/${totalPages}`,
     );
 
     const availableEvents = filterAvailableEventsFromTM(data._embedded.events);
@@ -113,6 +113,7 @@ const fetchAllEventsFromTM = async () => {
 
 const storeEventsToDB = async (events) => {
   try {
+    console.log("[stored events length]: ", events.length);
     for (const event of events) {
       const existingEvent = await Event.findOne({
         "tm.eventId": event.tm.eventId,

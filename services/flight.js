@@ -60,7 +60,7 @@ async function search(
 
     if (!originIATA || !destIATA) {
       console.log("Airports not found for coords:", { originLat, originLng });
-      return [];
+      return null;
     }
 
     // 2. Search Flights

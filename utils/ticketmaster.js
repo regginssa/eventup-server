@@ -435,13 +435,13 @@ const mapEvent = (event) => {
 };
 
 const filterAvailableEventsFromTM = (events) => {
-  console.log("[event]: ", events[0]);
   return events
     .filter((event) => {
       const { endDateTime } = event.sales.public;
       const { code } = event.dates.status;
+      const timezone = event.dates?.timezone;
 
-      if (!endDateTime || !code) return false;
+      if (!endDateTime || !code || !timezone || !event.url) return false;
 
       const end = new Date(endDateTime).getTime();
       const now = new Date().getTime();
