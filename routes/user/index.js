@@ -13,6 +13,7 @@ router.use("/ticket", require("./ticket"));
 router.use("/subscription", require("./subscription"));
 router.use("/tx", require("./transaction"));
 router.use("/upload", require("./upload"));
+router.use("/cryptocheckout", require("./cryptocheckout"));
 
 // Protected routes
 const requireAuth = passport.authenticate("jwt", { session: false });
