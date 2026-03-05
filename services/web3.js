@@ -17,6 +17,28 @@
 //   Uint8Array.from(JSON.parse(process.env.APP_WALLET_PRIVATE)),
 // );
 
+const fetchNativeTokensPrices = async () => {
+  try {
+    const res = await fetch(
+      "https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd",
+    );
+    const data = await res.json();
+
+    console.log("ETH:", data.ethereum.usd);
+    console.log("SOL:", data.solana.usd);
+    return {
+      eth: data.ethereum.usd,
+      sol: data.solana.usd,
+    };
+  } catch (error) {
+    console.error("[fetch native tokens prices error]: ", error);
+    return {
+      eth: 0,
+      sol: 0,
+    };
+  }
+};
+
 const fetchTokenPrices = async () => {
   try {
     //
@@ -105,4 +127,4 @@ const fetchTokenPrices = async () => {
 //   }
 // };
 
-module.exports = { fetchTokenPrices };
+module.exports = { fetchNativeTokensPrices, fetchTokenPrices };

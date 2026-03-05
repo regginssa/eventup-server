@@ -30,7 +30,9 @@ const getByUserIdAndEventId = async (req, res) => {
     const booking = await Booking.findOne({
       user: userId,
       event: eventId,
-    });
+    })
+      .populate("user")
+      .populate("event");
 
     res.status(200).json({ ok: true, data: booking });
   } catch (error) {

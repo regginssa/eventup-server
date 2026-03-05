@@ -56,6 +56,12 @@ const BookingSchema = new Schema(
       ],
       default: "created",
     },
+
+    ticketStatus: {
+      type: String,
+      enum: ["pending", "completed", "failed"],
+      default: "pending",
+    },
   },
   { timestamps: true },
 );

@@ -1,6 +1,34 @@
 const User = require("../../models/User");
 const Transaction = require("../../models/Transaction");
 const web3Services = require("../../services/web3");
+const CryptoJS = require("crypto-js");
+
+const getPrices = async (req, res) => {
+  try {
+    const nativePrices = await web3Services.fetchNativeTokensPrices();
+    const tokenPrices = await web3Services.fetchTokenPrices();
+    res
+      .status(200)
+      .json({ ok: true, data: { ...nativePrices, ...tokenPrices } });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
+const getCheckoutUrl = async (req, res) => {
+  try {
+    const json = JSON.stringify(req.body);
+    const encrypted = CryptoJS.AES.encrypt(
+      json,
+      process.env.CRYPTO_CHECKOUT_SECRET_KEY,
+    ).toString();
+
+    const url = `${process.env.CRYPTO_CHECKOUT_BASE_URL}?data=${encodeURIComponent(encrypted)}`;
+    res.status(200).json({ ok: true, data: url });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
 
 const getTokenPricesAndFee = async (req, res) => {
   try {
@@ -67,4 +95,9 @@ const createSellTicketPayout = async (req, res) => {
   }
 };
 
-module.exports = { getTokenPricesAndFee, createSellTicketPayout };
+module.exports = {
+  getPrices,
+  getCheckoutUrl,
+  getTokenPricesAndFee,
+  createSellTicketPayout,
+};
