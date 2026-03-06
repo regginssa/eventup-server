@@ -24,8 +24,6 @@ const fetchNativeTokensPrices = async () => {
     );
     const data = await res.json();
 
-    console.log("ETH:", data.ethereum.usd);
-    console.log("SOL:", data.solana.usd);
     return {
       eth: data.ethereum.usd,
       sol: data.solana.usd,
@@ -41,9 +39,6 @@ const fetchNativeTokensPrices = async () => {
 
 const fetchTokenPrices = async () => {
   try {
-    //
-    // 1) Fetch BABYU price from Raydium swap API
-    //
     const BABYU_TOKEN_ADDRESS = process.env.BABYU_TOKEN_ADDRESS;
     const CHRLE_TOKEN_ADDRESS = process.env.CHRLE_TOKEN_ADDRESS;
     const babyuURL = `https://api-v3.raydium.io/mint/price?mints=${BABYU_TOKEN_ADDRESS}`;
@@ -52,9 +47,6 @@ const fetchTokenPrices = async () => {
 
     const babyuPrice = Number(babyuJson?.data?.[BABYU_TOKEN_ADDRESS] ?? 0);
 
-    //
-    // 2) Fetch CHRLE marketcap + supply from Launchpad
-    //
     const chrleURL = `https://launch-mint-v1.raydium.io/get/by/mints?ids=${CHRLE_TOKEN_ADDRESS}`;
     const chrleRes = await fetch(chrleURL);
     const chrleJson = await chrleRes.json();
