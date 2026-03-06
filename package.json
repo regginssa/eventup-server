@@ -18,6 +18,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.986.0",
     "@aws-sdk/s3-request-presigner": "^3.986.0",
+    "@duffel/api": "^4.21.5",
     "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.98.4",
     "amadeus": "^11.0.0",
