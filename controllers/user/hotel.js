@@ -1,10 +1,9 @@
 const services = require("../../services/hotel");
-const dServices = require("../../services/dhotel");
 
 const get = async (req, res) => {
   try {
     const { lat, lng, checkIn, checkOut, packageType } = req.query;
-    const offer = await dServices.search(
+    const offer = await services.search(
       lat,
       lng,
       checkIn,
@@ -12,33 +11,35 @@ const get = async (req, res) => {
       packageType,
     );
 
-    console.log("Hotel offer:", offer);
-
     res.status(200).json({ ok: true, data: offer });
   } catch (err) {
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
 };
 
-const checkRates = async (req, res) => {
+const quote = async (req, res) => {
   try {
-    const { rateKey } = req.query;
-
-    const offer = await services.checkRates(rateKey);
-    res.json({ ok: true, data: offer });
-  } catch (err) {
+    const { rateId } = req.body;
+    const result = await services.quote(rateId);
+    res.json({ ok: true, data: result });
+  } catch (error) {
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
 };
 
 const book = async (req, res) => {
   try {
-    const { rateKey, paxes } = req.body;
-    const result = await services.book(rateKey, paxes);
+    const { quoteId, phoneNumber, guestInfo, specialRequests } = req.body;
+    const result = await services.book(
+      quoteId,
+      phoneNumber,
+      guestInfo,
+      specialRequests || "",
+    );
     res.json({ ok: true, data: result });
   } catch (err) {
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
 };
 
-module.exports = { get, checkRates, book };
+module.exports = { get, quote, book };
