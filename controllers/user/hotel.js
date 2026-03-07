@@ -30,6 +30,9 @@ const quote = async (req, res) => {
 const book = async (req, res) => {
   try {
     const { quoteId, phoneNumber, guestInfo, specialRequests } = req.body;
+
+    console.log("[body data]: ", req.body);
+
     const result = await services.book(
       quoteId,
       phoneNumber,
