@@ -63,6 +63,6 @@ server.listen(PORT, async () => {
 // const {fetchAllEventsFromTM} = require("./services/ticketmaster");
 // fetchAllEventsFromTM();
 
-const { search } = require("./services/hotel");
+// const { search } = require("./services/hotel");
 
-search(51.5071, -0.1416, "2026-04-04", "2026-04-07", "gold");
+// search(51.5071, -0.1416, "2026-04-04", "2026-04-07", "gold");
