@@ -1,6 +1,7 @@
 const Event = require("../../models/Event");
-const mongoose = require("mongoose");
+const User = require("../../models/User");
 const { checkPurchasesOneShot } = require("../../services/impact");
+const { buildFeedPipeline } = require("../../utils/event");
 
 const getFeeds = async (req, res) => {
   try {
@@ -18,26 +19,94 @@ const getFeeds = async (req, res) => {
     const pageNum = Math.max(0, (parseInt(page) || 1) - 1);
     const lim = parseInt(limit) || 10;
 
-    const query = {};
+    const query = { type }; // type always required
 
     const isValid = (v) =>
       v !== undefined && v !== null && v !== "" && v !== "undefined";
-
-    if (type) query.type = type;
 
     if (isValid(startDate)) query["dates.start.date"] = startDate;
     if (isValid(countryCode)) query["location.country.code"] = countryCode;
     if (isValid(regionCode)) query["location.region.code"] = regionCode;
     if (isValid(category)) query["classifications.category"] = category;
 
-    const [events, total] = await Promise.all([
-      Event.find(query)
-        .sort({ _id: -1 })
-        .skip(pageNum * lim)
-        .limit(lim)
-        .lean(),
-      Event.countDocuments(query),
-    ]);
+    const hasSearchFilters =
+      isValid(startDate) ||
+      isValid(countryCode) ||
+      isValid(regionCode) ||
+      isValid(category);
+
+    /**
+     * CASE 1
+     * NO USER
+     */
+    if (!userId) {
+      const [events, total] = await Promise.all([
+        Event.find(query)
+          .sort({ "dates.start.date": 1 })
+          .skip(pageNum * lim)
+          .limit(lim)
+          .lean(),
+        Event.countDocuments(query),
+      ]);
+
+      return res.status(200).json({
+        ok: true,
+        data: {
+          events,
+          pagination: {
+            page: pageNum + 1,
+            limit: lim,
+            total,
+            hasMore: (pageNum + 1) * lim < total,
+          },
+        },
+      });
+    }
+
+    /**
+     * CASE 2
+     * USER + SEARCH FILTERS
+     */
+    if (hasSearchFilters) {
+      const [events, total] = await Promise.all([
+        Event.find(query)
+          .sort({ "dates.start.date": 1 })
+          .skip(pageNum * lim)
+          .limit(lim)
+          .lean(),
+        Event.countDocuments(query),
+      ]);
+
+      return res.status(200).json({
+        ok: true,
+        data: {
+          events,
+          pagination: {
+            page: pageNum + 1,
+            limit: lim,
+            total,
+            hasMore: (pageNum + 1) * lim < total,
+          },
+        },
+      });
+    }
+
+    /**
+     * CASE 3
+     * PERSONALIZED FEED
+     */
+    const user = await User.findById(userId).lean();
+
+    const pipeline = [
+      { $match: { type } }, // important: filter ai/user events first
+      ...buildFeedPipeline(user),
+      { $skip: pageNum * lim },
+      { $limit: lim },
+    ];
+
+    const events = await Event.aggregate(pipeline);
+
+    const total = await Event.countDocuments({ type });
 
     return res.status(200).json({
       ok: true,
@@ -75,13 +144,6 @@ const get = async (req, res) => {
       return res
         .status(400)
         .json({ ok: false, message: "Something went wrong" });
-    }
-
-    // Validate that id is a valid MongoDB ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(400)
-        .json({ ok: false, message: "Invalid event ID format" });
     }
 
     let event = await Event.findById(id).populate("hoster").populate({
