@@ -59,7 +59,7 @@ const getFeeds = async (req, res) => {
 
 const getAll = async (req, res) => {
   try {
-    const events = await Event.find({}, "-__v").lean();
+    const events = await Event.find().lean();
     res.status(200).json({ ok: true, data: events });
   } catch (error) {
     console.error("get all events error: ", error);
