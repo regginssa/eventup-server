@@ -109,7 +109,7 @@ const emailLogin = async (req, res) => {
 
 const emailRegister = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { firstName, lastName, name, email, password } = req.body;
 
     const user = await User.findOne({ email });
 
@@ -121,6 +121,8 @@ const emailRegister = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await User.create({
+      firstName,
+      lastName,
       name,
       email,
       signOption: "email",
