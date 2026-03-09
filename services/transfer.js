@@ -183,7 +183,6 @@ async function book(
   offerHash,
   passenger,
   offer,
-  pickupDateTime,
   outward,
   destination,
 ) {
@@ -244,8 +243,6 @@ async function book(
     });
 
     const data = await res.json();
-
-    console.log("[transfer booking response]:", data);
 
     return mapBookingResponse(data, offer);
   } catch (error) {

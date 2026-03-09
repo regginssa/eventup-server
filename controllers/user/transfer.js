@@ -12,13 +12,16 @@ const get = async (req, res) => {
 
 const book = async (req, res) => {
   try {
-    const { quoteId, offerHash, passenger, offer, pickupDateTime } = req.body;
+    const { quoteId, offerHash, passenger, offer, outward, destination } =
+      req.body;
+
     const result = await services.book(
       quoteId,
       offerHash,
       passenger,
       offer,
-      pickupDateTime,
+      outward,
+      destination,
     );
     res.json({ ok: true, data: result });
   } catch (err) {
