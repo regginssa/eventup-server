@@ -2,34 +2,9 @@ const services = require("../../services/transfer");
 
 const get = async (req, res) => {
   try {
-    const {
-      fromType,
-      fromCode,
-      fromLat,
-      fromLng,
-      toType,
-      toCode,
-      toLat,
-      toLng,
-      date,
-      time,
-      packageType,
-    } = req.query;
+    const { from, to, departureTime, packageType } = req.query;
 
-    const offer = await services.search(
-      fromType,
-      fromCode,
-      fromLat,
-      fromLng,
-      toType,
-      toCode,
-      toLat,
-      toLng,
-      date,
-      time,
-      packageType,
-      1,
-    );
+    const offer = await services.search(from, to, departureTime, packageType);
     res.json({ ok: true, data: offer });
   } catch (err) {
     res.status(500).json({ ok: false, message: "Interal server error" });

@@ -1,228 +1,187 @@
-const crypto = require("crypto");
+const BASE_URL = "https://api.staging.suntransfers.biz/v1";
 
-const API_KEY = process.env.HOTELBEDS_TRANSFER_API_KEY;
-const SECRET = process.env.HOTELBEDS_TRANSFER_SECRET;
-const BASE_URL = "https://api.test.hotelbeds.com/transfer-api/1.0";
+let cachedToken = null;
+let tokenExpiry = null;
 
-function getHeaders() {
-  const timestamp = Math.floor(Date.now() / 1000);
-  const signature = crypto
-    .createHash("sha256")
-    .update(API_KEY + SECRET + timestamp)
-    .digest("hex");
+function filterByPackage(vehicleName, packageType) {
+  const name = vehicleName.toLowerCase();
 
+  if (packageType === "STANDARD") {
+    return !name.includes("luxury") && !name.includes("premium");
+  }
+
+  if (packageType === "GOLD") {
+    return name.includes("luxury") || name.includes("premium");
+  }
+
+  return true;
+}
+
+function map(quote, from, to, departureTime) {
   return {
-    "Api-key": API_KEY,
-    "X-Signature": signature,
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    "Accept-Encoding": "gzip",
+    id: quote.id,
+
+    vehicleType: quote.vehicle?.type || "PRIVATE",
+    vehicleName: quote.vehicle?.title || "",
+
+    capacity: quote.vehicle?.max_passengers || 0,
+
+    image: quote.vehicle?.images?.[0] || "",
+
+    currency: quote.price?.currency || "EUR",
+
+    netAmount: quote.price?.value || 0,
+
+    totalAmount: quote.price?.value || 0,
+
+    offerHash: quote._metadata?.offer?.hash || "",
+
+    waitingTime: quote.vehicle?.waiting_time
+      ? `${quote.vehicle.waiting_time} minutes`
+      : "60 minutes",
+
+    pickupPoint: JSON.stringify(from),
+    destinationPoint: JSON.stringify(to),
+
+    pickupLat:
+      from?.location?.latitude || from?.accommodation?.latitude || null,
+    pickupLng:
+      from?.location?.longitude || from?.accommodation?.longitude || null,
+
+    dropoffLat: to?.location?.latitude || to?.accommodation?.latitude || null,
+    dropoffLng: to?.location?.longitude || to?.accommodation?.longitude || null,
+
+    pickupDateTime: departureTime,
   };
 }
 
-async function checkStatus() {
-  const response = await fetch(
-    "https://api.test.hotelbeds.com/transfer-api/1.0/status",
-    {
-      method: "GET",
-      headers: getHeaders(),
+async function getAuthToken() {
+  if (cachedToken && Date.now() < tokenExpiry) {
+    return cachedToken;
+  }
+
+  const username = process.env.SUNTRANSFERS_USER;
+  const password = process.env.SUNTRANSFERS_PASS;
+
+  const base64 = Buffer.from(`${username}:${password}`).toString("base64");
+
+  const res = await fetch(`${BASE_URL}/authentication`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${base64}`,
+      "Content-Type": "application/json",
     },
-  );
-  console.log("Status Check:", await response.json());
+  });
+
+  const data = await res.json();
+
+  cachedToken = data.token;
+
+  tokenExpiry = Date.now() + 55 * 60 * 1000;
+
+  return cachedToken;
 }
 
-async function search(
-  fromType, // "iata" | "gps"
-  fromCode,
-  fromLat,
-  fromLng,
-  toType,
-  toCode,
-  toLat,
-  toLng,
-  date,
-  time,
-  packageType = "standard",
-  adults = 1,
-) {
+async function search(from, to, departureTime, packageType) {
   try {
-    const payload = {
-      language: "en",
-      occupancy: { adults, children: 0, infants: 0 },
-      from:
-        fromType === "IATA" || fromType === "ATLAS"
-          ? { type: fromType, code: fromCode }
-          : {
-              type: "GPS",
-              latitude: Number(fromLat),
-              longitude: Number(fromLng),
-            },
-      to:
-        toType === "IATA" || toType === "ATLAS"
-          ? { type: toType, code: toCode }
-          : {
-              type: "GPS",
-              latitude: Number(toLat),
-              longitude: Number(toLng),
-            },
-      outbound: { date, time },
-    };
+    const token = await getAuthToken();
 
-    console.log("[payload]: ", payload);
-
-    const response = await fetch(`${BASE_URL}/availability`, {
+    const res = await fetch(`${BASE_URL}/quotes`, {
       method: "POST",
-      headers: getHeaders(),
-      body: JSON.stringify(payload),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        outward: {
+          origin: from,
+          destination: to,
+          pickup_date_time: departureTime,
+        },
+        passengers: {
+          adults: 1,
+          children: 0,
+          infants: 0,
+        },
+      }),
     });
 
-    const data = await response.json();
-    console.log(data);
-    if (!response.ok) return null;
+    const data = await res.json();
 
-    // Filter and Map based on Package Type
-    const filteredServices = data.services.filter((service) => {
-      const name = service.vehicle.name.toLowerCase();
-      const isPrivate = service.transferType === "PRIVATE";
+    if (!data?.quotes) return null;
 
-      if (packageType === "gold") {
-        // Gold must be Private AND a high-end vehicle category
-        return (
-          isPrivate &&
-          (name.includes("luxury") ||
-            name.includes("executive") ||
-            name.includes("private") ||
-            service.category.includes("VIP"))
-        );
-      } else {
-        // Standard favors Shared or Budget Private options
-        return (
-          service.transferType === "SHARED" ||
-          (isPrivate && !name.includes("luxury") && !name.includes("executive"))
-        );
-      }
-    });
+    const filtered = data.quotes.filter((q) =>
+      filterByPackage(q.vehicle?.title || "", packageType),
+    );
 
-    const markup = packageType === "gold" ? 1.25 : 1.15; // 25% for VIP service, 15% standard
-    const service = filteredServices[0];
+    if (filtered.length === 0) return null;
 
-    return {
-      id: service.id,
-      vehicleType: service.transferType,
-      vehicleName: service.vehicle.name,
-      capacity: service.maxCapacity,
-      image:
-        service.content.images?.[0]?.url || "https://via.placeholder.com/150",
-      currency: data.currency,
-      netAmount: parseFloat(service.price.total),
-      totalAmount: parseFloat((service.price.total * markup).toFixed(2)),
-      rateKey: service.rateKey,
-      waitingTime: `${service.waitingTime} min`,
-      pickupPoint: service.pickupInformation.from.description,
-      destinationPoint: service.pickupInformation.to.description,
-    };
+    const mapped = map(filtered[0], from, to, departureTime);
+
+    console.log("[transfer search mapped data]: ", mapped);
+
+    return mapped;
   } catch (error) {
-    console.error("Transfer Search Error:", error);
+    console.error("[search transfer error]: ", error);
     return null;
   }
 }
 
-async function book(
-  rateKey,
-  holder,
-  transportInfo,
-  totalAmount,
-  addresses = {},
-) {
+async function book({ quoteId, offerHash, passenger }) {
   try {
-    const isAirportTransfer = transportInfo.type === "FLIGHT";
+    const token = await getAuthToken();
 
-    const payload = {
-      language: "en",
-      holder: {
-        name: holder.firstName,
-        surname: holder.lastName,
-        email: holder.email,
-        phone: holder.phone,
-      },
-      transfers: [
-        {
-          rateKey: rateKey,
-          // Mandatory for "Hotel -> Event" (Point-to-Point)
-          // Optional but highly recommended for "Airport -> Hotel" to avoid driver confusion
-          pickupInformation: {
-            description: addresses.pickupName || "Pickup Point",
-            address: addresses.pickupAddress || "",
-            town: addresses.pickupCity || "",
-            zip: addresses.pickupZip || "",
-            country: addresses.countryCode || "US",
-          },
-          dropoffInformation: {
-            description: addresses.dropoffName || "Destination",
-            address: addresses.dropoffAddress || "",
-            town: addresses.dropoffCity || "",
-            zip: addresses.dropoffZip || "",
-            country: addresses.countryCode || "US",
-          },
-          transferDetails: [
-            {
-              type:
-                transportInfo.type || (isAirportTransfer ? "FLIGHT" : "OTHER"),
-              direction:
-                transportInfo.direction ||
-                (isAirportTransfer ? "ARRIVAL" : "DEPARTURE"),
-              code: transportInfo.code, // Flight Number or Event Code
-              companyName: transportInfo.companyName, // Airline or "Event Venue"
-            },
-          ],
-        },
-      ],
-      clientReference: `EVENTUP_TR_${Date.now()}`,
-    };
-
-    // Use the appropriate BASE_URL (test or live) configured in your environment
-    const response = await fetch(`${BASE_URL}/bookings`, {
+    const res = await fetch(`${BASE_URL}/bookings`, {
       method: "POST",
-      headers: getHeaders(),
-      body: JSON.stringify(payload),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        quote_id: quoteId,
+
+        offer: {
+          hash: offerHash,
+        },
+
+        customer: {
+          title: passenger.title,
+          name: passenger.firstName,
+          surname: passenger.lastName,
+          email: passenger.email,
+          mobile_country_code: passenger.countryCode,
+          mobile_phone: passenger.phone,
+        },
+
+        lead_passenger: {
+          title: passenger.title,
+          name: passenger.firstName,
+          surname: passenger.lastName,
+          email: passenger.email,
+        },
+
+        passengers: {
+          adults: 1,
+          children: 0,
+          infants: 0,
+        },
+
+        currency: "EUR",
+        language: "en",
+
+        gold_protection: false,
+        sms_notification: true,
+      }),
     });
 
-    const data = await response.json();
+    const data = await res.json();
 
-    // Hotelbeds returns errors in an 'errors' array, not a single 'error' object
-    if (!response.ok || !data.bookings) {
-      const errorMsg =
-        data.errors && data.errors.length > 0
-          ? data.errors[0].message
-          : "Transfer booking failed.";
-
-      return {
-        status: "failed",
-        bookingReference: "",
-        clientReference: payload.clientReference,
-        message: errorMsg,
-      };
-    }
-
-    const b = data.bookings[0];
-    const t = b.transfers[0];
-
-    return {
-      status: b.status.toLowerCase(), // 'confirmed' or 'pending'
-      bookingReference: b.reference,
-      clientReference: b.clientReference,
-      pickupDate: t.pickupInformation.date,
-      pickupTime: t.pickupInformation.time,
-      vehicleName: t.vehicle.name,
-      totalAmount: parseFloat(totalAmount),
-      currency: b.currency,
-      message: "Your transfer has been successfully booked!",
-    };
+    return data;
   } catch (error) {
-    console.error("Transfer Confirm Error:", error);
+    console.error("[book transfer error]: ", error);
     return {
       status: "failed",
-      message: "System error during transfer booking.",
+      message: "Booking transfer failed",
     };
   }
 }
