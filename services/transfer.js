@@ -47,7 +47,7 @@ function formatLocation(location) {
   return location.name || "Location";
 }
 
-function map(quote, offerHash, from, to) {
+function mapSearch(quote, offerHash, from, to, depatureDate) {
   return {
     id: quote.id,
 
@@ -71,6 +71,31 @@ function map(quote, offerHash, from, to) {
 
     pickupPoint: formatLocation(from),
     destinationPoint: formatLocation(to),
+    pickupDateTime: depatureDate,
+  };
+}
+
+function mapBookingResponse(data, offer) {
+  if (!data) {
+    return {
+      status: "failed",
+      message: "Empty booking response",
+    };
+  }
+
+  if (data.error) {
+    return {
+      status: "failed",
+      message: data.error,
+    };
+  }
+
+  return {
+    status: "confirmed",
+    bookingId: data.id || "",
+    reference: data.reference || "",
+    totalAmount: offer.totalAmount,
+    currency: offer.currency,
   };
 }
 
@@ -137,8 +162,6 @@ async function search(from, to, departureTime, packageType) {
 
     const data = await res.json();
 
-    console.log("[transer search json]: ", data);
-
     if (!data?.quotes) return null;
 
     const offerHash = data?._metadata?.offer?.hash || "";
@@ -149,22 +172,72 @@ async function search(from, to, departureTime, packageType) {
 
     if (filtered.length === 0) return null;
 
-    const mapped = map(filtered[0], offerHash, from, to);
-
-    console.log("[transfer search mapped data]: ", mapped);
-
-    return mapped;
+    return mapSearch(filtered[0], offerHash, from, to, departureTime);
   } catch (error) {
     console.error("[search transfer error]: ", error);
     return null;
   }
 }
 
-async function book({ quoteId, offerHash, passenger }) {
+async function book(quoteId, offerHash, passenger, offer, pickupDateTime) {
   try {
     const token = await getAuthToken();
-
     if (!token) return null;
+
+    const body = {
+      quote_id: quoteId,
+
+      offer: {
+        hash: offerHash,
+      },
+
+      customer: {
+        title: passenger.title,
+        name: passenger.firstName,
+        surname: passenger.lastName,
+        email: passenger.email,
+        mobile_country_code: passenger.countryCode,
+        mobile_phone: passenger.phone,
+      },
+
+      lead_passenger: {
+        title: passenger.title,
+        name: passenger.firstName,
+        surname: passenger.lastName,
+        email: passenger.email,
+        mobile_country_code: passenger.countryCode,
+        mobile_phone: passenger.phone,
+      },
+
+      passengers: {
+        total: 1,
+      },
+
+      currency: offer.currency,
+      language: "en",
+
+      gold_protection: false,
+      sms_notification: true,
+
+      transfers: [
+        {
+          outward: {
+            accommodation: {
+              name: offer.pickupPoint,
+              address: offer.pickupPoint,
+              pickup_date_time: pickupDateTime,
+            },
+          },
+
+          destination: {
+            accommodation: {
+              name: offer.destinationPoint,
+              address: offer.destinationPoint,
+            },
+          },
+        },
+      ],
+    };
 
     const res = await fetch(`${BASE_URL}/bookings`, {
       method: "POST",
@@ -172,51 +245,20 @@ async function book({ quoteId, offerHash, passenger }) {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        quote_id: quoteId,
-
-        offer: {
-          hash: offerHash,
-        },
-
-        customer: {
-          title: passenger.title,
-          name: passenger.firstName,
-          surname: passenger.lastName,
-          email: passenger.email,
-          mobile_country_code: passenger.countryCode,
-          mobile_phone: passenger.phone,
-        },
-
-        lead_passenger: {
-          title: passenger.title,
-          name: passenger.firstName,
-          surname: passenger.lastName,
-          email: passenger.email,
-        },
-
-        passengers: {
-          adults: 1,
-          children: 0,
-          infants: 0,
-        },
-
-        currency: "EUR",
-        language: "en",
-
-        gold_protection: false,
-        sms_notification: true,
-      }),
+      body: JSON.stringify(body),
     });
 
     const data = await res.json();
 
-    return data;
+    console.log("[transfer booking response]:", data);
+
+    return mapBookingResponse(data, offer);
   } catch (error) {
     console.error("[book transfer error]: ", error);
+
     return {
       status: "failed",
-      message: "Booking transfer failed",
+      message: "Transfer booking failed",
     };
   }
 }
