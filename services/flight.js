@@ -175,6 +175,8 @@ async function book(offerId, passengers, totalAmount, currency = "USD") {
 
     const json = await response.json();
 
+    console.log(json);
+
     if (response.ok) {
       return {
         status: "confirmed",

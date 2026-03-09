@@ -92,7 +92,6 @@ function mapBookingResponse(data, offer) {
 
   return {
     status: "confirmed",
-    bookingId: data.id || "",
     reference: data.reference || "",
     totalAmount: offer.totalAmount,
     currency: offer.currency,
@@ -179,7 +178,15 @@ async function search(from, to, departureTime, packageType) {
   }
 }
 
-async function book(quoteId, offerHash, passenger, offer, pickupDateTime) {
+async function book(
+  quoteId,
+  offerHash,
+  passenger,
+  offer,
+  pickupDateTime,
+  outward,
+  destination,
+) {
   try {
     const token = await getAuthToken();
     if (!token) return null;
@@ -221,20 +228,8 @@ async function book(quoteId, offerHash, passenger, offer, pickupDateTime) {
 
       transfers: [
         {
-          outward: {
-            accommodation: {
-              name: offer.pickupPoint,
-              address: offer.pickupPoint,
-              pickup_date_time: pickupDateTime,
-            },
-          },
-
-          destination: {
-            accommodation: {
-              name: offer.destinationPoint,
-              address: offer.destinationPoint,
-            },
-          },
+          outward,
+          destination,
         },
       ],
     };
