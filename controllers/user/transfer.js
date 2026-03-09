@@ -2,8 +2,7 @@ const services = require("../../services/transfer");
 
 const get = async (req, res) => {
   try {
-    const { from, to, departureTime, packageType } = req.query;
-
+    const { from, to, departureTime, packageType } = req.body;
     const offer = await services.search(from, to, departureTime, packageType);
     res.json({ ok: true, data: offer });
   } catch (err) {

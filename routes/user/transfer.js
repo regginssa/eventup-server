@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const controllers = require("../../controllers/user/transfer");
 
-router.get("/", controllers.get);
-router.post("/", controllers.book);
+router.post("/search", controllers.get);
+router.post("/book", controllers.book);
 
 module.exports = router;
