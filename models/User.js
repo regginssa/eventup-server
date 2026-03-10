@@ -60,24 +60,32 @@ const StripeSchema = new mongoose.Schema(
   { _id: false },
 );
 
-const LocationSchema = new mongoose.Schema({
-  country: {
-    name: { type: String, default: null },
-    code: { type: String, default: null },
+const LocationSchema = new mongoose.Schema(
+  {
+    country: {
+      name: { type: String, default: null },
+      code: { type: String, default: null },
+    },
+    region: {
+      name: { type: String, default: null },
+      code: { type: String, default: null },
+    },
+    city: {
+      name: { type: String, default: null },
+      code: { type: String, default: null },
+    },
+    address: { type: String, default: null },
+    coordinate: {
+      latitude: { type: Number, default: 0 },
+      longitude: { type: Number, default: 0 },
+    },
   },
-  region: {
-    name: { type: String, default: null },
-    code: { type: String, default: null },
-  },
-  city: {
-    name: { type: String, default: null },
-    code: { type: String, default: null },
-  },
-  address: { type: String, default: null },
-  coordinate: {
-    latitude: { type: Number, default: 0 },
-    longitude: { type: Number, default: 0 },
-  },
+  { _id: false },
+);
+
+const OtpSchema = new mongoose.Schema({
+  code: { type: String, default: null },
+  expiresAt: { type: Date, default: Date.now },
 });
 
 const UserSchema = new mongoose.Schema(
@@ -125,6 +133,8 @@ const UserSchema = new mongoose.Schema(
       startedAt: { type: String, default: null },
     },
     status: { type: String, enum: ["online", "offline"], default: "online" },
+    otp: OtpSchema,
+    emailVerified: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
