@@ -4,12 +4,12 @@ const jwt = require("jsonwebtoken");
 
 const googleLogin = async (req, res) => {
   try {
-    const { email, googleId } = req.body;
+    const { email, google_id } = req.body;
 
     const user = await User.findOne({
       email,
       signOption: "google",
-      googleId,
+      googleId: google_id,
     });
 
     if (!user) {
@@ -36,7 +36,7 @@ const googleLogin = async (req, res) => {
 
 const googleRegister = async (req, res) => {
   try {
-    const { name, email, googleId, avatar } = req.body;
+    const { firstName, lastName, email, google_id, avatar } = req.body;
 
     const user = await User.findOne({ email });
 
@@ -46,12 +46,14 @@ const googleRegister = async (req, res) => {
         .json({ ok: false, message: "User already exists" });
     }
 
-    const password = await bcrypt.hash(googleId, 10);
+    const password = await bcrypt.hash(google_id, 10);
     const newUser = await User.create({
-      name,
+      firstName,
+      lastName,
+      name: `${firstName} ${lastName}`,
       email,
       signOption: "google",
-      googleId,
+      googleId: google_id,
       password,
       avatar,
     });
