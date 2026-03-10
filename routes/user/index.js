@@ -27,5 +27,6 @@ router.use("/web3", requireAuth, require("./web3"));
 router.use("/conversations", requireAuth, require("./conversation"));
 router.use("/messages", requireAuth, require("./message"));
 router.use("/notifications", requireAuth, require("./notification"));
+router.use("/support", requireAuth, require("./support"));
 
 module.exports = router;
