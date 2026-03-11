@@ -28,5 +28,6 @@ router.use("/conversations", requireAuth, require("./conversation"));
 router.use("/messages", requireAuth, require("./message"));
 router.use("/notifications", requireAuth, require("./notification"));
 router.use("/support", requireAuth, require("./support"));
+router.use("/iap", requireAuth, require("./iap"));
 
 module.exports = router;
