@@ -1,5 +1,8 @@
 const Booking = require("../../models/Booking");
 const Transaction = require("../../models/Transaction");
+const Ticket = require("../../models/Ticket");
+const User = require("../../models/User");
+const Subscription = require("../../models/Subscription");
 const { getIO } = require("../../socket");
 
 const webhook = async (req, res) => {
@@ -14,6 +17,9 @@ const webhook = async (req, res) => {
     }
 
     const { txHash, currency, amount, metadata } = tx;
+    const user = await User.findById(metadata.userId);
+
+    const io = getIO();
 
     switch (metadata.type) {
       case "booking":
@@ -46,13 +52,62 @@ const webhook = async (req, res) => {
           userId: booking.user.toString(),
         });
 
-        const io = getIO();
         io.to(booking.user.toString()).emit("booking_payment_status_updated", {
           bookingId: booking._id,
           status: booking.status,
         });
 
         break;
+
+      case "ticket":
+        user.tickets.push(metadata.ticketId);
+        await user.save();
+
+        const ticket = await Ticket.findById(metadata.ticketId);
+
+        await Transaction.create({
+          type: "buy",
+          service: "ticket",
+          amount: ticket.price,
+          currency,
+          status: "completed",
+          amountReceived: Number(amount),
+          metadata,
+          txId: txHash,
+          paymentMethod: "crypto",
+          userId: user._id,
+        });
+
+        io.to(user._id.toString()).emit("auth_user_updated", { user });
+        break;
+
+      case "subscription":
+        user.subscription = {
+          id: metadata.subscriptionId,
+          startedAt: new Date().toISOString().split("T")[0],
+        };
+        await user.save();
+
+        const subscription = await Subscription.findById(
+          metadata.subscriptionId,
+        );
+
+        await Transaction.create({
+          type: "buy",
+          service: "subscription",
+          amount: subscription.price,
+          currency,
+          status: "completed",
+          amountReceived: Number(amount),
+          metadata,
+          txId: txHash,
+          paymentMethod: "crypto",
+          userId: user._id,
+        });
+
+        io.to(user._id.toString()).emit("auth_user_updated", { user });
+        break;
+
       default:
         break;
     }
