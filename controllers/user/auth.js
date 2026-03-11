@@ -3,14 +3,134 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const mailServices = require("../../services/mail");
 
+const googleRegister = async (req, res) => {
+  try {
+    const { firstName, lastName, email, googleId, avatar } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (user) {
+      return res
+        .status(400)
+        .json({ ok: false, message: "User already exists" });
+    }
+
+    const password = await bcrypt.hash(googleId, 10);
+    const newUser = await User.create({
+      firstName,
+      lastName,
+      name: `${firstName} ${lastName}`,
+      email,
+      signOption: "google",
+      googleId: googleId,
+      password,
+      avatar,
+      emailVerified: true,
+    });
+
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "3d",
+    });
+
+    res.status(200).json({
+      ok: true,
+      data: { token: `Bearer ${token}`, user: newUser },
+    });
+  } catch (error) {
+    console.error("user google register error: ", error);
+    res.status(500).json({ ok: false, message: "Something went wrong" });
+  }
+};
+
+const appleRegister = async (req, res) => {
+  try {
+    const { firstName, lastName, email, appleId } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (user) {
+      return res
+        .status(400)
+        .json({ ok: false, message: "User already exists" });
+    }
+
+    const password = await bcrypt.hash(googleId, 10);
+    const newUser = await User.create({
+      firstName,
+      lastName,
+      name: `${firstName} ${lastName}`,
+      email,
+      signOption: "apple",
+      appleId,
+      password,
+      emailVerified: true,
+    });
+
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "3d",
+    });
+
+    res.status(200).json({
+      ok: true,
+      data: { token: `Bearer ${token}`, user: newUser },
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
+const emailRegister = async (req, res) => {
+  try {
+    const { firstName, lastName, name, email, password } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (user) {
+      return res
+        .status(400)
+        .json({ ok: false, message: "User already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = await User.create({
+      firstName,
+      lastName,
+      name,
+      email,
+      signOption: "email",
+      password: hashedPassword,
+    });
+
+    const otp = await mailServices.sendOTP(newUser.email);
+    if (!otp) {
+      await User.findByIdAndDelete(newUser._id);
+      return res
+        .status(500)
+        .json({ ok: false, message: "Internal server error" });
+    }
+
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "3d",
+    });
+
+    res.status(200).json({
+      ok: true,
+      data: { token: `Bearer ${token}`, user: newUser },
+    });
+  } catch (error) {
+    console.error("user email register error: ", error);
+    res.status(500).json({ ok: false, message: "Something went wrong" });
+  }
+};
+
 const googleLogin = async (req, res) => {
   try {
-    const { email, google_id } = req.body;
+    const { email, googleId } = req.body;
 
     const user = await User.findOne({
       email,
       signOption: "google",
-      googleId: google_id,
+      googleId: googleId,
     });
 
     if (!user) {
@@ -35,42 +155,30 @@ const googleLogin = async (req, res) => {
   }
 };
 
-const googleRegister = async (req, res) => {
+const appleLogin = async (req, res) => {
   try {
-    const { firstName, lastName, email, google_id, avatar } = req.body;
+    const { appleId, email } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email, appleId });
 
-    if (user) {
-      return res
-        .status(400)
-        .json({ ok: false, message: "User already exists" });
+    if (!user) {
+      return res.status(400).json({ ok: false, message: "User not found" });
     }
 
-    const password = await bcrypt.hash(google_id, 10);
-    const newUser = await User.create({
-      firstName,
-      lastName,
-      name: `${firstName} ${lastName}`,
-      email,
-      signOption: "google",
-      googleId: google_id,
-      password,
-      avatar,
-      emailVerified: true,
-    });
+    const populated = await User.findById(user._id)
+      .select("-password")
+      .populate("tickets");
 
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "3d",
     });
 
     res.status(200).json({
       ok: true,
-      data: { token: `Bearer ${token}`, user: newUser },
+      data: { token: `Bearer ${token}`, user: populated },
     });
   } catch (error) {
-    console.error("user google register error: ", error);
-    res.status(500).json({ ok: false, message: "Something went wrong" });
+    res.status(500).json({ ok: false, message: "Internal server error" });
   }
 };
 
@@ -119,50 +227,6 @@ const emailLogin = async (req, res) => {
     });
   } catch (error) {
     console.error("user email login error: ", error);
-    res.status(500).json({ ok: false, message: "Something went wrong" });
-  }
-};
-
-const emailRegister = async (req, res) => {
-  try {
-    const { firstName, lastName, name, email, password } = req.body;
-
-    const user = await User.findOne({ email });
-
-    if (user) {
-      return res
-        .status(400)
-        .json({ ok: false, message: "User already exists" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({
-      firstName,
-      lastName,
-      name,
-      email,
-      signOption: "email",
-      password: hashedPassword,
-    });
-
-    const otp = await mailServices.sendOTP(newUser.email);
-    if (!otp) {
-      await User.findByIdAndDelete(newUser._id);
-      return res
-        .status(500)
-        .json({ ok: false, message: "Internal server error" });
-    }
-
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-      expiresIn: "3d",
-    });
-
-    res.status(200).json({
-      ok: true,
-      data: { token: `Bearer ${token}`, user: newUser },
-    });
-  } catch (error) {
-    console.error("user email register error: ", error);
     res.status(500).json({ ok: false, message: "Something went wrong" });
   }
 };
@@ -244,10 +308,12 @@ const getMe = async (req, res) => {
 };
 
 module.exports = {
-  googleLogin,
   googleRegister,
-  emailLogin,
+  appleRegister,
   emailRegister,
+  googleLogin,
+  appleLogin,
+  emailLogin,
   verifyOtp,
   resendOtp,
   getMe,
