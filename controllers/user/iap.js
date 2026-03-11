@@ -43,9 +43,12 @@ const verify = async (req, res) => {
     }
 
     // Find product in receipt
-    const inApps = Array.isArray(data?.receipt?.in_app)
-      ? data.receipt.in_app
-      : [];
+    const inApps = [
+      ...(Array.isArray(data?.receipt?.in_app) ? data.receipt.in_app : []),
+      ...(Array.isArray(data?.latest_receipt_info)
+        ? data.latest_receipt_info
+        : []),
+    ];
 
     const match = inApps.find(
       (t) =>
