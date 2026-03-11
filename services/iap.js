@@ -4,12 +4,6 @@ dotenv.config();
 const PROD = process.env.IAP_PROD;
 const SBX = process.env.IAP_SBX;
 
-const monthsFromProductId = (productId) => {
-  if (productId.endsWith(".12")) return 12;
-  if (productId.endsWith(".6")) return 6;
-  return 3;
-};
-
 const verifyReceipt = async (receiptData) => {
   const payload = {
     "receipt-data": receiptData,
@@ -42,4 +36,4 @@ const verifyReceipt = async (receiptData) => {
   return prod;
 };
 
-module.exports = { monthsFromProductId, verifyReceipt };
+module.exports = { verifyReceipt };
