@@ -88,6 +88,18 @@ const OtpSchema = new mongoose.Schema({
   expiresAt: { type: Date, default: Date.now },
 });
 
+const SubscriptionSchema = new mongoose.Schema(
+  {
+    id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subscription",
+      default: "698344ad855e2bb5feee2bb0",
+    },
+    startedAt: { type: String, default: null },
+  },
+  { _id: false },
+);
+
 const UserSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -124,14 +136,7 @@ const UserSchema = new mongoose.Schema(
     tickets: [
       { type: mongoose.Schema.Types.ObjectId, ref: "Ticket", default: null },
     ],
-    subscription: {
-      id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Subscription",
-        default: "698344ad855e2bb5feee2bb0",
-      },
-      startedAt: { type: String, default: null },
-    },
+    subscription: SubscriptionSchema,
     status: { type: String, enum: ["online", "offline"], default: "online" },
     otp: OtpSchema,
     emailVerified: { type: Boolean, default: false },

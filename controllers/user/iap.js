@@ -1,12 +1,30 @@
 const service = require("../../services/iap");
 const Transaction = require("../../models/Transaction");
+const User = require("../../models/User");
+const df = require("../../utils/date");
 
 const verify = async (req, res) => {
   try {
-    const { userId, productId, transactionId, receiptData } = req.body;
+    const {
+      userId,
+      type,
+      ticketId,
+      subscriptionId,
+      currency,
+      amount,
+      productId,
+      transactionId,
+      receiptData,
+    } = req.body;
 
     if (!userId || !productId || !receiptData) {
       return res.status(400).json({ ok: false, message: "Missing fields" });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ ok: false, message: "User not found" });
     }
 
     const data = await service.verifyReceipt(receiptData);
@@ -72,28 +90,57 @@ const verify = async (req, res) => {
       });
     }
 
-    // Create transaction record
-    const transaction = await Transaction.create({
-      userId,
-      txId: match.transaction_id,
-      type: "buy",
-      paymentMethod: "credit",
-      amount: 0, // Apple IAP doesn't expose price here
-      amountReceived: 0,
-      currency: "USD", // you may pass this from client if needed
-      service: "subscription",
-      status: "completed",
-      metadata: {
-        productId: match.product_id,
-        purchaseDate: match.purchase_date,
-        originalTransactionId: match.original_transaction_id,
-        receipt: receiptData,
-      },
-    });
+    let transaction = null;
+
+    if (type === "ticket") {
+      transaction = await Transaction.create({
+        userId,
+        txId: match.transaction_id,
+        type: "buy",
+        paymentMethod: "credit",
+        amount,
+        amountReceived: amount,
+        currency,
+        service: "ticket",
+        status: "completed",
+        metadata: {
+          productId: match.product_id,
+          purchaseDate: match.purchase_date,
+          originalTransactionId: match.original_transaction_id,
+          receipt: receiptData,
+          ticketId,
+        },
+      });
+
+      user.tickets = [...user.tickets, ticketId];
+      await user.save();
+    } else if (type === "subscription") {
+      transaction = await Transaction.create({
+        userId,
+        txId: match.transaction_id,
+        type: "buy",
+        paymentMethod: "credit",
+        amount,
+        amountReceived: amount,
+        currency,
+        service: "subscription",
+        status: "completed",
+        metadata: {
+          productId: match.product_id,
+          purchaseDate: match.purchase_date,
+          originalTransactionId: match.original_transaction_id,
+          receipt: receiptData,
+          subscriptionId,
+        },
+      });
+
+      user.subscription.id = subscriptionId;
+      user.subscription.startedAt = df.toISOString(new Date());
+      await user.save();
+    }
 
     return res.status(200).json({
       ok: true,
-      message: "Purchased successfully",
       data: transaction,
     });
   } catch (error) {
