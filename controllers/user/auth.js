@@ -155,9 +155,9 @@ const googleLogin = async (req, res) => {
 
 const appleLogin = async (req, res) => {
   try {
-    const { appleId, email } = req.body;
+    const { email } = req.body;
 
-    const user = await User.findOne({ email, appleId });
+    const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(400).json({ ok: false, message: "User not found" });
