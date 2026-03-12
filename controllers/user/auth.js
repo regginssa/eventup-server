@@ -46,6 +46,14 @@ const appleRegister = async (req, res) => {
   try {
     const { firstName, lastName, email, appleId } = req.body;
 
+    console.log(
+      "[new user register with apple body data]: ",
+      firstName,
+      lastName,
+      email,
+      appleId,
+    );
+
     const user = await User.findOne({ email });
 
     if (user) {
@@ -54,7 +62,7 @@ const appleRegister = async (req, res) => {
         .json({ ok: false, message: "User already exists" });
     }
 
-    const password = await bcrypt.hash(googleId, 10);
+    const password = await bcrypt.hash(appleId, 10);
     const newUser = await User.create({
       firstName,
       lastName,
@@ -125,7 +133,7 @@ const emailRegister = async (req, res) => {
 
 const googleLogin = async (req, res) => {
   try {
-    const { email, googleId } = req.body;
+    const { email } = req.body;
 
     const user = await User.findOne({
       email,

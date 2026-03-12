@@ -48,10 +48,10 @@ const sendOTP = async (email, expiryMinutes = 3) => {
           <tr>
             <td style="background:linear-gradient(90deg,#C427E0,#844AFF,#12A9FF);padding:30px;text-align:center;">
               <img src="https://charlieunicornai.eu/_next/static/media/logo.9e6f2f6a.png" 
-                   alt="EventUp | Charlie Unicorn AI"
+                   alt="EventWorld | Charlie Unicorn AI"
                    style="height:60px;margin-bottom:10px;" />
               <div style="color:#ffffff;font-size:20px;font-weight:bold;">
-                EventUp
+                EventWorld
               </div>
               <div style="color:#ffffff;font-size:12px;opacity:0.9;">
                 by Charlie Unicorn AI
@@ -122,7 +122,7 @@ const sendOTP = async (email, expiryMinutes = 3) => {
               </p>
 
               <p style="margin:5px 0;color:#aaa;">
-                EventUp | Secure Account Verification
+                EventWorld | Secure Account Verification
               </p>
 
             </td>
@@ -167,11 +167,11 @@ const sendMessageToSupport = async ({
     }
 
     const mailOptions = {
-      from: `"EventUp Support Form" <no-reply@charlieeventup.eu>`,
+      from: `"EventWorld Support Form" <no-reply@charlieeventup.eu>`,
       to: "team@charlieunicornai.eu",
       subject: `Support Request: ${subject || "New Message"}`,
       text: `
-New support request from EventUp
+New support request from EventWorld
 
 Name: ${firstName || ""} ${lastName || ""}
 Email: ${email}
@@ -192,10 +192,10 @@ ${text}
           <tr>
             <td style="background:linear-gradient(90deg,#C427E0,#844AFF,#12A9FF);padding:30px;text-align:center;">
               <img src="https://charlieunicornai.eu/_next/static/media/logo.9e6f2f6a.png" 
-                   alt="EventUp | Charlie Unicorn AI"
+                   alt="EventWorld | Charlie Unicorn AI"
                    style="height:60px;margin-bottom:10px;" />
               <div style="color:#ffffff;font-size:20px;font-weight:bold;">
-                EventUp
+                EventWorld
               </div>
               <div style="color:#ffffff;font-size:12px;opacity:0.9;">
                 by Charlie Unicorn AI
@@ -212,7 +212,7 @@ ${text}
               </h2>
 
               <p style="font-size:14px;color:#555;margin-bottom:25px;text-align:center;">
-                A new message has been submitted through the EventUp support form.
+                A new message has been submitted through the EventWorld support form.
               </p>
 
               <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#333;margin-bottom:20px;">
@@ -260,7 +260,7 @@ ${text}
             <td style="padding:25px 35px;text-align:center;font-size:12px;color:#888;">
 
               <p style="margin:5px 0;">
-                Sent via EventUp Contact Form
+                Sent via EventWorld Contact Form
               </p>
 
               <p style="margin:5px 0;">
@@ -268,7 +268,7 @@ ${text}
               </p>
 
               <p style="margin:5px 0;color:#aaa;">
-                EventUp | Support Notification
+                EventWorld | Support Notification
               </p>
 
             </td>
