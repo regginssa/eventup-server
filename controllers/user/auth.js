@@ -129,8 +129,6 @@ const googleLogin = async (req, res) => {
 
     const user = await User.findOne({
       email,
-      signOption: "google",
-      googleId: googleId,
     });
 
     if (!user) {
