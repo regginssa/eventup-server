@@ -18,6 +18,7 @@ router.get("/verify/otp/resend", controllers.resendOtp);
 router.post("/forgot-password", controllers.forgotPassword);
 
 router.get("/me", requireAuth, controllers.getMe);
+router.patch("/reset-password", requireAuth, controllers.resetPassword);
 router.patch("/change-password", requireAuth, controllers.changePassword);
 
 module.exports = router;

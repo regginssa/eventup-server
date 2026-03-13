@@ -18,6 +18,8 @@ const createSession = async (userId, appCallbackNextUrl) => {
     }),
   };
 
+  console.log("[didit create session callback]: ", callback);
+
   try {
     const response = await fetch(url, options);
 

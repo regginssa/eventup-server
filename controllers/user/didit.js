@@ -85,7 +85,7 @@ const startVerification = async (req, res) => {
       url,
     };
 
-    const user = await User.findById(id);
+    const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ ok: false, message: "User not found" });
@@ -98,7 +98,8 @@ const startVerification = async (req, res) => {
 
     res.status(200).json({ ok: true, data });
   } catch (error) {
-    res.status(500).json({ ok: false, message: "Something went wrong" });
+    console.error("[start verification error]: ", error);
+    res.status(500).json({ ok: false, message: "Internal server error" });
   }
 };
 

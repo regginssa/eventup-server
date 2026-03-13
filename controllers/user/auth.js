@@ -328,7 +328,7 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-const changePassword = async (req, res) => {
+const resetPassword = async (req, res) => {
   try {
     const userId = req.user.id;
 
@@ -368,6 +368,34 @@ const getMe = async (req, res) => {
   }
 };
 
+const changePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.json({ ok: false, message: "User not found" });
+    }
+
+    const { newPassword, currentPassword } = req.body;
+
+    const matches = await bcrypt.compare(currentPassword, user.password);
+
+    if (!matches) {
+      return res.json({ ok: false, message: "Incorrect password" });
+    }
+
+    const pass = await bcrypt.hash(newPassword, 10);
+    user.password = pass;
+    await user.save();
+
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
 module.exports = {
   googleRegister,
   appleRegister,
@@ -378,6 +406,7 @@ module.exports = {
   verifyOtp,
   resendOtp,
   forgotPassword,
-  changePassword,
+  resetPassword,
   getMe,
+  changePassword,
 };
