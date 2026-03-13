@@ -21,8 +21,8 @@ app.use(cors());
 app.use(passport.initialize());
 
 // Special middleware for Didit webhook (raw body)
-const userDiditRoutes = require("./routes/user/didit");
-app.use(
+const { diditWebhook } = require("./controllers/user/didit");
+app.post(
   "/api/v1/didit/webhook",
   bodyParser.json({
     verify: (req, res, buf, encoding) => {
@@ -31,7 +31,15 @@ app.use(
       }
     },
   }),
-  userDiditRoutes,
+  async (req, res) => {
+    try {
+      console.log("didit webhook is being called.");
+      await diditWebhook(req, res);
+    } catch (error) {
+      console.error("didit webhook error: ", error);
+      res.status(500).json({ ok: false, message: "Something went wrong" });
+    }
+  },
 );
 
 // Special middleware for Stripe webhook (raw body)
