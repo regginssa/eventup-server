@@ -58,7 +58,7 @@ const diditWebhook = async (req, res) => {
         // user.notifications.push(notification);
       }
       user.kyc.status = status;
-      user.is_id_verified = status === "Approved";
+      user.idVerified = status === "Approved";
 
       await user.save();
     }
