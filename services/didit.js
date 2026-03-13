@@ -1,7 +1,6 @@
 const createSession = async (userId) => {
   const url = process.env.DIDIT_SESSION_BASE_URL;
-  const callback =
-    `${process.env.SERVER_BASE_URI}/api/callbacks/didit` + `?userId=${userId}`;
+  const callback = `${process.env.DIDIT_CALLBACK}` + `?userId=${userId}`;
 
   const options = {
     method: "POST",

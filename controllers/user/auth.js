@@ -270,7 +270,14 @@ const verifyOtp = async (req, res) => {
       .select("-password")
       .populate("tickets");
 
-    res.json({ ok: true, data: populated });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1y",
+    });
+
+    res.status(200).json({
+      ok: true,
+      data: { token: `Bearer ${token}`, user: populated },
+    });
   } catch (error) {
     res.status(500).json({ ok: false, message: "Internal server error" });
   }

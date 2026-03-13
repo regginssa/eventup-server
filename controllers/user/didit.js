@@ -46,17 +46,8 @@ const diditWebhook = async (req, res) => {
         status === "Expired" ||
         status === "Abandoned"
       ) {
-        // const notification = {
-        //   type: "id_verify",
-        //   id_status: status,
-        //   time: new Date().toLocaleTimeString([], {
-        //     hour: "2-digit",
-        //     minute: "2-digit",
-        //     hour12: false,
-        //   }),
-        // };
-        // user.notifications.push(notification);
       }
+
       user.kyc.status = status;
       user.idVerified = status === "Approved";
 
