@@ -6,7 +6,6 @@ const passport = require("passport");
 router.use("/auth", require("./auth"));
 router.use("/user", require("./user"));
 router.use("/callbacks", require("./callbacks"));
-router.use("/didit", require("./didit"));
 router.use("/events", require("./event"));
 router.use("/reviews", require("./review"));
 router.use("/ticket", require("./ticket"));
@@ -18,6 +17,7 @@ router.use("/cryptocheckout", require("./cryptocheckout"));
 // Protected routes
 const requireAuth = passport.authenticate("jwt", { session: false });
 
+router.use("/didit", require("./didit"));
 router.use("/flight", requireAuth, require("./flight"));
 router.use("/hotel", requireAuth, require("./hotel"));
 router.use("/transfer", requireAuth, require("./transfer"));
