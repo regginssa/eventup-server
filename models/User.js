@@ -144,11 +144,4 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-UserSchema.pre("save", function (next) {
-  if (this.tickets && this.tickets.length > 15) {
-    return next(new Error("A user cannot have more than 15 tickets."));
-  }
-  next();
-});
-
 module.exports = mongoose.model("User", UserSchema);

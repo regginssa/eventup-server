@@ -63,9 +63,9 @@ const diditWebhook = async (req, res) => {
 
 const startVerification = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { userId, appCallbackNextUrl } = req.body;
 
-    const session = await createSession(id);
+    const session = await createSession(userId, appCallbackNextUrl);
 
     const {
       session_id,

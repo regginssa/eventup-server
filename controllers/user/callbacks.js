@@ -1,7 +1,7 @@
 const User = require("../../models/User");
 
 const diditCallback = async (req, res) => {
-  const { userId } = req.query;
+  const { userId, nextUrl } = req.query;
 
   if (!userId) {
     return res.status(400).json({ ok: false, message: "Missing data" });
@@ -13,7 +13,7 @@ const diditCallback = async (req, res) => {
     return res.status(404).json({ ok: false, message: "User not found" });
   }
 
-  const deepLink = `${process.env.APP_NAME}://didit?status=${user.kyc.status}&sessionId=${user.kyc.sessionId}`;
+  const deepLink = `${process.env.APP_NAME}://didit?status=${user.kyc.status}&sessionId=${user.kyc.sessionId}&nextUrl=${nextUrl}`;
   console.log("didit callback redirect link: ", deepLink);
 
   res.redirect(deepLink);

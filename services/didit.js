@@ -1,6 +1,8 @@
-const createSession = async (userId) => {
+const createSession = async (userId, appCallbackNextUrl) => {
   const url = process.env.DIDIT_SESSION_BASE_URL;
-  const callback = `${process.env.DIDIT_CALLBACK}` + `?userId=${userId}`;
+  const callback =
+    `${process.env.DIDIT_CALLBACK}` +
+    `?userId=${userId}&nextUrl=${appCallbackNextUrl}`;
 
   const options = {
     method: "POST",

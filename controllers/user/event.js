@@ -19,7 +19,7 @@ const getFeeds = async (req, res) => {
     const pageNum = Math.max(0, (parseInt(page) || 1) - 1);
     const lim = parseInt(limit) || 10;
 
-    const query = { type }; // type always required
+    const query = { type, hoster: { $ne: null } }; // type always required
 
     const isValid = (v) =>
       v !== undefined && v !== null && v !== "" && v !== "undefined";
