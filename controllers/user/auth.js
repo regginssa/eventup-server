@@ -29,7 +29,7 @@ const googleRegister = async (req, res) => {
     });
 
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-      expiresIn: "3d",
+      expiresIn: "1y",
     });
 
     res.status(200).json({
@@ -75,7 +75,7 @@ const appleRegister = async (req, res) => {
     });
 
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-      expiresIn: "3d",
+      expiresIn: "1y",
     });
 
     res.status(200).json({
@@ -118,7 +118,7 @@ const emailRegister = async (req, res) => {
     }
 
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-      expiresIn: "3d",
+      expiresIn: "1y",
     });
 
     res.status(200).json({
@@ -148,7 +148,7 @@ const googleLogin = async (req, res) => {
       .populate("tickets");
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "3d",
+      expiresIn: "1y",
     });
 
     res.status(200).json({
@@ -176,7 +176,7 @@ const appleLogin = async (req, res) => {
       .populate("tickets");
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "3d",
+      expiresIn: "1y",
     });
 
     res.status(200).json({
@@ -224,7 +224,7 @@ const emailLogin = async (req, res) => {
       .populate("tickets");
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "3d",
+      expiresIn: "1y",
     });
 
     res.status(200).json({
@@ -240,7 +240,6 @@ const emailLogin = async (req, res) => {
 const verifyOtp = async (req, res) => {
   try {
     const { code, email } = req.body;
-    console.log(code, email);
     let user = await User.findOne({ email });
     if (!user?.otp?.code) {
       return res.json({
@@ -294,6 +293,55 @@ const resendOtp = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.json({ ok: false, message: "User not found" });
+    }
+
+    const result = await mailServices.sendOTP(email);
+    if (!result) {
+      return res.json({ ok: false, message: "Send verification code failed" });
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1y",
+    });
+
+    res.json({
+      ok: true,
+      data: `Bearer ${token}`,
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
+const changePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.json({ ok: false, message: "User not found" });
+    }
+
+    const { newPassword } = req.body;
+    const pass = await bcrypt.hash(newPassword, 10);
+    user.password = pass;
+    await user.save();
+
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
 const getMe = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -322,5 +370,7 @@ module.exports = {
   emailLogin,
   verifyOtp,
   resendOtp,
+  forgotPassword,
+  changePassword,
   getMe,
 };
