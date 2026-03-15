@@ -10,7 +10,7 @@ const buildFeedPipeline = (user) => {
   const pipeline = [];
 
   /**
-   * CALCULATE DISTANCE (HAVERSINE)
+   * CALCULATE DISTANCE (HAVERSINE SAFE VERSION)
    */
   pipeline.push({
     $addFields: {
@@ -27,24 +27,34 @@ const buildFeedPipeline = (user) => {
               6371,
               {
                 $acos: {
-                  $add: [
+                  $max: [
+                    -1,
                     {
-                      $multiply: [
-                        { $sin: { $degreesToRadians: "$$lat1" } },
-                        { $sin: { $degreesToRadians: "$$lat2" } },
-                      ],
-                    },
-                    {
-                      $multiply: [
-                        { $cos: { $degreesToRadians: "$$lat1" } },
-                        { $cos: { $degreesToRadians: "$$lat2" } },
+                      $min: [
+                        1,
                         {
-                          $cos: {
-                            $subtract: [
-                              { $degreesToRadians: "$$lon2" },
-                              { $degreesToRadians: "$$lon1" },
-                            ],
-                          },
+                          $add: [
+                            {
+                              $multiply: [
+                                { $sin: { $degreesToRadians: "$$lat1" } },
+                                { $sin: { $degreesToRadians: "$$lat2" } },
+                              ],
+                            },
+                            {
+                              $multiply: [
+                                { $cos: { $degreesToRadians: "$$lat1" } },
+                                { $cos: { $degreesToRadians: "$$lat2" } },
+                                {
+                                  $cos: {
+                                    $subtract: [
+                                      { $degreesToRadians: "$$lon2" },
+                                      { $degreesToRadians: "$$lon1" },
+                                    ],
+                                  },
+                                },
+                              ],
+                            },
+                          ],
                         },
                       ],
                     },
@@ -59,15 +69,58 @@ const buildFeedPipeline = (user) => {
   });
 
   /**
-   * SCORE CALCULATION
+   * LOCATION SCORE
    */
   pipeline.push({
     $addFields: {
-      score: {
+      locationScore: {
+        $switch: {
+          branches: [
+            {
+              case: {
+                $and: [
+                  { $eq: [pref.location, "nearby"] },
+                  { $lte: ["$distance", 10] },
+                ],
+              },
+              then: 100,
+            },
+            {
+              case: {
+                $and: [
+                  { $eq: [pref.location, "city"] },
+                  { $eq: ["$location.city.code", city] },
+                ],
+              },
+              then: 80,
+            },
+            {
+              case: {
+                $and: [
+                  { $eq: [pref.location, "country"] },
+                  { $eq: ["$location.country.code", country] },
+                ],
+              },
+              then: 60,
+            },
+            {
+              case: { $eq: [pref.location, "worldwide"] },
+              then: 40,
+            },
+          ],
+          default: 0,
+        },
+      },
+    },
+  });
+
+  /**
+   * INTEREST SCORE
+   */
+  pipeline.push({
+    $addFields: {
+      interestScore: {
         $add: [
-          /**
-           * CATEGORY
-           */
           {
             $cond: [
               { $eq: ["$classifications.category", pref.category] },
@@ -75,10 +128,6 @@ const buildFeedPipeline = (user) => {
               0,
             ],
           },
-
-          /**
-           * SUBCATEGORY
-           */
           {
             $multiply: [
               {
@@ -92,10 +141,6 @@ const buildFeedPipeline = (user) => {
               3,
             ],
           },
-
-          /**
-           * VIBE
-           */
           {
             $multiply: [
               {
@@ -106,10 +151,6 @@ const buildFeedPipeline = (user) => {
               2,
             ],
           },
-
-          /**
-           * VENUE
-           */
           {
             $multiply: [
               {
@@ -123,56 +164,30 @@ const buildFeedPipeline = (user) => {
               2,
             ],
           },
-
-          /**
-           * LOCATION PREFERENCE
-           */
-          {
-            $switch: {
-              branches: [
-                {
-                  case: {
-                    $and: [
-                      { $eq: [pref.location, "city"] },
-                      { $eq: ["$location.city.code", city] },
-                    ],
-                  },
-                  then: 5,
-                },
-                {
-                  case: {
-                    $and: [
-                      { $eq: [pref.location, "country"] },
-                      { $eq: ["$location.country.code", country] },
-                    ],
-                  },
-                  then: 4,
-                },
-                {
-                  case: { $eq: [pref.location, "worldwide"] },
-                  then: 2,
-                },
-                {
-                  case: {
-                    $and: [
-                      { $eq: [pref.location, "nearby"] },
-                      { $lte: ["$distance", 10] }, // 10km
-                    ],
-                  },
-                  then: 6,
-                },
-              ],
-              default: 0,
-            },
-          },
         ],
       },
     },
   });
 
+  /**
+   * TOTAL SCORE
+   */
+  pipeline.push({
+    $addFields: {
+      score: {
+        $add: ["$locationScore", "$interestScore"],
+      },
+    },
+  });
+
+  /**
+   * SORT
+   */
   pipeline.push({
     $sort: {
-      score: -1,
+      locationScore: -1,
+      interestScore: -1,
+      distance: 1,
       "dates.start.date": 1,
     },
   });
