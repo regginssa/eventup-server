@@ -38,7 +38,7 @@ const webhook = async (req, res) => {
       } = event.data.object;
 
       if (!metadata.userId) break;
-
+      const io = getIO();
       const user = await User.findById(metadata.userId);
 
       if (!user) break;
@@ -60,6 +60,7 @@ const webhook = async (req, res) => {
             paymentMethod: "credit",
             userId: user._id,
           });
+
           break;
 
         case "subscription":
@@ -102,9 +103,6 @@ const webhook = async (req, res) => {
           booking.paymentStatus = "completed";
           await booking.save();
 
-          console.log("[booking updated]: ", booking.paymentStatus);
-
-          const io = getIO();
           io.to(user._id.toString()).emit("booking_payment_status_updated", {
             bookingId: booking._id,
             status: "completed",
