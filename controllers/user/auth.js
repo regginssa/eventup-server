@@ -195,11 +195,17 @@ const emailLogin = async (req, res) => {
 
     const user = await User.findOne({
       email,
-      signOption: "email",
     });
 
     if (!user) {
       return res.status(404).json({ ok: false, message: "User not found" });
+    }
+
+    if (user.signOption !== "email") {
+      return res.json({
+        ok: false,
+        message: `You signed in with ${user.signOption}`,
+      });
     }
 
     const matches = await bcrypt.compare(password, user.password);

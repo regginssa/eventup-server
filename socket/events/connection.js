@@ -13,7 +13,9 @@ module.exports = (io, socket) => {
     socket.leave(socket.userId);
     io.emit("user_offline", socket.userId);
     socket.userId = null;
-    await User.findByIdAndUpdate(userId, { $set: { status: "offline" } });
+    await User.findByIdAndUpdate(socket.userId, {
+      $set: { status: "offline" },
+    });
   });
 
   // --- Join the conversation room ---

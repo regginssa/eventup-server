@@ -12,16 +12,10 @@ function initSocket(server) {
   });
 
   io.on("connection", (socket) => {
-    console.log(`Socket connected: ${socket.id}`);
-
     registerConnectionEvents(io, socket);
     registerConversationEvents(io, socket);
     registerMessageEvents(io, socket);
     registerNotificationEvents(io, socket);
-
-    socket.on("disconnect", () => {
-      console.log(`Socket disconnected: ${socket.id}`);
-    });
   });
 }
 
