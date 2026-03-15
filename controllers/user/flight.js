@@ -1,4 +1,5 @@
 const services = require("../../services/flight");
+const { convertCurrency } = require("../../utils/currency");
 
 const get = async (req, res) => {
   try {
@@ -17,7 +18,7 @@ const get = async (req, res) => {
     const dLat = parseFloat(destLat);
     const dLng = parseFloat(destLng);
 
-    const offer = await services.search(
+    let offer = await services.search(
       oLat,
       oLng,
       dLat,
@@ -25,6 +26,15 @@ const get = async (req, res) => {
       departureDate,
       packageType,
     );
+
+    if (offer) {
+      const totalAmount = await convertCurrency(
+        offer.currency,
+        "USD",
+        offer.totalAmount,
+      );
+      offer = { ...offer, totalAmount, currency: "USD" };
+    }
 
     res.status(200).json({ ok: true, data: offer });
   } catch (err) {

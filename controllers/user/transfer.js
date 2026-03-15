@@ -1,9 +1,25 @@
 const services = require("../../services/transfer");
+const { convertCurrency } = require("../../utils/currency");
 
 const get = async (req, res) => {
   try {
     const { from, to, departureTime, packageType } = req.body;
-    const offer = await services.search(from, to, departureTime, packageType);
+    let offer = await services.search(from, to, departureTime, packageType);
+
+    if (offer) {
+      const totalAmount = await convertCurrency(
+        offer.currency,
+        "USD",
+        offer.totalAmount,
+      );
+      const netAmount = await convertCurrency(
+        offer.currency,
+        "USD",
+        offer.netAmount,
+      );
+      offer = { ...offer, totalAmount, netAmount, currency: "USD" };
+    }
+
     res.json({ ok: true, data: offer });
   } catch (err) {
     res.status(500).json({ ok: false, message: "Interal server error" });

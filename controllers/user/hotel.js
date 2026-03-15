@@ -1,15 +1,24 @@
 const services = require("../../services/hotel");
+const { convertCurrency } = require("../../utils/currency");
 
 const get = async (req, res) => {
   try {
     const { lat, lng, checkIn, checkOut, packageType } = req.query;
-    const offer = await services.search(
-      lat,
-      lng,
-      checkIn,
-      checkOut,
-      packageType,
-    );
+    let offer = await services.search(lat, lng, checkIn, checkOut, packageType);
+
+    if (offer) {
+      const totalAmount = await convertCurrency(
+        offer.currency,
+        "USD",
+        offer.totalAmount,
+      );
+      const netAmount = await convertCurrency(
+        offer.currency,
+        "USD",
+        offer.netAmount,
+      );
+      offer = { ...offer, totalAmount, currency: "USD", netAmount };
+    }
 
     res.status(200).json({ ok: true, data: offer });
   } catch (err) {
