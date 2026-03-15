@@ -136,6 +136,43 @@ const getAll = async (req, res) => {
   }
 };
 
+const getByBounds = async (req, res) => {
+  try {
+    const { north, south, east, west } = req.query;
+
+    if (!north || !south || !east || !west) {
+      return res.status(400).json({
+        ok: false,
+        message: "Missing map bounds",
+      });
+    }
+
+    const events = await Event.find({
+      "location.coordinate.latitude": {
+        $gte: Number(south),
+        $lte: Number(north),
+      },
+      "location.coordinate.longitude": {
+        $gte: Number(west),
+        $lte: Number(east),
+      },
+    })
+      .limit(300) // never return too many markers
+      .lean();
+
+    return res.json({
+      ok: true,
+      data: events,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      ok: false,
+      message: "Server error",
+    });
+  }
+};
+
 const get = async (req, res) => {
   try {
     const { id } = req.params;
@@ -274,6 +311,7 @@ const checkTicketPurchase = async (req, res) => {
 module.exports = {
   getFeeds,
   getAll,
+  getByBounds,
   get,
   getByUserId,
   create,
