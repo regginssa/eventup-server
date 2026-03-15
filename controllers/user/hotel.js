@@ -12,12 +12,12 @@ const get = async (req, res) => {
         "USD",
         offer.totalAmount,
       );
-      const netAmount = await convertCurrency(
-        offer.currency,
-        "USD",
-        offer.netAmount,
-      );
-      offer = { ...offer, totalAmount, currency: "USD", netAmount };
+
+      if (Number(totalAmount) <= 0) {
+        return res.json({ ok: true, data: null });
+      }
+
+      offer.converted.totalAmount = totalAmount;
     }
 
     res.status(200).json({ ok: true, data: offer });
@@ -30,6 +30,21 @@ const quote = async (req, res) => {
   try {
     const { rateId } = req.body;
     const result = await services.quote(rateId);
+
+    if (result) {
+      const totalAmount = await convertCurrency(
+        result.currency,
+        "USD",
+        result.totalAmount,
+      );
+
+      if (Number(totalAmount) <= 0) {
+        return res.json({ ok: true, data: null });
+      }
+
+      result.converted.totalAmount = totalAmount;
+    }
+
     res.json({ ok: true, data: result });
   } catch (error) {
     res.status(500).json({ ok: false, message: "Internal server error" });

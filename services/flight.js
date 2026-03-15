@@ -141,6 +141,10 @@ async function search(
           duration: `${hours}h ${minutes}m`,
         };
       }),
+      converted: {
+        totalAmount: 0,
+        currency: "USD",
+      },
     };
   } catch (err) {
     console.log("[duffel search flights error]: ", err);

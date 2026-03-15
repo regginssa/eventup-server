@@ -20,5 +20,6 @@ router.post("/forgot-password", controllers.forgotPassword);
 router.get("/me", requireAuth, controllers.getMe);
 router.patch("/reset-password", requireAuth, controllers.resetPassword);
 router.patch("/change-password", requireAuth, controllers.changePassword);
+router.delete("/me", requireAuth, controllers.removeMe);
 
 module.exports = router;

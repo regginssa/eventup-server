@@ -75,6 +75,10 @@ function map(data, type = "search") {
       checkIn: data.check_in_date,
       checkOut: data.check_out_date,
       checkInInfo: formatCheckInInfo(data.accommodation.check_in_information),
+      converted: {
+        totalAmount: 0,
+        currency: "USD",
+      },
     };
   } else {
   }
@@ -155,6 +159,10 @@ async function quote(rateId) {
       checkIn: data.check_in_date,
       checkOut: data.check_out_date,
       checkInInfo: formatCheckInInfo(data.accommodation.check_in_information),
+      converted: {
+        totalAmount: 0,
+        currency: "USD",
+      },
     };
 
     return mapped;

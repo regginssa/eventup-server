@@ -12,12 +12,11 @@ const get = async (req, res) => {
         "USD",
         offer.totalAmount,
       );
-      const netAmount = await convertCurrency(
-        offer.currency,
-        "USD",
-        offer.netAmount,
-      );
-      offer = { ...offer, totalAmount, netAmount, currency: "USD" };
+
+      if (Number(totalAmount) <= 0) {
+        return res.json({ ok: true, data: null });
+      }
+      offer.converted.totalAmount = totalAmount;
     }
 
     res.json({ ok: true, data: offer });

@@ -72,6 +72,10 @@ function mapSearch(quote, offerHash, from, to, depatureDate) {
     pickupPoint: formatLocation(from),
     destinationPoint: formatLocation(to),
     pickupDateTime: depatureDate,
+    converted: {
+      totalAmount: 0,
+      currency: "USD",
+    },
   };
 }
 

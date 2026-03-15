@@ -2,6 +2,7 @@ const User = require("../../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const mailServices = require("../../services/mail");
+const Event = require("../../models/Event");
 
 const googleRegister = async (req, res) => {
   try {
@@ -396,6 +397,26 @@ const changePassword = async (req, res) => {
   }
 };
 
+const removeMe = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const events = await Event.find({ hoster: userId });
+
+    if (events && events.length > 0) {
+      return res.json({
+        ok: false,
+        message:
+          "Your some events are still opening. Please contact support team via contact us form and explain why you are removing your account",
+      });
+    }
+
+    await User.findByIdAndDelete(userId);
+    return res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
 module.exports = {
   googleRegister,
   appleRegister,
@@ -409,4 +430,5 @@ module.exports = {
   resetPassword,
   getMe,
   changePassword,
+  removeMe,
 };

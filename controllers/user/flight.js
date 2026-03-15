@@ -33,7 +33,11 @@ const get = async (req, res) => {
         "USD",
         offer.totalAmount,
       );
-      offer = { ...offer, totalAmount, currency: "USD" };
+
+      if (Number(totalAmount) <= 0) {
+        return res.json({ ok: true, data: null });
+      }
+      offer.converted.totalAmount = totalAmount;
     }
 
     res.status(200).json({ ok: true, data: offer });

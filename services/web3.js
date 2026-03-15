@@ -25,8 +25,8 @@ const fetchNativeTokensPrices = async () => {
     const data = await res.json();
 
     return {
-      eth: data.ethereum.usd,
-      sol: data.solana.usd,
+      eth: data.ethereum?.usd || 0,
+      sol: data.solana?.usd || 0,
     };
   } catch (error) {
     console.error("[fetch native tokens prices error]: ", error);
