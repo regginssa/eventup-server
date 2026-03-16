@@ -78,13 +78,13 @@ const webhook = async (req, res) => {
           userId: user._id,
         });
 
-        io.to(user._id.toString()).emit("auth_user_updated", { user });
         break;
 
       case "subscription":
+        const startedAt = new Date().toISOString().split("T")[0];
         user.subscription = {
           id: metadata.subscriptionId,
-          startedAt: new Date().toISOString().split("T")[0],
+          startedAt,
         };
         await user.save();
 
@@ -105,7 +105,15 @@ const webhook = async (req, res) => {
           userId: user._id,
         });
 
-        io.to(user._id.toString()).emit("auth_user_updated", { user });
+        console.log("purchase_subscription_confirmed socket triggered: ", {
+          id: metadata.subscriptionId,
+          startedAt,
+        });
+
+        io.to(user._id.toString()).emit("purchase_subscription_confirmed", {
+          id: metadata.subscriptionId,
+          startedAt,
+        });
         break;
 
       default:
