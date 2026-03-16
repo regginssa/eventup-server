@@ -140,6 +140,7 @@ const UserSchema = new mongoose.Schema(
     status: { type: String, enum: ["online", "offline"], default: "online" },
     otp: OtpSchema,
     emailVerified: { type: Boolean, default: false },
+    blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true },
 );

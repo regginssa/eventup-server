@@ -17,7 +17,7 @@ module.exports = (io, socket) => {
       }
 
       const populated = await Conversation.findById(convo._id)
-        .populate("participants", "name avatar status")
+        .populate("participants", "name avatar status blockedUsers")
         .populate("lastMessage")
         .lean();
 
@@ -47,7 +47,7 @@ module.exports = (io, socket) => {
   socket.on("update_conversation", async ({ conversationId, userId }) => {
     try {
       const conversation = await Conversation.findById(conversationId)
-        .populate("participants", "name avatar status")
+        .populate("participants", "name avatar status blockedUsers")
         .populate("creator", "name avatar status")
         .populate("event")
         .populate("lastMessage");
@@ -98,4 +98,20 @@ module.exports = (io, socket) => {
       }
     },
   );
+
+  // --- Block DM ---
+  socket.on("block_dm", async ({ userId, conversationId }) => {
+    const conv = await Conversation.findById(conversationId);
+    if (!conv || conv?.type !== "dm") return;
+
+    io.to(conversationId).emit("dm_blocked", { userId, conversationId });
+  });
+
+  // --- Unblock DM ---
+  socket.on("unblock_dm", async ({ userId, conversationId }) => {
+    const conv = await Conversation.findById(conversationId);
+    if (!conv || conv?.type !== "dm") return;
+
+    io.to(conversationId).emit("dm_unblocked", { userId, conversationId });
+  });
 };

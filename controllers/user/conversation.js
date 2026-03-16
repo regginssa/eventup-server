@@ -9,7 +9,7 @@ const getUserConversations = async (req, res) => {
       participants: userId,
       hiddenFor: { $ne: userId },
     })
-      .populate("participants", "name avatar status")
+      .populate("participants", "name avatar status blockedUsers")
       .populate("creator", "name avatar status")
       .populate("event")
       .populate("lastMessage")
@@ -29,7 +29,7 @@ const create = async (req, res) => {
     const newConv = await Conversation.create(req.body);
 
     const populated = await Conversation.findById(newConv._id)
-      .populate("participants", "name avatar status")
+      .populate("participants", "name avatar status blockedUsers")
       .populate("creator")
       .populate("event")
       .populate("lastMessage");
@@ -52,7 +52,7 @@ const update = async (req, res) => {
     conversation.set(req.body);
     await conversation.save();
     const populated = await Conversation.findById(id)
-      .populate("participants", "name avatar status")
+      .populate("participants", "name avatar status blockedUsers")
       .populate("creator", "name avatar status")
       .populate("event")
       .populate("lastMessage");

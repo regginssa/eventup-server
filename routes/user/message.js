@@ -7,6 +7,6 @@ router.patch("/seen", controllers.markSeen);
 
 router.patch("/:id", controllers.update);
 router.delete("/:id", controllers.removeOne);
-router.delete("/many", controllers.removeMany);
+router.post("/many", controllers.removeMany);
 
 module.exports = router;

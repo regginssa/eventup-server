@@ -403,6 +403,28 @@ const changePassword = async (req, res) => {
   }
 };
 
+const updateMe = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ ok: false, message: "User not found" });
+    }
+
+    user.set(req.body);
+    await user.save();
+
+    const populated = await User.findById(userId)
+      .select("-password")
+      .populate("tickets");
+
+    res.status(200).json({ ok: true, data: populated });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
 const removeMe = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -436,5 +458,6 @@ module.exports = {
   resetPassword,
   getMe,
   changePassword,
+  updateMe,
   removeMe,
 };

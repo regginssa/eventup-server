@@ -102,4 +102,16 @@ module.exports = (io, socket) => {
       console.error("[socket remove message error]: ", error);
     }
   });
+
+  socket.on("remove_messages", async ({ ids, conversationId, userId }) => {
+    const conv = await Conversation.findById(conversationId);
+    if (!conv || conv?.type !== "dm") return;
+
+    const otherUserId = conv.participants.find((p) => p.toString() !== userId);
+    io.to(conversationId).emit("messages_removed", {
+      ids,
+      conversationId,
+      userId: otherUserId,
+    });
+  });
 };
