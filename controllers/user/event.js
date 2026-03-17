@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const Event = require("../../models/Event");
 const User = require("../../models/User");
 const { checkPurchasesOneShot } = require("../../services/impact");
@@ -28,6 +29,10 @@ const getFeeds = async (req, res) => {
     if (isValid(countryCode)) query["location.country.code"] = countryCode;
     if (isValid(regionCode)) query["location.region.code"] = regionCode;
     if (isValid(category)) query["classifications.category"] = category;
+    const isValidObjectId = (id) =>
+      mongoose.Types.ObjectId.isValid(id) &&
+      id !== "null" &&
+      id !== "undefined";
 
     const hasSearchFilters =
       isValid(startDate) ||
@@ -39,7 +44,8 @@ const getFeeds = async (req, res) => {
      * CASE 1
      * NO USER
      */
-    if (!userId) {
+
+    if (!isValidObjectId(userId)) {
       const [events, total] = await Promise.all([
         Event.find(query)
           .sort({ "dates.start.date": 1 })
