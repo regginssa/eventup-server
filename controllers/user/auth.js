@@ -3,6 +3,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const mailServices = require("../../services/mail");
 const Event = require("../../models/Event");
+const Conversation = require("../../models/Conversation");
+const Message = require("../../models/Message");
 
 const googleRegister = async (req, res) => {
   try {
@@ -428,9 +430,11 @@ const updateMe = async (req, res) => {
 const removeMe = async (req, res) => {
   try {
     const userId = req.user.id;
+
+    // 1️⃣ Check if user still hosts events
     const events = await Event.find({ hoster: userId });
 
-    if (events && events.length > 0) {
+    if (events.length > 0) {
       return res.json({
         ok: false,
         message:
@@ -438,10 +442,58 @@ const removeMe = async (req, res) => {
       });
     }
 
+    // 2️⃣ Find all conversations where user participates
+    const conversations = await Conversation.find({
+      participants: userId,
+    });
+
+    const dmConversationIds = [];
+    const groupConversationIds = [];
+
+    conversations.forEach((c) => {
+      if (c.type === "dm") {
+        dmConversationIds.push(c._id);
+      } else if (c.type === "group") {
+        groupConversationIds.push(c._id);
+      }
+    });
+
+    // 3️⃣ Delete messages for DM conversations
+    if (dmConversationIds.length > 0) {
+      await Message.deleteMany({
+        conversation: { $in: dmConversationIds },
+      });
+
+      // 4️⃣ Delete DM conversations
+      await Conversation.deleteMany({
+        _id: { $in: dmConversationIds },
+      });
+    }
+
+    // 5️⃣ Remove user from group conversations
+    if (groupConversationIds.length > 0) {
+      await Conversation.updateMany(
+        { _id: { $in: groupConversationIds } },
+        {
+          $pull: { participants: userId },
+          $unset: { [`unread.${userId}`]: "" },
+        },
+      );
+    }
+
+    // 6️⃣ Finally delete user
     await User.findByIdAndDelete(userId);
-    return res.json({ ok: true });
+
+    return res.json({
+      ok: true,
+      message: "Account removed successfully",
+    });
   } catch (error) {
-    res.status(500).json({ ok: false, message: "Internal server error" });
+    console.error(error);
+    res.status(500).json({
+      ok: false,
+      message: "Internal server error",
+    });
   }
 };
 
