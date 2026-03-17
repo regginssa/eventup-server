@@ -10,6 +10,8 @@ const get = async (req, res) => {
       destLng,
       departureDate,
       packageType,
+      tripType,
+      returnDate,
     } = req.query; // MUST be query for GET requests
 
     // Convert to actual numbers here
@@ -24,7 +26,9 @@ const get = async (req, res) => {
       dLat,
       dLng,
       departureDate,
+      returnDate,
       packageType,
+      tripType,
     );
 
     if (offer) {
