@@ -17,6 +17,7 @@ const NotificationSchema = new mongoose.Schema(
         "event_ticket_refunded",
         "receive_invite_group_chat",
         "system",
+        "subscription_expired",
       ],
       required: true,
     },
