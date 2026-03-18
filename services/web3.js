@@ -19,21 +19,20 @@
 
 const fetchNativeTokensPrices = async () => {
   try {
-    const res = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd",
-    );
-    const data = await res.json();
+    const [ethRes, solRes] = await Promise.all([
+      fetch("https://api.coinpaprika.com/v1/tickers/eth-ethereum"),
+      fetch("https://api.coinpaprika.com/v1/tickers/sol-solana"),
+    ]);
+
+    const eth = await ethRes.json();
+    const sol = await solRes.json();
 
     return {
-      eth: data.ethereum?.usd || 0,
-      sol: data.solana?.usd || 0,
+      eth: eth.quotes.USD.price,
+      sol: sol.quotes.USD.price,
     };
-  } catch (error) {
-    console.error("[fetch native tokens prices error]: ", error);
-    return {
-      eth: 0,
-      sol: 0,
-    };
+  } catch (e) {
+    return { eth: 0, sol: 0 };
   }
 };
 
