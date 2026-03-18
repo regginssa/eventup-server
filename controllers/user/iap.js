@@ -17,6 +17,18 @@ const verify = async (req, res) => {
       receiptData,
     } = req.body;
 
+    console.log("[iap verify body data]: ", {
+      userId,
+      type,
+      ticketId,
+      subscriptionId,
+      currency,
+      amount,
+      productId,
+      transactionId,
+      receiptData,
+    });
+
     if (!userId || !productId || !receiptData) {
       return res.status(400).json({ ok: false, message: "Missing fields" });
     }
@@ -116,6 +128,7 @@ const verify = async (req, res) => {
 
       user.tickets = [...user.tickets, ticketId];
       await user.save();
+      console.log("[iap user tickets saved]: ", user.tickets);
     } else if (type === "subscription") {
       transaction = await Transaction.create({
         userId,
@@ -139,7 +152,10 @@ const verify = async (req, res) => {
       user.subscription.id = subscriptionId;
       user.subscription.startedAt = df.toISOString(new Date());
       await user.save();
+      console.log("[iap user subscription activated]: ", user.subscription);
     }
+
+    console.log("[iap transaction response]: ", transaction);
 
     return res.status(200).json({
       ok: true,
