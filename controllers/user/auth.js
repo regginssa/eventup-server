@@ -13,9 +13,7 @@ const googleRegister = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user) {
-      return res
-        .status(400)
-        .json({ ok: false, message: "User already exists" });
+      return res.json({ ok: false, message: "User already exists" });
     }
 
     const password = await bcrypt.hash(googleId, 10);
@@ -49,20 +47,10 @@ const appleRegister = async (req, res) => {
   try {
     const { firstName, lastName, email, appleId } = req.body;
 
-    console.log(
-      "[new user register with apple body data]: ",
-      firstName,
-      lastName,
-      email,
-      appleId,
-    );
-
     const user = await User.findOne({ email });
 
     if (user) {
-      return res
-        .status(400)
-        .json({ ok: false, message: "User already exists" });
+      return res.json({ ok: false, message: "User already exists" });
     }
 
     const password = await bcrypt.hash(appleId, 10);
@@ -143,7 +131,7 @@ const googleLogin = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ ok: false, message: "User not found" });
+      return res.json({ ok: false, message: "User not found" });
     }
 
     const populated = await User.findById(user._id)
@@ -171,7 +159,7 @@ const appleLogin = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(400).json({ ok: false, message: "User not found" });
+      return res.json({ ok: false, message: "User not found" });
     }
 
     const populated = await User.findById(user._id)
@@ -200,7 +188,7 @@ const emailLogin = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ ok: false, message: "User not found" });
+      return res.json({ ok: false, message: "User not found" });
     }
 
     if (user.signOption !== "email") {
