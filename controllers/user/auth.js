@@ -134,6 +134,9 @@ const googleLogin = async (req, res) => {
       return res.json({ ok: false, message: "User not found" });
     }
 
+    user.emailVerified = true;
+    await user.save();
+
     const populated = await User.findById(user._id)
       .select("-password")
       .populate("tickets");
@@ -161,6 +164,9 @@ const appleLogin = async (req, res) => {
     if (!user) {
       return res.json({ ok: false, message: "User not found" });
     }
+
+    user.emailVerified = true;
+    await user.save();
 
     const populated = await User.findById(user._id)
       .select("-password")
