@@ -3,6 +3,7 @@ const Transaction = require("../../models/Transaction");
 const Ticket = require("../../models/Ticket");
 const User = require("../../models/User");
 const Subscription = require("../../models/Subscription");
+const Notification = require("../../models/Notification");
 const { getIO } = require("../../socket");
 
 const webhook = async (req, res) => {
@@ -52,6 +53,28 @@ const webhook = async (req, res) => {
           userId: booking.user.toString(),
         });
 
+        const bookingNotification = await Notification.create({
+          type: "booking_payment_completed",
+          metadata: {
+            bookingId: booking._id,
+          },
+          title: isPartiallyPaid
+            ? "Partial payment received"
+            : "Booking payment confirmed",
+          body: isPartiallyPaid
+            ? `We received a partial payment for your booking. Please complete the remaining payment to confirm it.`
+            : `Your booking payment was successful. Your reservation is now confirmed.`,
+          isRead: false,
+          isArchived: false,
+          user: booking.user.toString(),
+          link: `/booking/status`,
+        });
+
+        io.to(booking.user.toString()).emit("notification_sent", {
+          notification: bookingNotification,
+          userId: booking.user.toString(),
+        });
+
         io.to(booking.user.toString()).emit("booking_payment_status_updated", {
           bookingId: booking._id,
           status: booking.status,
@@ -76,6 +99,24 @@ const webhook = async (req, res) => {
           txId: txHash,
           paymentMethod: "crypto",
           userId: user._id,
+        });
+
+        const ticketNotification = await Notification.create({
+          type: "new_ticket_purchased",
+          metadata: {
+            ticketId: metadata.ticketId,
+          },
+          title: "Ticket purchased successfully",
+          body: `Your ticket payment was successful. You can now view your ticket in My Tickets.`,
+          isRead: false,
+          isArchived: false,
+          user: user._id.toString(),
+          link: `/mine/tickets`,
+        });
+
+        io.to(user._id.toString()).emit("notification_sent", {
+          notification: ticketNotification,
+          userId: user._id.toString(),
         });
 
         io.to(user._id.toString()).emit("auth_user_updated", { user });
@@ -105,7 +146,29 @@ const webhook = async (req, res) => {
           userId: user._id,
         });
 
-        io.to(user._id.toString()).emit("auth_user_updated", { user });
+        const subscriptionNotification = await Notification.create({
+          type: "subscription_activated",
+          metadata: {
+            subscriptionId: metadata.subscriptionId,
+          },
+          title: "Subscription activated",
+          body: `Your subscription payment was successful. You now have access to premium features.`,
+          isRead: false,
+          isArchived: false,
+          user: user._id.toString(),
+          link: `/subscription`,
+        });
+
+        io.to(user._id.toString()).emit("notification_sent", {
+          notification: subscriptionNotification,
+          userId: user._id.toString(),
+        });
+
+        io.to(user._id.toString()).emit("subscription_activated", {
+          subId: user.subscription.id,
+          startedAt: user.subscription.startedAt,
+          userId: user._id.toString(),
+        });
         break;
 
       default:
