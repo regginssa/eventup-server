@@ -9,7 +9,6 @@ const { getIO } = require("../../socket");
 const webhook = async (req, res) => {
   try {
     const tx = req.body;
-    console.log("[cryptocurrency checkout webhook data]: ", tx);
 
     if (!tx) {
       return res
