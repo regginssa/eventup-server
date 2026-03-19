@@ -70,3 +70,29 @@ server.listen(PORT, async () => {
 // require("./services/ticketmaster");
 // const {fetchAllEventsFromTM} = require("./services/ticketmaster");
 // fetchAllEventsFromTM();
+
+// const {
+//   getAirportGatewayId,
+//   getAllRoutesByGatewayId,
+//   createQuote,
+//   createBooking,
+//   amendBooking,
+//   cancelBooking,
+// } = require("./services/transfer");
+
+// const testTransfer = async () => {
+//   // const gatewayId = await getAirportGatewayId();
+//   // console.log("Barcelona airport gateway id: ", gatewayId);
+//   // const routeId = await getAllRoutesByGatewayId(gatewayId);
+//   // console.log("Route id: ", routeId);
+//   const quote = await createQuote();
+//   console.log("Quote: ", quote);
+//   const booking = await createBooking(quote.quoteId, quote.offerHash);
+//   console.log("Booking: ", booking);
+//   // const amend = await amendBooking(booking);
+//   // console.log("Amend: ", amend);
+//   // const result = await cancelBooking(booking);
+//   // console.log("Cancel result: ", result);
+// };
+
+// testTransfer();
