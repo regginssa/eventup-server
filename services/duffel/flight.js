@@ -212,7 +212,12 @@ async function book(offerId, passengers, totalAmount, currency = "USD") {
 
     const json = await response.json();
 
-    console.log(json);
+    if (!json.data?.id) {
+      return {
+        status: "failed",
+        message: json.errors[0].message,
+      };
+    }
 
     if (response.ok) {
       return {

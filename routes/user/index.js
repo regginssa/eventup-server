@@ -22,8 +22,11 @@ router.use("/didit", require("./didit"));
 router.use("/flight", requireAuth, require("./flight"));
 router.use("/hotel", requireAuth, require("./hotel"));
 router.use("/transfer", requireAuth, require("./transfer"));
-router.use("/booking", requireAuth, require("./booking"));
+
 router.use("/stripe", requireAuth, require("./stripe"));
+router.use("/duffel", requireAuth, require("./duffel"));
+
+router.use("/booking", requireAuth, require("./booking"));
 router.use("/web3", requireAuth, require("./web3"));
 router.use("/conversations", requireAuth, require("./conversation"));
 router.use("/messages", requireAuth, require("./message"));

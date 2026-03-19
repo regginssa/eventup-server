@@ -1,4 +1,4 @@
-const services = require("../../services/flight");
+const services = require("../../services/duffel/flight");
 const { convertCurrency } = require("../../utils/currency");
 
 const get = async (req, res) => {
@@ -54,21 +54,48 @@ const book = async (req, res) => {
   try {
     const { offerId, passengers, totalAmount, currency } = req.body;
 
-    const book = await services.book(
+    const result = await services.book(
       offerId,
       passengers,
       totalAmount,
       currency,
     );
 
-    if (!book.orderId) {
-      return res.status(400).json({ ok: false, data: book });
-    }
-
-    return res.status(200).json({ ok: true, data: book });
+    return res.json({ ok: true, data: result });
   } catch (err) {
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
 };
 
-module.exports = { get, book };
+const webhook = async (req, res) => {
+  try {
+    const event = req.body;
+
+    console.log("Received duffel webhook:", event.type);
+
+    switch (event.type) {
+      case "order.created":
+        console.log("✅ Order created");
+        break;
+
+      case "order.creation_failed":
+        console.log("❌ Order failed");
+        break;
+
+      case "stays.booking.created":
+        console.log("🏨 Stay created");
+        break;
+
+      case "stays.booking_creation_failed":
+        console.log("Stays booking failed");
+        break;
+
+      default:
+        console.log("Unhandled event:", event.type);
+    }
+
+    res.status(200).send("ok");
+  } catch (error) {}
+};
+
+module.exports = { get, book, webhook };

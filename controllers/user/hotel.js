@@ -1,4 +1,4 @@
-const services = require("../../services/hotel");
+const services = require("../../services/duffel/hotel");
 const { convertCurrency } = require("../../utils/currency");
 
 const get = async (req, res) => {
@@ -55,14 +55,13 @@ const book = async (req, res) => {
   try {
     const { quoteId, phoneNumber, guestInfo, specialRequests } = req.body;
 
-    console.log("[body data]: ", req.body);
-
     const result = await services.book(
       quoteId,
       phoneNumber,
       guestInfo,
       specialRequests || "",
     );
+
     res.json({ ok: true, data: result });
   } catch (err) {
     res.status(500).json({ ok: false, message: "Internal server error" });

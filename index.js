@@ -49,6 +49,12 @@ app.use(
   bodyParser.raw({ type: "application/json" }),
   userStripeController.webhook,
 );
+const userFlightController = require("./controllers/user/flight");
+app.post(
+  "/api/v1/flight/webhook",
+  bodyParser.raw({ type: "application/json" }),
+  userFlightController.webhook,
+);
 
 // Middlewares
 app.use(bodyParser.json());
