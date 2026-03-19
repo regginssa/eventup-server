@@ -11,7 +11,7 @@ const zeroDecimalCurrencies = [
   "UGX",
 ];
 
-const convertCurrency = async (from, to = "USD", amount) => {
+const convertCurrency = async (from = "EUR", to = "USD", amount) => {
   try {
     const res = await fetch(
       `https://open.er-api.com/v6/latest/${from?.toUpperCase()}`,

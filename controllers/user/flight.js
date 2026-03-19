@@ -12,7 +12,7 @@ const get = async (req, res) => {
       packageType,
       tripType,
       returnDate,
-    } = req.query; // MUST be query for GET requests
+    } = req.query;
 
     // Convert to actual numbers here
     const oLat = parseFloat(originLat);

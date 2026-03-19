@@ -8,7 +8,8 @@ const duffel = new Duffel({
 const create = async ({ amount, currency }) => {
   try {
     const res = await duffel.paymentIntents.create({
-      data: { amount: amount.toString(), currency: currency },
+      amount: amount.toString(),
+      currency: currency,
     });
 
     if (!res.data) return null;
