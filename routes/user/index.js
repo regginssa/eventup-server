@@ -14,6 +14,7 @@ router.use("/tx", require("./transaction"));
 router.use("/upload", require("./upload"));
 router.use("/cryptocheckout", require("./cryptocheckout"));
 router.use("/currency", require("./currency"));
+router.use("/iap", require("./iap"));
 
 // Protected routes
 const requireAuth = passport.authenticate("jwt", { session: false });
@@ -24,6 +25,7 @@ router.use("/hotel", requireAuth, require("./hotel"));
 router.use("/transfer", requireAuth, require("./transfer"));
 
 router.use("/stripe", requireAuth, require("./stripe"));
+router.use("/airwallex", requireAuth, require("./airwallex"));
 router.use("/duffel", requireAuth, require("./duffel"));
 
 router.use("/booking", requireAuth, require("./booking"));
@@ -32,6 +34,5 @@ router.use("/conversations", requireAuth, require("./conversation"));
 router.use("/messages", requireAuth, require("./message"));
 router.use("/notifications", requireAuth, require("./notification"));
 router.use("/support", requireAuth, require("./support"));
-router.use("/iap", requireAuth, require("./iap"));
 
 module.exports = router;
