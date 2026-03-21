@@ -1,10 +1,10 @@
 const crypto = require("crypto");
-const Airwallex = require("@airwallex/node-sdk");
+const { Airwallex } = require("@airwallex/node-sdk");
 
 const airwallex = new Airwallex({
   clientId: process.env.AIRWALLEX_CLIENT_ID,
   apiKey: process.env.AIRWALLEX_API_KEY,
-  env: "demo", // API environment: 'demo','prod'
+  env: "demo", // 'demo' or 'prod'
 });
 
 const createPaymentIntent = async ({
@@ -15,14 +15,16 @@ const createPaymentIntent = async ({
 }) => {
   try {
     const requestId = crypto.randomUUID();
-    const pit = await airwallex.paymentAcceptance.paymentIntents.create({
-      request_id: requestId,
-      amount: Number(amount),
-      currency: currency.toUpperCase(),
-      merchant_order_id: merchantOrderId,
-      descriptor: "CHARLIE UNICORN AI LTD",
-      return_url: returnUrl,
-    });
+
+    const pit =
+      await airwallex.paymentAcceptance.paymentIntents.createPaymentIntent({
+        request_id: requestId,
+        amount: Number(amount),
+        currency: currency.toUpperCase(),
+        merchant_order_id: merchantOrderId,
+        descriptor: "CHARLIE UNICORN AI LTD",
+        return_url: returnUrl,
+      });
 
     return pit;
   } catch (e) {
