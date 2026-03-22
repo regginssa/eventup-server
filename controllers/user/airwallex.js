@@ -165,10 +165,6 @@ const webhook = async (req, res) => {
               status: "completed",
             });
 
-            console.log(
-              "[booking payment status changed]: ",
-              booking.paymentStatus,
-            );
             break;
         }
 
