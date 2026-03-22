@@ -25,7 +25,6 @@ module.exports = (io, socket) => {
       const now = new Date();
 
       if (now > expireDate) {
-        console.log("subscription expired");
         const freeSub = await Subscription.findOne().lean();
         if (!freeSub) return;
 

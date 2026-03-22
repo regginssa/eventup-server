@@ -80,7 +80,7 @@ const webhook = async (req, res) => {
 
           case "subscription":
             user.subscription = {
-              id: metadata.subscriptionId,
+              id: metadata.subId,
               startedAt: new Date().toISOString().split("T")[0],
             };
             await user.save();
@@ -101,7 +101,7 @@ const webhook = async (req, res) => {
             const subscriptionNotification = await Notification.create({
               type: "subscription_activated",
               metadata: {
-                subscriptionId: metadata.subscriptionId,
+                subscriptionId: metadata.subId,
               },
               title: "Subscription activated",
               body: `Your subscription is now active. Enjoy all premium features!`,
@@ -109,11 +109,6 @@ const webhook = async (req, res) => {
               isArchived: false,
               user: user._id.toString(),
               link: `/subscription`,
-            });
-
-            console.log("subscription webhook: ", {
-              id: metadata.subscriptionId,
-              startedAt: new Date().toISOString().split("T")[0],
             });
 
             io.to(user._id.toString()).emit("notification_sent", {
@@ -169,6 +164,11 @@ const webhook = async (req, res) => {
               bookingId: booking._id,
               status: "completed",
             });
+
+            console.log(
+              "[booking payment status changed]: ",
+              booking.paymentStatus,
+            );
             break;
         }
 
