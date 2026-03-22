@@ -24,6 +24,7 @@ const createPaymentIntent = async ({
         merchant_order_id: merchantOrderId,
         descriptor: "CHARLIE UNICORN AI LTD",
         return_url: returnUrl,
+        payment_method_types: ["card"],
       });
 
     return pit;
