@@ -26,7 +26,8 @@ const webhook = async (req, res) => {
 
     const event = JSON.parse(rawBody);
     const intent = event.data.object;
-    const metadata = JSON.parse(intent.merchant_order_id);
+    const txId = event.data.object.id;
+    const metadata = intent.metadata;
     console.log("airwallex webhook metadata: ", metadata);
 
     if (!metadata) return res.status(400).json();
@@ -51,7 +52,7 @@ const webhook = async (req, res) => {
               status: "completed",
               amountReceived,
               metadata,
-              txId: id,
+              txId,
               paymentMethod: "credit",
               userId: user._id,
             });
@@ -91,7 +92,7 @@ const webhook = async (req, res) => {
               status: "completed",
               amountReceived,
               metadata,
-              txId: id,
+              txId,
               paymentMethod: "credit",
               userId: user._id,
             });
@@ -130,7 +131,7 @@ const webhook = async (req, res) => {
               status: "completed",
               amountReceived,
               metadata,
-              txId: id,
+              txId,
               paymentMethod: "credit",
               userId: user._id,
             });
@@ -225,7 +226,10 @@ const customer = {
 const paymentIntent = {
   create: async (req, res) => {
     try {
-      const pit = await service.paymentIntent.create(req.body);
+      const pit = await service.paymentIntent.create({
+        ...req.body,
+        userId: req.user.id,
+      });
       res.json({ ok: true, data: pit });
     } catch (e) {
       console.error("airwallex create payment error: ", e);

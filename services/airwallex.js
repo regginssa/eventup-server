@@ -26,7 +26,7 @@ const customer = {
 };
 
 const paymentIntent = {
-  create: async ({ amount, currency, metadata, returnUrl }) => {
+  create: async ({ amount, currency, metadata, returnUrl, userId }) => {
     try {
       const pit =
         await airwallex.paymentAcceptance.paymentIntents.createPaymentIntent({
@@ -34,8 +34,9 @@ const paymentIntent = {
           amount: Number(amount),
           currency: currency.toUpperCase(),
           payment_method_types: ["card"],
-          merchant_order_id: JSON.stringify(metadata),
+          merchant_order_id: userId,
           return_url: returnUrl,
+          metadata,
         });
 
       return pit;
