@@ -55,6 +55,12 @@ app.post(
   bodyParser.raw({ type: "application/json" }),
   userFlightController.webhook,
 );
+const userAirwallexController = require("./controllers/user/airwallex");
+app.use(
+  "/api/v1/airwallex/webhook",
+  bodyParser.raw({ type: "application/json" }),
+  userAirwallexController.webhook,
+);
 
 // Middlewares
 app.use(bodyParser.json());
