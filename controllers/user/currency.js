@@ -4,7 +4,7 @@ const convert = async (req, res) => {
   try {
     const { from, to, amount } = req.query;
 
-    const result = await convertCurrency(from, to, amount);
+    const result = await convertCurrency(amount, from, to);
     res.json({ ok: true, data: result });
   } catch (error) {
     console.error("[currency convert error]: ", error);

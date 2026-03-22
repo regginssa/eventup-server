@@ -19,7 +19,7 @@ const convertCurrency = async (amount, from, to = "EUR") => {
     const data = await res.json();
 
     const rate = data.rates[to?.toUpperCase() || "EUR"];
-    const result = amount * rate;
+    const result = Number(amount) * rate;
     const rounded = Number(result.toFixed(2));
     return rounded;
   } catch (error) {
