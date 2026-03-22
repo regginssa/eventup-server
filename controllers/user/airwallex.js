@@ -32,13 +32,13 @@ const webhook = async (req, res) => {
 
     if (!metadata) return res.status(400).json();
 
+    if (!metadata.userId) return res.status(400).json();
+    const io = getIO();
+    const user = await User.findById(metadata.userId);
+    if (!user) return res.status(400).json();
+
     switch (event.name) {
       case "payment_intent.succeeded":
-        if (!metadata.userId) break;
-        const io = getIO();
-        const user = await User.findById(metadata.userId);
-        if (!user) break;
-
         switch (metadata.type) {
           case "ticket":
             user.tickets.push(metadata.ticketId);
@@ -176,7 +176,7 @@ const webhook = async (req, res) => {
         const nextUrl = intent.next_action?.url;
         console.log("payment intent next url: ", nextUrl);
 
-        if (!nextUrl) return;
+        if (!nextUrl) break;
 
         io.to(user._id.toString()).emit("payment_requires_customer_action", {
           nextUrl,
