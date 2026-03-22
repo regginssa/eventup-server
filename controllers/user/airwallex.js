@@ -11,6 +11,7 @@ const webhook = async (req, res) => {
     const timestamp = req.headers["x-timestamp"];
     const signature = req.headers["x-signature"];
     const rawBody = req.body.toString();
+    const secret = process.env.AIRWALLEX_WEBHOOK_ID;
 
     const payload = timestamp + rawBody;
 
