@@ -77,7 +77,7 @@ function map(data, type = "search") {
       checkInInfo: formatCheckInInfo(data.accommodation.check_in_information),
       converted: {
         totalAmount: 0,
-        currency: "USD",
+        currency: "EUR",
       },
     };
   } else {
@@ -161,7 +161,7 @@ async function quote(rateId) {
       checkInInfo: formatCheckInInfo(data.accommodation.check_in_information),
       converted: {
         totalAmount: 0,
-        currency: "USD",
+        currency: "EUR",
       },
     };
 

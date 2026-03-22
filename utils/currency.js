@@ -11,14 +11,14 @@ const zeroDecimalCurrencies = [
   "UGX",
 ];
 
-const convertCurrency = async (from = "EUR", to = "USD", amount) => {
+const convertCurrency = async (amount, from, to = "EUR") => {
   try {
     const res = await fetch(
       `https://open.er-api.com/v6/latest/${from?.toUpperCase()}`,
     );
     const data = await res.json();
 
-    const rate = data.rates[to?.toUpperCase() || "USD"];
+    const rate = data.rates[to?.toUpperCase() || "EUR"];
     const result = amount * rate;
     const rounded = Number(result.toFixed(2));
     return rounded;

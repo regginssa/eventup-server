@@ -74,7 +74,7 @@ function mapSearch(quote, offerHash, from, to, depatureDate) {
     pickupDateTime: depatureDate,
     converted: {
       totalAmount: 0,
-      currency: "USD",
+      currency: "EUR",
     },
   };
 }

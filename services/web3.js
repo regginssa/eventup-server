@@ -20,16 +20,16 @@
 const fetchNativeTokensPrices = async () => {
   try {
     const [ethRes, solRes] = await Promise.all([
-      fetch("https://api.coinpaprika.com/v1/tickers/eth-ethereum"),
-      fetch("https://api.coinpaprika.com/v1/tickers/sol-solana"),
+      fetch("https://api.coinpaprika.com/v1/tickers/eth-ethereum?quotes=EUR"),
+      fetch("https://api.coinpaprika.com/v1/tickers/sol-solana?quotes=EUR"),
     ]);
 
     const eth = await ethRes.json();
     const sol = await solRes.json();
 
     return {
-      eth: eth.quotes.USD.price,
-      sol: sol.quotes.USD.price,
+      eth: eth.quotes.EUR.price,
+      sol: sol.quotes.EUR.price,
     };
   } catch (e) {
     return { eth: 0, sol: 0 };
@@ -40,29 +40,39 @@ const fetchTokenPrices = async () => {
   try {
     const BABYU_TOKEN_ADDRESS = process.env.BABYU_TOKEN_ADDRESS;
     const CHRLE_TOKEN_ADDRESS = process.env.CHRLE_TOKEN_ADDRESS;
-    const babyuURL = `https://api-v3.raydium.io/mint/price?mints=${BABYU_TOKEN_ADDRESS}`;
-    const babyuRes = await fetch(babyuURL);
-    const babyuJson = await babyuRes.json();
 
-    const babyuPrice = Number(babyuJson?.data?.[BABYU_TOKEN_ADDRESS] ?? 0);
+    // Fetch both in parallel
+    const [babRes, chrleRes] = await Promise.all([
+      fetch(
+        `https://api-v3.raydium.io/mint/price?mints=${BABYU_TOKEN_ADDRESS}`,
+      ),
+      fetch(
+        `https://launch-mint-v1.raydium.io/get/by/mints?ids=${CHRLE_TOKEN_ADDRESS}`,
+      ),
+    ]);
 
-    const chrleURL = `https://launch-mint-v1.raydium.io/get/by/mints?ids=${CHRLE_TOKEN_ADDRESS}`;
-    const chrleRes = await fetch(chrleURL);
+    const babyuJson = await babRes.json();
     const chrleJson = await chrleRes.json();
 
-    const chrleRow = chrleJson?.data?.rows?.[0];
+    // --- USD prices ---
+    const babyuUSD = Number(babyuJson?.data?.[BABYU_TOKEN_ADDRESS] ?? 0);
 
-    let chrlePrice = 0;
+    const chrleRow = chrleJson?.data?.rows?.[0];
+    let chrleUSD = 0;
 
     if (chrleRow && chrleRow.marketCap && chrleRow.supply) {
-      const marketCap = Number(chrleRow.marketCap);
-      const supply = Number(chrleRow.supply);
-      chrlePrice = marketCap / supply; // USD price
+      chrleUSD = Number(chrleRow.marketCap) / Number(chrleRow.supply);
     }
 
+    // --- Convert to EUR (parallel again for speed) ---
+    const [babEur, chrleEur] = await Promise.all([
+      convertCurrency(babyuUSD || 0, "USD", "EUR"),
+      convertCurrency(chrleUSD || 0, "USD", "EUR"),
+    ]);
+
     return {
-      chrle: chrlePrice,
-      babyu: babyuPrice,
+      babyu: babEur || 0,
+      chrle: chrleEur || 0,
     };
   } catch (err) {
     console.error("Failed to fetch token prices:", err);

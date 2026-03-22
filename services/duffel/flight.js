@@ -176,7 +176,7 @@ async function search(
       converted: {
         totalAmount: 0,
         netAmount: 0,
-        currency: "USD",
+        currency: "EUR",
       },
     };
   } catch (err) {

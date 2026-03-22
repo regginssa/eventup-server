@@ -32,16 +32,19 @@ const get = async (req, res) => {
     );
 
     if (offer) {
-      const totalAmount = await convertCurrency(
-        offer.currency,
-        "USD",
-        offer.totalAmount,
-      );
+      if (offer.currency === "EUR") {
+        offer.converted.totalAmount = offer.totalAmount;
+      } else {
+        const totalAmount = await convertCurrency(
+          offer.totalAmount,
+          offer.currency,
+        );
 
-      if (Number(totalAmount) <= 0) {
-        return res.json({ ok: true, data: null });
+        if (Number(totalAmount) <= 0) {
+          return res.json({ ok: true, data: null });
+        }
+        offer.converted.totalAmount = totalAmount;
       }
-      offer.converted.totalAmount = totalAmount;
     }
 
     res.status(200).json({ ok: true, data: offer });
