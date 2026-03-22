@@ -172,6 +172,18 @@ const webhook = async (req, res) => {
         console.log("❌ Payment failed");
         break;
 
+      case "payment_intent.requires_customer_action":
+        const nextUrl = intent.next_action?.url;
+        console.log("payment intent next url: ", nextUrl);
+
+        if (!nextUrl) return;
+
+        io.to(user._id.toString()).emit("payment_requires_customer_action", {
+          nextUrl,
+        });
+
+        break;
+
       default:
         console.log("Unhandled event:", event.name);
     }
