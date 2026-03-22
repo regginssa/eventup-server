@@ -1,4 +1,3 @@
-const crypto = require("crypto");
 const { Airwallex } = require("@airwallex/node-sdk");
 
 const airwallex = new Airwallex({
@@ -7,31 +6,43 @@ const airwallex = new Airwallex({
   env: "demo", // 'demo' or 'prod'
 });
 
-const createPaymentIntent = async ({
-  amount,
-  currency,
-  merchantOrderId,
-  returnUrl,
-}) => {
-  try {
-    const requestId = crypto.randomUUID();
-
-    const pit =
-      await airwallex.paymentAcceptance.paymentIntents.createPaymentIntent({
-        request_id: requestId,
-        amount: Number(amount),
-        currency: currency.toUpperCase(),
-        merchant_order_id: merchantOrderId,
-        descriptor: "CHARLIE UNICORN AI LTD",
-        return_url: returnUrl,
-        payment_method_types: ["card"],
+const customer = {
+  create: async ({ email, firstName, lastName, userId }) => {
+    try {
+      const res = await airwallex.post("/api/v1/pa/customers/create", {
+        request_id: `req_${Date.now()}`,
+        email: email,
+        first_name: firstName,
+        last_name: lastName,
+        merchant_customer_id: "customer_123123",
       });
 
-    return pit;
-  } catch (e) {
-    console.error("create airwallex payment intent error: ", e);
-    return null;
-  }
+      return res.id;
+    } catch (e) {
+      console.log("create customer error: ", e);
+      return null;
+    }
+  },
 };
 
-module.exports = { createPaymentIntent };
+const paymentIntent = {
+  create: async ({ amount, currency, userId }) => {
+    try {
+      const pit =
+        await airwallex.paymentAcceptance.paymentIntents.createPaymentIntent({
+          request_id: `req_${Date.now()}`,
+          amount: Number(amount),
+          currency: currency.toUpperCase(),
+          payment_method_types: ["card"],
+          merchant_order_id: userId,
+        });
+
+      return pit;
+    } catch (e) {
+      console.error("create airwallex payment intent error: ", e);
+      return null;
+    }
+  },
+};
+
+module.exports = { customer, paymentIntent };

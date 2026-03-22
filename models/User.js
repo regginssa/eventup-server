@@ -141,6 +141,7 @@ const UserSchema = new mongoose.Schema(
     otp: OtpSchema,
     emailVerified: { type: Boolean, default: false },
     blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    airwallexCustomerId: { type: String, default: null },
   },
   { timestamps: true },
 );

@@ -1,6 +1,7 @@
 const router = require("express").Router();
-const controllers = require("../../controllers/user/airwallex");
+const { customer, paymentIntent } = require("../../controllers/user/airwallex");
 
-router.post("/payment-intent", controllers.createPaymentIntent);
+router.post("/customer", customer.create);
+router.post("/payment-intent", paymentIntent.create);
 
 module.exports = router;
