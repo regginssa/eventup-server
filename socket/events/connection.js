@@ -39,7 +39,7 @@ module.exports = (io, socket) => {
         const notification = await Notification.create({
           type: "subscription_expired",
           metadata: {
-            subId: subs[0]._id,
+            subId: freeSub._id,
           },
           title: "Your subscription has expired",
           body: `Hi ${user?.name}, your subscription has expired. Renew it anytime to continue enjoying all premium features.`,
@@ -55,7 +55,7 @@ module.exports = (io, socket) => {
         });
 
         io.to(userId.toString()).emit("subscription_expired", {
-          freeSubId: subs[0]._id,
+          freeSubId: freeSub._id,
           userId,
         });
       }
