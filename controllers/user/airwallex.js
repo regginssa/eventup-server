@@ -28,7 +28,6 @@ const webhook = async (req, res) => {
     const intent = event.data.object;
     const txId = event.data.object.id;
     const metadata = intent.metadata;
-    console.log("airwallex webhook metadata: ", metadata);
 
     if (!metadata) return res.status(400).json();
 
@@ -39,6 +38,8 @@ const webhook = async (req, res) => {
 
     switch (event.name) {
       case "payment_intent.succeeded":
+        const { amount, currency, captured_amount: amountReceived } = intent;
+
         switch (metadata.type) {
           case "ticket":
             user.tickets.push(metadata.ticketId);
