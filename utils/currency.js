@@ -20,7 +20,7 @@ const convertCurrency = async (amount, from, to = "EUR") => {
 
     const rate = data.rates[to?.toUpperCase() || "EUR"];
     const result = Number(amount) * rate;
-    const rounded = Number(result.toFixed(2));
+    const rounded = Number(result);
     return rounded;
   } catch (error) {
     console.error("[covert currency error]: ", error);

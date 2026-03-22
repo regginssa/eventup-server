@@ -126,11 +126,10 @@ async function getAuthToken() {
     );
 
     const data = await res.json();
+    console.log(data);
 
     cachedToken = data.info.token;
-
     tokenExpiry = Date.now() + 55 * 60 * 1000;
-
     return cachedToken;
   } catch (error) {
     console.error("[get suntransfers auth token error]: ", error);
@@ -369,6 +368,7 @@ async function cancelBooking(reference) {
 async function search(from, to, departureTime, packageType) {
   try {
     const token = await getAuthToken();
+    console.log("Transfer search token: ", token);
     if (!token) return null;
 
     const origin = buildLocation(from?.type, from?.code, from?.lat, from?.lng);
@@ -392,6 +392,8 @@ async function search(from, to, departureTime, packageType) {
     });
 
     const data = await res.json();
+
+    console.log("Transfer search res: ", data);
 
     if (!data?.quotes) return null;
 

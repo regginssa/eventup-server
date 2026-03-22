@@ -11,6 +11,8 @@
 // } = require("@solana/web3.js");
 // require("dotenv").config();
 
+const { convertCurrency } = require("../utils/currency");
+
 // const connection = new Connection(process.env.SOLANA_RPC_URL, "confirmed");
 
 // const appWallet = Keypair.fromSecretKey(
@@ -66,8 +68,8 @@ const fetchTokenPrices = async () => {
 
     // --- Convert to EUR (parallel again for speed) ---
     const [babEur, chrleEur] = await Promise.all([
-      convertCurrency(babyuUSD || 0, "USD", "EUR"),
-      convertCurrency(chrleUSD || 0, "USD", "EUR"),
+      convertCurrency(babyuUSD || 0, "USD"),
+      convertCurrency(chrleUSD || 0, "USD"),
     ]);
 
     return {
