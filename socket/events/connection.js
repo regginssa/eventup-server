@@ -2,6 +2,7 @@ const User = require("../../models/User");
 const Subscription = require("../../models/Subscription");
 const Notification = require("../../models/Notification");
 const Conversation = require("../../models/Conversation");
+const { addMonths } = require("date-fns");
 
 module.exports = (io, socket) => {
   // --- User connects ---
@@ -20,17 +21,20 @@ module.exports = (io, socket) => {
       if (!subscription) return;
 
       const subMonth = subscription.month;
-      const expireDate = new Date(startedAt);
-      expireDate.setMonth(expireDate.getMonth() + subMonth);
-
+      const expireDate = addMonths(new Date(startedAt), subMonth);
       const now = new Date();
 
       if (now > expireDate) {
-        const subs = await Subscription.find().lean();
+        console.log("subscription expired");
+        const freeSub = await Subscription.findOne().lean();
+        if (!freeSub) return;
+
         user.subscription = {
-          id: subs[0]._id.toString(),
+          id: freeSub._id.toString(),
           startedAt: null,
         };
+
+        await user.save();
 
         const notification = await Notification.create({
           type: "subscription_expired",

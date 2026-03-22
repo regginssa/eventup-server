@@ -111,6 +111,8 @@ const webhook = async (req, res) => {
               link: `/subscription`,
             });
 
+            console.log("subscription webhook: ", user.subscription);
+
             io.to(user._id.toString()).emit("notification_sent", {
               notification: subscriptionNotification,
               userId: user._id.toString(),
