@@ -2,6 +2,7 @@ const User = require("../../models/User");
 const Transaction = require("../../models/Transaction");
 const Notification = require("../../models/Notification");
 const Booking = require("../../models/Booking");
+const DuffelTx = require("../../models/DuffelTx");
 const crypto = require("crypto");
 const service = require("../../services/airwallex");
 const { getIO } = require("../../socket");
@@ -39,6 +40,12 @@ const webhook = async (req, res) => {
     switch (event.name) {
       case "payment_intent.succeeded":
         const { amount, currency, captured_amount: amountReceived } = intent;
+        const baseAmount = Number((amount * 0.9).toFixed(2));
+
+        await service.transfer.create({
+          amount: baseAmount,
+          currency: "EUR",
+        });
 
         switch (metadata.type) {
           case "ticket":
@@ -176,14 +183,28 @@ const webhook = async (req, res) => {
 
       case "payment_intent.requires_customer_action":
         const nextUrl = intent.next_action?.url;
-        console.log("payment intent next url: ", nextUrl);
-
         if (!nextUrl) break;
 
         io.to(user._id.toString()).emit("payment_requires_customer_action", {
           nextUrl,
         });
 
+        break;
+
+      case "payout.transfer.paid":
+        const transferId = event.data.id;
+        const transferPaidAmount = event.data.transfer_amount;
+
+        await DuffelTx.create({
+          amount: transferPaidAmount,
+          currency: "EUR",
+          reference: event.data?.reference,
+          transferId,
+        });
+
+        break;
+
+      case "payout.transfer.failed":
         break;
 
       default:

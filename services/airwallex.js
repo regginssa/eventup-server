@@ -47,4 +47,52 @@ const paymentIntent = {
   },
 };
 
-module.exports = { customer, paymentIntent };
+const transfer = {
+  create: async ({ currency, amount }) => {
+    try {
+      const transferRequest = {
+        request_id: `req_${Date.now()}`,
+        reason: "Top up Duffel balance",
+        reference: "D3272AG2IV", // MUST match exactly
+        transfer_currency: "EUR",
+
+        beneficiary: {
+          bank_details: {
+            account_name: "Duffel Technology Limited",
+            account_number: "14703154",
+            sort_code: "185008",
+            iban: "GB07CITI18500814703154",
+            bic_swift: "CITIGB2LXXX",
+            bank_name: "Citibank N.A. London",
+            bank_address: {
+              address_line1: "Citigroup Ctr 25 Canada Sq",
+              city: "London",
+              country_code: "GB",
+              postcode: "E14 5LB",
+            },
+          },
+          address: {
+            country_code: "GB",
+          },
+        },
+
+        source_currency: currency || "EUR", // e.g. "USD", "JPY"
+        source_amount: amount, // or use transfer_amount if already GBP
+
+        transfer_method: "bank_transfer",
+      };
+
+      const transfer =
+        await airwallex.payouts.transfers.createTransfer(transferRequest);
+
+      console.log("Duffel transfer: ", transfer);
+
+      return transfer;
+    } catch (e) {
+      console.error("transfer airwallex error: ", e);
+      return null;
+    }
+  },
+};
+
+module.exports = { customer, paymentIntent, transfer };
