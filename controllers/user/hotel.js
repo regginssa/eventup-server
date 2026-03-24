@@ -1,4 +1,4 @@
-const services = require("../../services/duffel/hotel");
+const services = require("../../services/hotel");
 const { convertCurrency } = require("../../utils/currency");
 
 const get = async (req, res) => {

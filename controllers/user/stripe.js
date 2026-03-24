@@ -34,7 +34,6 @@ const webhook = async (req, res) => {
         metadata,
         currency,
         amount,
-        status,
         amount_received: amountReceived,
       } = event.data.object;
 

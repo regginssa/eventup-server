@@ -1,6 +1,4 @@
 const router = require("express").Router();
-const { createPaymentIntents } = require("../../controllers/user/duffel");
-
-router.post("/payment-intents", createPaymentIntents);
+const controllers = require("../../controllers/user/duffel");
 
 module.exports = router;
