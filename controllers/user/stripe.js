@@ -208,7 +208,7 @@ const webhook = async (req, res) => {
               given_name: user.firstName,
               family_name: user.lastName,
               born_on: user.birthday,
-              gender: user.gender === "mr" ? "male" : "female",
+              gender: user.gender === "mr" ? "m" : "f",
               email: user.email,
               phone_number: user.phone,
               title: user.gender,
@@ -223,9 +223,11 @@ const webhook = async (req, res) => {
           captureAmount -= calculateStripeAmount(totalAmount);
           booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
         }
+        await booking.save();
         io.to(user._id.toString()).emit("booking_flight_status_changed", {
           bookingId: booking._id,
           result,
+          currentTotalAmount: booking.price.totalAmount,
         });
       }
 
@@ -247,14 +249,15 @@ const webhook = async (req, res) => {
           captureAmount -= calculateStripeAmount(totalAmount);
           booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
         }
+        await booking.save();
         io.to(user._id.toString()).emit("booking_hotel_status_changed", {
           bookingId: booking._id,
           result,
+          currentTotalAmount: booking.price.totalAmount,
         });
       }
 
       await stripeService.capturePaymentIntent(id, captureAmount);
-      await booking.save();
 
       break;
 
