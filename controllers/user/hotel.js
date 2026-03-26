@@ -61,12 +61,12 @@ const book = async (req, res) => {
   try {
     const { quoteId, phoneNumber, guestInfo, specialRequests } = req.body;
 
-    const result = await services.book(
+    const result = await services.book({
       quoteId,
       phoneNumber,
       guestInfo,
-      specialRequests || "",
-    );
+      specialRequests: specialRequests || "",
+    });
 
     res.json({ ok: true, data: result });
   } catch (err) {

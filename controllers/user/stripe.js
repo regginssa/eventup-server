@@ -8,9 +8,14 @@ const {
   retrieveSetupIntentPaymentMethod,
   createPaymentIntent,
   refundPayment,
+  createCapturePaymentIntent,
 } = require("../../services/stripe");
+const flightService = require("../../services/flight");
+const hotelService = require("../../services/hotel");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const stripeService = require("../../services/stripe");
 const { getIO } = require("../../socket");
+const { calculateStripeAmount } = require("../../utils/currency");
 
 const webhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
@@ -27,22 +32,24 @@ const webhook = async (req, res) => {
 
   console.log("[stripe webhook received]: ", event.type);
 
+  const {
+    id,
+    metadata,
+    currency,
+    amount,
+    amount_received: amountReceived,
+  } = event.data.object;
+
+  if (!metadata.userId) return res.json();
+  const io = getIO();
+  const user = await User.findById(metadata.userId);
+
+  if (!user) {
+    return res.json();
+  }
+
   switch (event.type) {
     case "payment_intent.succeeded":
-      const {
-        id,
-        metadata,
-        currency,
-        amount,
-        amount_received: amountReceived,
-      } = event.data.object;
-
-      if (!metadata.userId) break;
-      const io = getIO();
-      const user = await User.findById(metadata.userId);
-
-      if (!user) break;
-
       switch (metadata.type) {
         case "ticket":
           user.tickets.push(metadata.ticketId);
@@ -178,6 +185,79 @@ const webhook = async (req, res) => {
       // ❌ Optional: notify user
       break;
 
+    case "payment_intent.amount_capturable_updated":
+      const { bookingId } = metadata;
+      if (!bookingId) break;
+
+      const booking = await Booking.findById(bookingId);
+      if (!booking) break;
+
+      const { flight, hotel } = booking;
+      let captureAmount = Number(amount);
+
+      if (flight?.offer && !flight?.booking?.id) {
+        const { totalAmount, currency, id, passengerIds } = flight.offer;
+        const result = await flightService.book({
+          totalAmount,
+          currency,
+          offerId: id,
+          passengers: [
+            {
+              id: passengerIds[0],
+              type: "adult",
+              given_name: user.firstName,
+              family_name: user.lastName,
+              born_on: user.birthday,
+              gender: user.gender === "mr" ? "male" : "female",
+              email: user.email,
+              phone_number: user.phone,
+              title: user.gender,
+            },
+          ],
+        });
+
+        booking.flight.booking = result;
+        if (!result.id) {
+          const baseAmount = Number(flight.offer.converted.totalAmount);
+          const totalAmount = Number((baseAmount * 1.09).toFixed(2));
+          captureAmount -= calculateStripeAmount(totalAmount);
+          booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
+        }
+        io.to(user._id.toString()).emit("booking_flight_status_changed", {
+          bookingId: booking._id,
+          result,
+        });
+      }
+
+      if (hotel?.offer && !hotel?.booking?.id) {
+        const { id } = hotel.offer;
+        const result = await hotelService.book({
+          quoteId: id,
+          phoneNumber: user.phone,
+          guestInfo: {
+            given_name: user.firstName,
+            family_name: user.lastName,
+            born_on: user.birthday,
+          },
+        });
+        booking.hotel.booking = result;
+        if (!result.id) {
+          const baseAmount = Number(hotel.offer.converted.totalAmount);
+          const totalAmount = Number((baseAmount * 1.09).toFixed(2));
+          captureAmount -= calculateStripeAmount(totalAmount);
+          booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
+        }
+        io.to(user._id.toString()).emit("booking_hotel_status_changed", {
+          bookingId: booking._id,
+          result,
+        });
+      }
+
+      await stripeService.capturePaymentIntent(id, captureAmount);
+      await booking.save();
+
+      break;
+
     default:
       console.log(`Unhandled event type ${event.type}`);
   }
@@ -308,6 +388,48 @@ const createStripePaymentIntent = async (req, res) => {
   }
 };
 
+const createStripeCapturePaymentIntent = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { paymentMethodId, metadata: bodyMeta, amount, currency } = req.body;
+
+    const user = await User.findById(userId);
+
+    if (!user)
+      return res.status(401).json({ ok: false, message: "Unauthorized" });
+
+    const metadata = {
+      userId: user._id.toString(),
+      email: user.email,
+      ...bodyMeta,
+    };
+
+    const customerId = user.stripe.customerId;
+
+    if (!customerId) {
+      return res
+        .status(400)
+        .json({ ok: false, message: "Payment method is not verified" });
+    }
+
+    const result = await createCapturePaymentIntent(
+      customerId,
+      paymentMethodId,
+      amount,
+      currency,
+      metadata,
+    );
+
+    if (!result?.clientSecret) {
+      return res.status(500).json({ ok: false, message: result.message });
+    }
+
+    res.status(200).json({ ok: true, data: result });
+  } catch (e) {
+    res.status(500).json({ ok: false, message: "Internal server error" });
+  }
+};
+
 const refundStripePaymentIntent = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -337,5 +459,6 @@ module.exports = {
   getClientSecret,
   saveStripePaymentMethod,
   createStripePaymentIntent,
+  createStripeCapturePaymentIntent,
   refundStripePaymentIntent,
 };

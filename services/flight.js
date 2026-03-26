@@ -175,7 +175,6 @@ async function search(
       arrivalTime,
       converted: {
         totalAmount: 0,
-        netAmount: 0,
         currency: "EUR",
       },
     };
@@ -185,7 +184,7 @@ async function search(
   }
 }
 
-async function book(offerId, passengers, totalAmount, currency = "USD") {
+async function book({ offerId, passengers, totalAmount, currency = "EUR" }) {
   try {
     const payment = {
       type: "balance",
@@ -224,8 +223,8 @@ async function book(offerId, passengers, totalAmount, currency = "USD") {
     if (response.ok) {
       return {
         status: "confirmed",
-        orderId: json.data.id,
-        bookingReference: json.data.booking_reference,
+        id: json.data.id,
+        reference: json.data.booking_reference,
         message: "Flight booked successfully!",
       };
     }

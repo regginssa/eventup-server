@@ -28,7 +28,7 @@ const convertCurrency = async (amount, from, to = "EUR") => {
   }
 };
 
-function calculateStripeAmount(amount, currency) {
+function calculateStripeAmount(amount, currency = "EUR") {
   if (zeroDecimalCurrencies.includes(currency.toUpperCase())) {
     return Math.round(amount);
   }

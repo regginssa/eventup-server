@@ -32,7 +32,7 @@ const createPaymentIntent = async (
   customerId,
   paymentMethodId,
   amount,
-  currency = "USD",
+  currency = "EUR",
   metadata,
 ) => {
   const stripeAmount = calculateStripeAmount(amount, currency);
@@ -54,6 +54,39 @@ const createPaymentIntent = async (
   return { id: paymentIntent?.id, clientSecret: paymentIntent?.client_secret };
 };
 
+const createCapturePaymentIntent = async (
+  customerId,
+  paymentMethodId,
+  amount,
+  currency = "EUR",
+  metadata,
+) => {
+  const stripeAmount = calculateStripeAmount(amount, currency);
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: stripeAmount,
+    currency: currency.toUpperCase(),
+    customer: customerId,
+    payment_method: paymentMethodId,
+    capture_method: "manual", // 🔑 ADD THIS
+    setup_future_usage: "off_session",
+    metadata,
+  });
+
+  if (paymentIntent?.error) {
+    return {
+      message: paymentIntent.error?.message,
+    };
+  }
+
+  return { id: paymentIntent?.id, clientSecret: paymentIntent?.client_secret };
+};
+
+const capturePaymentIntent = async (paymentIntentId, amount) => {
+  await stripe.paymentIntents.capture(paymentIntentId, {
+    amount_to_capture: amount,
+  });
+};
+
 const refundPayment = async (paymentIntentId) => {
   await stripe.refunds.create({
     payment_intent: paymentIntentId,
@@ -65,5 +98,7 @@ module.exports = {
   setupIntents,
   retrieveSetupIntentPaymentMethod,
   createPaymentIntent,
+  createCapturePaymentIntent,
+  capturePaymentIntent,
   refundPayment,
 };

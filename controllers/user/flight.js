@@ -57,12 +57,12 @@ const book = async (req, res) => {
   try {
     const { offerId, passengers, totalAmount, currency } = req.body;
 
-    const result = await services.book(
+    const result = await services.book({
       offerId,
       passengers,
       totalAmount,
       currency,
-    );
+    });
 
     return res.json({ ok: true, data: result });
   } catch (err) {

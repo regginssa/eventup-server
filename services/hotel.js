@@ -172,7 +172,7 @@ async function quote(rateId) {
   }
 }
 
-async function book(quoteId, phoneNumber, guestInfo, specialRequests = "") {
+async function book({ quoteId, phoneNumber, guestInfo, specialRequests = "" }) {
   try {
     const res = await duffel.stays.bookings.create({
       quote_id: quoteId,
