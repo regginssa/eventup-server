@@ -240,6 +240,7 @@ const webhook = async (req, res) => {
             given_name: user.firstName,
             family_name: user.lastName,
             born_on: user.birthday,
+            email: user.email,
           },
         });
         booking.hotel.booking = result;
