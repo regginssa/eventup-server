@@ -212,6 +212,8 @@ async function book(offerId, passengers, totalAmount, currency = "USD") {
 
     const json = await response.json();
 
+    console.log("booking flight result: ", json);
+
     if (!json.data?.id) {
       return {
         status: "failed",

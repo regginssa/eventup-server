@@ -188,7 +188,11 @@ async function book(quoteId, phoneNumber, guestInfo, specialRequests = "") {
       accommodation_special_requests: specialRequests,
     });
 
-    if (!res.data) return null;
+    if (!res.data)
+      return {
+        status: "failed",
+        message: "Hotel booking failed",
+      };
 
     return {
       status: "confirmed",
