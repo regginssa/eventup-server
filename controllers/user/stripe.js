@@ -195,7 +195,7 @@ const webhook = async (req, res) => {
       const { flight, hotel } = booking;
       let captureAmount = Number(amount);
 
-      if (flight?.offer && !flight?.booking?.id) {
+      if (flight?.offer && !flight?.booking) {
         const { totalAmount, currency, id, passengerIds } = flight.offer;
         const result = await flightService.book({
           totalAmount,
@@ -231,7 +231,7 @@ const webhook = async (req, res) => {
         });
       }
 
-      if (hotel?.offer && !hotel?.booking?.id) {
+      if (hotel?.offer && !hotel?.booking) {
         const { id } = hotel.offer;
         const result = await hotelService.book({
           quoteId: id,
