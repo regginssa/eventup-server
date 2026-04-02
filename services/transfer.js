@@ -48,7 +48,7 @@ async function search({ from, to, departureDateTime, packageType }) {
     });
 
     const json = await res.json();
-    console.log("transfer search json: ", json);
+    // console.log("transfer search json: ", json);
     if (!json?.services) {
       return null;
     }
@@ -147,6 +147,12 @@ async function book({ holder, rateKey, transferDetails, bookingId }) {
     }
 
     const booking = json.bookings?.[0];
+    if (!booking) {
+      return {
+        status: "failed",
+        message: "Transfer booking failed",
+      };
+    }
     const transfer = booking?.transfers?.[0];
 
     const pickupDesc = transfer?.pickupInformation?.pickup?.description || "";
@@ -155,7 +161,7 @@ async function book({ holder, rateKey, transferDetails, bookingId }) {
     const phoneMatch = pickupDesc.match(/\+\d[\d\s]+/);
 
     return {
-      status: booking?.status,
+      status: "confirmed",
       reference: booking?.reference,
       clientReference: booking?.clientReference,
       pickupDateTime: `${transfer?.pickupInformation?.date}T${transfer?.pickupInformation?.time}`,
