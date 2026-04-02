@@ -3,8 +3,13 @@ const { convertCurrency } = require("../../utils/currency");
 
 const get = async (req, res) => {
   try {
-    const { from, to, departureTime, packageType } = req.body;
-    let offer = await services.search(from, to, departureTime, packageType);
+    const { from, to, departureDateTime, packageType } = req.body;
+    let offer = await services.search({
+      from,
+      to,
+      departureDateTime,
+      packageType,
+    });
 
     if (offer) {
       if (offer.currency === "EUR") {
@@ -30,17 +35,14 @@ const get = async (req, res) => {
 
 const book = async (req, res) => {
   try {
-    const { quoteId, offerHash, passenger, offer, outward, destination } =
-      req.body;
+    const { holder, bookingId, rateKey, transferDetails } = req.body;
 
-    const result = await services.book(
-      quoteId,
-      offerHash,
-      passenger,
-      offer,
-      outward,
-      destination,
-    );
+    const result = await services.book({
+      holder,
+      bookingId,
+      rateKey,
+      transferDetails,
+    });
     res.json({ ok: true, data: result });
   } catch (err) {
     res.status(500).json({ ok: false, message: "Interal server error" });
