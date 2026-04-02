@@ -48,6 +48,7 @@ async function search({ from, to, departureDateTime, packageType }) {
     });
 
     const json = await res.json();
+    console.log("transfer search json: ", json);
     if (!json?.services) {
       return null;
     }
@@ -136,6 +137,7 @@ async function book({ holder, rateKey, transferDetails, bookingId }) {
       body,
     });
     const json = await res.json();
+    console.log("transfer book json: ", json);
 
     if (!json?.bookings || !json?.bookings?.length === 0) {
       return {

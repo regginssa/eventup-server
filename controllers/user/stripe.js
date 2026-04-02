@@ -12,6 +12,7 @@ const {
 } = require("../../services/stripe");
 const flightService = require("../../services/flight");
 const hotelService = require("../../services/hotel");
+const transferService = require("../../services/transfer");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const stripeService = require("../../services/stripe");
 const { getIO } = require("../../socket");
@@ -193,6 +194,7 @@ const webhook = async (req, res) => {
       if (!booking) break;
 
       const { flight, hotel } = booking;
+      const { airportToHotel, hotelToEvent } = booking.transfer;
       let captureAmount = Number(amount);
 
       if (flight?.offer && !flight?.booking) {
@@ -256,6 +258,85 @@ const webhook = async (req, res) => {
           result,
           currentTotalAmount: booking.price.totalAmount,
         });
+      }
+
+      if (flight?.offer && airportToHotel?.offer && !airportToHotel?.booking) {
+        const result = await transferService.book({
+          holder: {
+            name: user.firstName,
+            surname: user.lastName,
+            email: user.email,
+            phone: user.phone,
+          },
+          bookingId: `BOK_${booking._id.toString()}`,
+          rateKey: airportToHotel.offer.rateKey,
+          transferDetails: [
+            {
+              type: "FLIGHT",
+              direction: airportToHotel.offer.rateKey.split("|")[0],
+              code: flight.offer.slices[flight.offer.slices.length - 1]
+                .destinationIata,
+              companyName: flight.offer.airlineName,
+            },
+          ],
+        });
+        booking.transfer.airportToHotel.booking = result;
+        console.log("airport transfer booking res: ", result);
+        if (!result.id) {
+          const baseAmount = Number(
+            airportToHotel?.offer.converted.totalAmount,
+          );
+          const totalAmount = Number((baseAmount * 1.09).toFixed(2));
+          captureAmount -= calculateStripeAmount(totalAmount);
+          booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
+        }
+        await booking.save();
+        io.to(user._id.toString()).emit(
+          "booking_transfer_airport_status_changed",
+          {
+            bookingId: booking._id,
+            result,
+            currentTotalAmount: booking.price.totalAmount,
+          },
+        );
+      }
+
+      if (hotelToEvent?.offer && !hotelToEvent?.booking) {
+        const result = await transferService.book({
+          holder: {
+            name: user.firstName,
+            surname: user.lastName,
+            email: user.email,
+            phone: user.phone,
+          },
+          bookingId: `BOK_${booking._id.toString()}`,
+          rateKey: hotelToEvent.offer.rateKey,
+          transferDetails: [
+            {
+              type: "FLIGHT",
+              direction: hotelToEvent.offer.rateKey.split("|")[0],
+              code: "N/A",
+              companyName: "Event",
+            },
+          ],
+        });
+        console.log("event transfer booking res: ", result);
+        booking.transfer.hotelToEvent.booking = result;
+        if (!result.id) {
+          const baseAmount = Number(hotelToEvent?.offer.converted.totalAmount);
+          const totalAmount = Number((baseAmount * 1.09).toFixed(2));
+          captureAmount -= calculateStripeAmount(totalAmount);
+          booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
+        }
+        await booking.save();
+        io.to(user._id.toString()).emit(
+          "booking_transfer_event_status_changed",
+          {
+            bookingId: booking._id,
+            result,
+            currentTotalAmount: booking.price.totalAmount,
+          },
+        );
       }
 
       await stripeService.capturePaymentIntent(id, captureAmount);
