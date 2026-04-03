@@ -16,6 +16,7 @@ const transferService = require("../../services/transfer");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const stripeService = require("../../services/stripe");
 const { getIO } = require("../../socket");
+const { calculateStripeAmount } = require("../../utils/currency");
 
 const webhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
@@ -221,13 +222,14 @@ const webhook = async (req, res) => {
         booking.flight.booking = result;
         booking.flight.status = result.status;
         if (!result.reference) {
-          captureAmount -= booking.price.breakdown.flight;
+          captureAmount -= calculateStripeAmount(
+            booking.price.breakdown.flight,
+          );
           booking.price.breakdown.flight = 0;
-          booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
           booking.flight.offer = null;
           booking.transfer.airportToHotel = null;
         }
-        booking.price.totalAmount = captureAmount;
+        booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
         await booking.save();
         io.to(user._id.toString()).emit("booking_changed", {
           booking,
@@ -249,13 +251,12 @@ const webhook = async (req, res) => {
         booking.hotel.booking = result;
         booking.hotel.status = result.status;
         if (!result.reference) {
-          captureAmount -= booking.price.breakdown.hotel;
+          captureAmount -= calculateStripeAmount(booking.price.breakdown.hotel);
           booking.price.breakdown.hotel = 0;
-          booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
           booking.hotel.offer = null;
           booking.transfer.hotelToEvent = null;
         }
-        booking.price.totalAmount = captureAmount;
+        booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
         await booking.save();
         io.to(user._id.toString()).emit("booking_changed", {
           booking,
@@ -289,12 +290,13 @@ const webhook = async (req, res) => {
         booking.transfer.airportToHotel.booking = result;
         booking.transfer.airportToHotel.status = result.status;
         if (!result.reference) {
-          captureAmount -= booking.price.breakdown.transferAirport;
+          captureAmount -= calculateStripeAmount(
+            booking.price.breakdown.transferAirport,
+          );
           booking.price.breakdown.transferAirport = 0;
-          booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
           booking.transfer.airportToHotel.offer = null;
         }
-        booking.price.totalAmount = captureAmount;
+        booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
         await booking.save();
         io.to(user._id.toString()).emit("booking_changed", {
           booking,
@@ -326,19 +328,22 @@ const webhook = async (req, res) => {
         booking.transfer.hotelToEvent.booking = result;
         booking.transfer.hotelToEvent.status = result.status;
         if (!result.reference) {
-          captureAmount -= booking.price.breakdown.transferEvent;
+          captureAmount -= calculateStripeAmount(
+            booking.price.breakdown.transferEvent,
+          );
           booking.price.breakdown.transferEvent = 0;
-          booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
           booking.transfer.hotelToEvent.offer = null;
         }
-        booking.price.totalAmount = captureAmount;
+        booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
         await booking.save();
         io.to(user._id.toString()).emit("booking_changed", {
           booking,
         });
       }
 
-      await stripeService.capturePaymentIntent(id, captureAmount);
+      if (captureAmount > 0) {
+        await stripeService.capturePaymentIntent(id, captureAmount);
+      }
 
       break;
 

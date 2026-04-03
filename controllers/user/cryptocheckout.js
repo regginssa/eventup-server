@@ -31,11 +31,159 @@ const webhook = async (req, res) => {
             .json({ ok: false, message: "Booking not found" });
         }
 
-        const isPartiallyPaid = booking.price.totalAmount > Number(amount);
+        booking.paymentStatus = "completed";
+        const { flight, hotel } = booking;
+        const { airportToHotel, hotelToEvent } = booking.transfer;
+        let captureAmount = Number(amount);
 
-        isPartiallyPaid
-          ? (booking.paymentStatus = "partially_completed")
-          : (booking.paymentStatus = "completed");
+        if (
+          flight?.offer &&
+          (!flight?.booking || flight?.status === "failed")
+        ) {
+          const { totalAmount, currency, id, passengerIds } = flight.offer;
+          const result = await flightService.book({
+            totalAmount,
+            currency,
+            offerId: id,
+            passengers: [
+              {
+                id: passengerIds[0],
+                type: "adult",
+                given_name: user.firstName,
+                family_name: user.lastName,
+                born_on: user.birthday,
+                gender: user.gender === "mr" ? "m" : "f",
+                email: user.email,
+                phone_number: user.phone,
+                title: user.gender,
+              },
+            ],
+          });
+
+          booking.flight.booking = result;
+          booking.flight.status = result.status;
+          if (!result.reference) {
+            captureAmount -= booking.price.breakdown.flight;
+            booking.price.breakdown.flight = 0;
+            booking.flight.offer = null;
+            booking.transfer.airportToHotel = null;
+          }
+          booking.price.totalAmount = Number(captureAmount.toFixed(6));
+          await booking.save();
+          io.to(user._id.toString()).emit("booking_changed", {
+            booking,
+          });
+        }
+
+        if (hotel?.offer && (!hotel?.booking || hotel?.status === "failed")) {
+          const { id } = hotel.offer;
+          const result = await hotelService.book({
+            quoteId: id,
+            phoneNumber: user.phone,
+            guestInfo: {
+              given_name: user.firstName,
+              family_name: user.lastName,
+              born_on: user.birthday,
+              email: user.email,
+            },
+          });
+          booking.hotel.booking = result;
+          booking.hotel.status = result.status;
+          if (!result.reference) {
+            captureAmount -= booking.price.breakdown.hotel;
+            booking.price.breakdown.hotel = 0;
+            booking.price.totalAmount = Number(
+              (captureAmount / 100).toFixed(2),
+            );
+            booking.hotel.offer = null;
+            booking.transfer.hotelToEvent = null;
+          }
+          booking.price.totalAmount = captureAmount;
+          await booking.save();
+          io.to(user._id.toString()).emit("booking_changed", {
+            booking,
+          });
+        }
+
+        if (
+          flight?.offer &&
+          airportToHotel?.offer &&
+          (!airportToHotel?.booking || airportToHotel?.status === "failed")
+        ) {
+          const result = await transferService.book({
+            holder: {
+              name: user.firstName,
+              surname: user.lastName,
+              email: user.email,
+              phone: user.phone,
+            },
+            bookingId: `BOK_${booking._id.toString().slice(0, 8)}`,
+            rateKey: airportToHotel.offer.rateKey,
+            transferDetails: [
+              {
+                type: "FLIGHT",
+                direction: airportToHotel.offer.rateKey.split("|")[0],
+                code: flight.offer.slices[flight.offer.slices.length - 1]
+                  .destinationIata,
+                companyName: flight.offer.airlineName,
+              },
+            ],
+          });
+          booking.transfer.airportToHotel.booking = result;
+          booking.transfer.airportToHotel.status = result.status;
+          if (!result.reference) {
+            captureAmount -= booking.price.breakdown.transferAirport;
+            booking.price.breakdown.transferAirport = 0;
+            booking.price.totalAmount = Number(
+              (captureAmount / 100).toFixed(2),
+            );
+            booking.transfer.airportToHotel.offer = null;
+          }
+          booking.price.totalAmount = captureAmount;
+          await booking.save();
+          io.to(user._id.toString()).emit("booking_changed", {
+            booking,
+          });
+        }
+
+        if (
+          hotelToEvent?.offer &&
+          (!hotelToEvent?.booking || hotelToEvent?.status === "failed")
+        ) {
+          const result = await transferService.book({
+            holder: {
+              name: user.firstName,
+              surname: user.lastName,
+              email: user.email,
+              phone: user.phone,
+            },
+            bookingId: `BOK_${booking._id.toString().slice(0, 8)}`,
+            rateKey: hotelToEvent.offer.rateKey,
+            transferDetails: [
+              {
+                type: "FLIGHT",
+                direction: hotelToEvent.offer.rateKey.split("|")[0],
+                code: "N/A",
+                companyName: "Event",
+              },
+            ],
+          });
+          booking.transfer.hotelToEvent.booking = result;
+          booking.transfer.hotelToEvent.status = result.status;
+          if (!result.reference) {
+            captureAmount -= booking.price.breakdown.transferEvent;
+            booking.price.breakdown.transferEvent = 0;
+            booking.price.totalAmount = Number(
+              (captureAmount / 100).toFixed(2),
+            );
+            booking.transfer.hotelToEvent.offer = null;
+          }
+          booking.price.totalAmount = captureAmount;
+          await booking.save();
+          io.to(user._id.toString()).emit("booking_changed", {
+            booking,
+          });
+        }
 
         await booking.save();
 
@@ -44,7 +192,7 @@ const webhook = async (req, res) => {
           service: "booking",
           amount: booking.price.totalAmount,
           currency,
-          status: isPartiallyPaid ? "partially_completed" : "completed",
+          status: "completed",
           amountReceived: Number(amount),
           metadata,
           txId: txHash,
@@ -57,12 +205,8 @@ const webhook = async (req, res) => {
           metadata: {
             bookingId: booking._id,
           },
-          title: isPartiallyPaid
-            ? "Partial payment received"
-            : "Booking payment confirmed",
-          body: isPartiallyPaid
-            ? `We received a partial payment for your booking. Please complete the remaining payment to confirm it.`
-            : `Your booking payment was successful. Your reservation is now confirmed.`,
+          title: "Booking payment confirmed",
+          body: `Your booking payment was successful. Your reservation is now confirmed.`,
           isRead: false,
           isArchived: false,
           user: booking.user.toString(),
