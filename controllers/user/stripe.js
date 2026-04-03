@@ -16,7 +16,6 @@ const transferService = require("../../services/transfer");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const stripeService = require("../../services/stripe");
 const { getIO } = require("../../socket");
-const { calculateStripeAmount } = require("../../utils/currency");
 
 const webhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
@@ -150,7 +149,9 @@ const webhook = async (req, res) => {
 
           const booking = await Booking.findById(metadata.bookingId);
           if (!booking) return;
+          const amountEUR = Number((Number(amount) / 100).toFixed(2));
           booking.paymentStatus = "completed";
+          booking.price.totalAmount += amountEUR;
           await booking.save();
 
           const bookingNotification = await Notification.create({
@@ -196,7 +197,7 @@ const webhook = async (req, res) => {
       const { airportToHotel, hotelToEvent } = booking.transfer;
       let captureAmount = Number(amount);
 
-      if (flight?.offer && !flight?.booking) {
+      if (flight?.offer && (!flight?.booking || flight?.status === "failed")) {
         const { totalAmount, currency, id, passengerIds } = flight.offer;
         const result = await flightService.book({
           totalAmount,
@@ -220,20 +221,20 @@ const webhook = async (req, res) => {
         booking.flight.booking = result;
         booking.flight.status = result.status;
         if (!result.reference) {
-          const baseAmount = Number(flight.offer.converted.totalAmount);
-          const totalAmount = Number((baseAmount * 1.09).toFixed(2));
-          captureAmount -= calculateStripeAmount(totalAmount);
+          captureAmount -= booking.price.breakdown.flight;
+          booking.price.breakdown.flight = 0;
           booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
           booking.flight.offer = null;
-          booking.transfer?.airportToHotel = null;
+          booking.transfer.airportToHotel = null;
         }
+        booking.price.totalAmount = captureAmount;
         await booking.save();
         io.to(user._id.toString()).emit("booking_changed", {
           booking,
         });
       }
 
-      if (hotel?.offer && !hotel?.booking) {
+      if (hotel?.offer && (!hotel?.booking || hotel?.status === "failed")) {
         const { id } = hotel.offer;
         const result = await hotelService.book({
           quoteId: id,
@@ -248,20 +249,24 @@ const webhook = async (req, res) => {
         booking.hotel.booking = result;
         booking.hotel.status = result.status;
         if (!result.reference) {
-          const baseAmount = Number(hotel.offer.converted.totalAmount);
-          const totalAmount = Number((baseAmount * 1.09).toFixed(2));
-          captureAmount -= calculateStripeAmount(totalAmount);
+          captureAmount -= booking.price.breakdown.hotel;
+          booking.price.breakdown.hotel = 0;
           booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
           booking.hotel.offer = null;
-          booking.transfer?.hotelToEvent = null;
+          booking.transfer.hotelToEvent = null;
         }
+        booking.price.totalAmount = captureAmount;
         await booking.save();
         io.to(user._id.toString()).emit("booking_changed", {
           booking,
         });
       }
 
-      if (flight?.offer && airportToHotel?.offer && !airportToHotel?.booking) {
+      if (
+        flight?.offer &&
+        airportToHotel?.offer &&
+        (!airportToHotel?.booking || airportToHotel?.status === "failed")
+      ) {
         const result = await transferService.book({
           holder: {
             name: user.firstName,
@@ -284,20 +289,22 @@ const webhook = async (req, res) => {
         booking.transfer.airportToHotel.booking = result;
         booking.transfer.airportToHotel.status = result.status;
         if (!result.reference) {
-          const baseAmount = Number(
-            airportToHotel?.offer.converted.totalAmount,
-          );
-          const totalAmount = Number((baseAmount * 1.09).toFixed(2));
-          captureAmount -= calculateStripeAmount(totalAmount);
+          captureAmount -= booking.price.breakdown.transferAirport;
+          booking.price.breakdown.transferAirport = 0;
           booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
+          booking.transfer.airportToHotel.offer = null;
         }
+        booking.price.totalAmount = captureAmount;
         await booking.save();
         io.to(user._id.toString()).emit("booking_changed", {
           booking,
         });
       }
 
-      if (hotelToEvent?.offer && !hotelToEvent?.booking) {
+      if (
+        hotelToEvent?.offer &&
+        (!hotelToEvent?.booking || hotelToEvent?.status === "failed")
+      ) {
         const result = await transferService.book({
           holder: {
             name: user.firstName,
@@ -319,11 +326,12 @@ const webhook = async (req, res) => {
         booking.transfer.hotelToEvent.booking = result;
         booking.transfer.hotelToEvent.status = result.status;
         if (!result.reference) {
-          const baseAmount = Number(hotelToEvent?.offer.converted.totalAmount);
-          const totalAmount = Number((baseAmount * 1.09).toFixed(2));
-          captureAmount -= calculateStripeAmount(totalAmount);
+          captureAmount -= booking.price.breakdown.transferEvent;
+          booking.price.breakdown.transferEvent = 0;
           booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
+          booking.transfer.hotelToEvent.offer = null;
         }
+        booking.price.totalAmount = captureAmount;
         await booking.save();
         io.to(user._id.toString()).emit("booking_changed", {
           booking,
@@ -344,7 +352,6 @@ const webhook = async (req, res) => {
 const getCustomerId = async (req, res) => {
   try {
     const userId = req.user.id;
-    console.log("[passport user id]: ", userId);
 
     const user = await User.findById(userId);
 

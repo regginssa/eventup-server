@@ -74,6 +74,7 @@ const appleRegister = async (req, res) => {
       data: { token: `Bearer ${token}`, user: newUser },
     });
   } catch (error) {
+    console.error("apple register error: ", error);
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
 };
@@ -181,6 +182,7 @@ const appleLogin = async (req, res) => {
       data: { token: `Bearer ${token}`, user: populated },
     });
   } catch (error) {
+    console.error("apple login error: ", error);
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
 };

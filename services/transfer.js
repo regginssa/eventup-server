@@ -40,8 +40,6 @@ async function search({ from, to, departureDateTime, packageType }) {
   try {
     const url = `${BASE_URL}/availability/en/from/${from.type}/${from.code}/to/${to.type}/${to.code}/${formatDate(departureDateTime)}/1/0/0`;
 
-    console.log("API URL:", url);
-
     const res = await fetch(url, {
       method: "GET",
       headers: getHeaders(),

@@ -6,13 +6,6 @@ const BookingSchema = new Schema(
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     event: { type: Schema.Types.ObjectId, ref: "Event", required: true },
 
-    // Overall status of the entire package
-    status: {
-      type: String,
-      enum: ["pending", "confirmed", "failed", "partially_confirmed"],
-      default: "pending",
-    },
-
     flight: {
       offer: { type: Object }, // Stores IFlightOffer
       booking: { type: Object }, // Stores IFlightBookingResponse
@@ -40,7 +33,13 @@ const BookingSchema = new Schema(
 
     price: {
       totalAmount: { type: Number, required: true },
-      currency: { type: String, default: "USD" },
+      currency: { type: String, default: "EUR" },
+      breakdown: {
+        flight: Number,
+        hotel: Number,
+        transferAirport: Number,
+        transferEvent: Number,
+      },
     },
 
     packageType: { type: String, required: true },
