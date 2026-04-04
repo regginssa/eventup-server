@@ -152,7 +152,11 @@ const webhook = async (req, res) => {
           if (!booking) return;
           const amountEUR = Number((Number(amount) / 100).toFixed(2));
           booking.paymentStatus = "completed";
-          booking.price.totalAmount += amountEUR;
+          if (metadata.isNewBooking === "true") {
+            booking.price.totalAmount = amountEUR;
+          } else {
+            booking.price.totalAmount += amountEUR;
+          }
           await booking.save();
 
           const bookingNotification = await Notification.create({
@@ -229,10 +233,10 @@ const webhook = async (req, res) => {
           booking.flight.offer = null;
           booking.transfer.airportToHotel = null;
         }
-        booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
         await booking.save();
         io.to(user._id.toString()).emit("booking_changed", {
           booking,
+          amount: Number(Number(captureAmount / 100).toFixed(2)),
         });
       }
 
@@ -256,10 +260,10 @@ const webhook = async (req, res) => {
           booking.hotel.offer = null;
           booking.transfer.hotelToEvent = null;
         }
-        booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
         await booking.save();
         io.to(user._id.toString()).emit("booking_changed", {
           booking,
+          amount: Number(captureAmount / 100).toFixed(2),
         });
       }
 
@@ -296,10 +300,10 @@ const webhook = async (req, res) => {
           booking.price.breakdown.transferAirport = 0;
           booking.transfer.airportToHotel.offer = null;
         }
-        booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
         await booking.save();
         io.to(user._id.toString()).emit("booking_changed", {
           booking,
+          amount: Number(captureAmount / 100).toFixed(2),
         });
       }
 
@@ -334,10 +338,10 @@ const webhook = async (req, res) => {
           booking.price.breakdown.transferEvent = 0;
           booking.transfer.hotelToEvent.offer = null;
         }
-        booking.price.totalAmount = Number((captureAmount / 100).toFixed(2));
         await booking.save();
         io.to(user._id.toString()).emit("booking_changed", {
           booking,
+          amount: Number(captureAmount / 100).toFixed(2),
         });
       }
 
