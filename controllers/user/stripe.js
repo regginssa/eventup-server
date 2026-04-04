@@ -31,8 +31,6 @@ const webhook = async (req, res) => {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  console.log("[stripe webhook received]: ", event.type);
-
   const {
     id,
     metadata,
@@ -155,7 +153,9 @@ const webhook = async (req, res) => {
           if (metadata.isNewBooking === "true") {
             booking.price.totalAmount = amountEUR;
           } else {
-            booking.price.totalAmount += amountEUR;
+            booking.price.totalAmount = Number(
+              (booking.price.totalAmount + amountEUR).toFixed(2),
+            );
           }
           await booking.save();
 
@@ -179,16 +179,11 @@ const webhook = async (req, res) => {
 
           io.to(user._id.toString()).emit("booking_changed", {
             booking,
+            amount: amountEUR,
           });
           break;
       }
 
-      break;
-
-    case "payment_intent.payment_failed":
-      const failedIntent = event.data.object;
-      console.log("Payment failed:", failedIntent.last_payment_error?.message);
-      // ❌ Optional: notify user
       break;
 
     case "payment_intent.amount_capturable_updated":
@@ -230,8 +225,8 @@ const webhook = async (req, res) => {
             booking.price.breakdown.flight,
           );
           booking.price.breakdown.flight = 0;
-          booking.flight.offer = null;
-          booking.transfer.airportToHotel = null;
+          // booking.flight.offer = null;
+          // booking.transfer.airportToHotel = null;
         }
         await booking.save();
         io.to(user._id.toString()).emit("booking_changed", {
@@ -257,13 +252,13 @@ const webhook = async (req, res) => {
         if (!result.reference) {
           captureAmount -= calculateStripeAmount(booking.price.breakdown.hotel);
           booking.price.breakdown.hotel = 0;
-          booking.hotel.offer = null;
-          booking.transfer.hotelToEvent = null;
+          // booking.hotel.offer = null;
+          // booking.transfer.hotelToEvent = null;
         }
         await booking.save();
         io.to(user._id.toString()).emit("booking_changed", {
           booking,
-          amount: Number(captureAmount / 100).toFixed(2),
+          amount: Number(Number(captureAmount / 100).toFixed(2)),
         });
       }
 
@@ -298,12 +293,12 @@ const webhook = async (req, res) => {
             booking.price.breakdown.transferAirport,
           );
           booking.price.breakdown.transferAirport = 0;
-          booking.transfer.airportToHotel.offer = null;
+          // booking.transfer.airportToHotel.offer = null;
         }
         await booking.save();
         io.to(user._id.toString()).emit("booking_changed", {
           booking,
-          amount: Number(captureAmount / 100).toFixed(2),
+          amount: Number(Number(captureAmount / 100).toFixed(2)),
         });
       }
 
@@ -336,12 +331,12 @@ const webhook = async (req, res) => {
             booking.price.breakdown.transferEvent,
           );
           booking.price.breakdown.transferEvent = 0;
-          booking.transfer.hotelToEvent.offer = null;
+          // booking.transfer.hotelToEvent.offer = null;
         }
         await booking.save();
         io.to(user._id.toString()).emit("booking_changed", {
           booking,
-          amount: Number(captureAmount / 100).toFixed(2),
+          amount: Number(Number(captureAmount / 100).toFixed(2)),
         });
       }
 

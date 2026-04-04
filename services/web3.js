@@ -10,14 +10,36 @@
 //   Transaction,
 // } = require("@solana/web3.js");
 // require("dotenv").config();
-
+const { ethers } = require("ethers");
+const {
+  Connection,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+  sendAndConfirmTransaction,
+} = require("@solana/web3.js");
+const {
+  getOrCreateAssociatedTokenAccount,
+  transfer: splTransfer,
+} = require("@solana/spl-token");
+const config = require("../config/web3");
 const { convertCurrency } = require("../utils/currency");
 
-// const connection = new Connection(process.env.SOLANA_RPC_URL, "confirmed");
+const ERC20_ABI = [
+  "function transfer(address to, uint256 amount) returns (bool)",
+];
 
-// const appWallet = Keypair.fromSecretKey(
-//   Uint8Array.from(JSON.parse(process.env.APP_WALLET_PRIVATE)),
-// );
+const ethProvider = new ethers.JsonRpcProvider(config.ETH_RPC);
+const ethWallet = new ethers.Wallet(config.ETH_PRIVATE_KEY, ethProvider);
+const solConnection = new Connection(config.SOL_RPC, "confirmed");
+const solWallet = Keypair.fromSecretKey(
+  Uint8Array.from(JSON.parse(config.SOL_PRIVATE_KEY)),
+);
+
+function toSmallestUnit(amount, decimals) {
+  return BigInt(Math.floor(amount * 10 ** decimals));
+}
 
 const fetchNativeTokensPrices = async () => {
   try {
@@ -85,49 +107,109 @@ const fetchTokenPrices = async () => {
   }
 };
 
-// const transferToken = async (userWallet, token, amount) => {
-//   try {
-//     const mint =
-//       token === "chrle"
-//         ? process.env.CHRLE_TOKEN_ADDRESS
-//         : process.env.BABYU_TOKEN_ADDRESS;
+async function refundETH(to, amount, decimals) {
+  const value = toSmallestUnit(amount, decimals);
 
-//     const mintKey = new PublicKey(mint);
-//     const toWallet = new PublicKey(userWallet);
+  const tx = await ethWallet.sendTransaction({
+    to,
+    value,
+  });
 
-//     const fromTokenAccount = await getAssociatedTokenAddress(
-//       mintKey,
-//       appWallet.publicKey,
-//     );
+  await tx.wait();
+  return tx.hash;
+}
 
-//     const toTokenAccount = await getAssociatedTokenAddress(mintKey, toWallet);
+async function refundERC20(to, amount, tokenConfig) {
+  const contract = new ethers.Contract(
+    tokenConfig.address,
+    ERC20_ABI,
+    ethWallet,
+  );
 
-//     const tx = new Transaction().add(
-//       createTransferInstruction(
-//         fromTokenAccount,
-//         toTokenAccount,
-//         appWallet.publicKey,
-//         amount,
-//         [],
-//         TOKEN_PROGRAM_ID,
-//       ),
-//     );
+  const value = toSmallestUnit(amount, tokenConfig.decimals);
 
-//     tx.feePayer = appWallet.publicKey;
+  const tx = await contract.transfer(to, value);
+  await tx.wait();
 
-//     const latestBlockhash = await connection.getLatestBlockhash();
-//     tx.recentBlockhash = latestBlockhash.blockhash;
+  return tx.hash;
+}
 
-//     const signedTx = await appWallet.signTransaction(tx);
-//     const signature = await connection.sendRawTransaction(signedTx.serialize());
+async function refundSOL(to, amount, decimals) {
+  const lamports = Number(toSmallestUnit(amount, decimals));
 
-//     await connection.confirmTransaction(signature, "confirmed");
+  const tx = new Transaction().add(
+    SystemProgram.transfer({
+      fromPubkey: solWallet.publicKey,
+      toPubkey: new PublicKey(to),
+      lamports,
+    }),
+  );
 
-//     return signature;
-//   } catch (error) {
-//     console.error("[transfer token error]: ", error);
-//     return null;
-//   }
-// };
+  const sig = await sendAndConfirmTransaction(solConnection, tx, [solWallet]);
+  return sig;
+}
 
-module.exports = { fetchNativeTokensPrices, fetchTokenPrices };
+async function refundSPL(to, amount, tokenConfig) {
+  const mint = new PublicKey(tokenConfig.mint);
+  const toPubkey = new PublicKey(to);
+
+  const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
+    solConnection,
+    solWallet,
+    mint,
+    solWallet.publicKey,
+  );
+
+  const toTokenAccount = await getOrCreateAssociatedTokenAccount(
+    solConnection,
+    solWallet,
+    mint,
+    toPubkey,
+  );
+
+  const value = Number(toSmallestUnit(amount, tokenConfig.decimals));
+
+  const sig = await splTransfer(
+    solConnection,
+    solWallet,
+    fromTokenAccount.address,
+    toTokenAccount.address,
+    solWallet,
+    value,
+  );
+
+  return sig;
+}
+
+const refund = async ({ chain, token, amount, to }) => {
+  const tokenConfig = config.TOKENS[token];
+
+  if (!tokenConfig) {
+    throw new Error("Unsupported token");
+  }
+
+  // ETHEREUM
+  if (chain === "ETH") {
+    if (tokenConfig.type === "native") {
+      return await refundETH(to, amount, tokenConfig.decimals);
+    }
+
+    if (tokenConfig.type === "erc20") {
+      return await refundERC20(to, amount, tokenConfig);
+    }
+  }
+
+  if (chain === "SOL") {
+    if (tokenConfig.type === "native") {
+      return await refundSOL(to, amount, tokenConfig.decimals);
+    }
+
+    if (tokenConfig.type === "spl") {
+      return await refundSPL(to, amount, tokenConfig);
+    }
+  }
+
+  throw new Error("Invalid chain/token combination");
+};
+
+module.exports = { fetchNativeTokensPrices, fetchTokenPrices, refund };

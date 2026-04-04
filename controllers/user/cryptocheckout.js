@@ -4,6 +4,10 @@ const Ticket = require("../../models/Ticket");
 const User = require("../../models/User");
 const Subscription = require("../../models/Subscription");
 const Notification = require("../../models/Notification");
+const web3Service = require("../../services/web3");
+const flightService = require("../../services/flight");
+const hotelService = require("../../services/hotel");
+const transferService = require("../../services/transfer");
 const { getIO } = require("../../socket");
 
 const webhook = async (req, res) => {
@@ -16,7 +20,7 @@ const webhook = async (req, res) => {
         .json({ ok: false, message: "Invalid request data" });
     }
 
-    const { txHash, currency, amount, metadata } = tx;
+    const { txHash, currency, amount, metadata, to: userWalletAddress } = tx;
     const user = await User.findById(metadata.userId);
 
     const io = getIO();
@@ -34,7 +38,9 @@ const webhook = async (req, res) => {
         booking.paymentStatus = "completed";
         const { flight, hotel } = booking;
         const { airportToHotel, hotelToEvent } = booking.transfer;
-        let captureAmount = Number(amount);
+        let captureAmount = Number(Number(amount).toFixed(6));
+        const chain = currency.includes("eth") ? "ETH" : "SOL";
+        const token = currency;
 
         if (
           flight?.offer &&
@@ -64,14 +70,18 @@ const webhook = async (req, res) => {
           booking.flight.status = result.status;
           if (!result.reference) {
             captureAmount -= booking.price.breakdown.flight;
+            await web3Service.refund({
+              chain,
+              token,
+              amount: booking.price.breakdown.flight,
+              to: userWalletAddress,
+            });
             booking.price.breakdown.flight = 0;
-            booking.flight.offer = null;
-            booking.transfer.airportToHotel = null;
           }
-          booking.price.totalAmount = Number(captureAmount.toFixed(6));
           await booking.save();
           io.to(user._id.toString()).emit("booking_changed", {
             booking,
+            amount: Number(captureAmount.toFixed(6)),
           });
         }
 
@@ -91,17 +101,18 @@ const webhook = async (req, res) => {
           booking.hotel.status = result.status;
           if (!result.reference) {
             captureAmount -= booking.price.breakdown.hotel;
+            await web3Service.refund({
+              chain,
+              token,
+              amount: booking.price.breakdown.hotel,
+              to: userWalletAddress,
+            });
             booking.price.breakdown.hotel = 0;
-            booking.price.totalAmount = Number(
-              (captureAmount / 100).toFixed(2),
-            );
-            booking.hotel.offer = null;
-            booking.transfer.hotelToEvent = null;
           }
-          booking.price.totalAmount = captureAmount;
           await booking.save();
           io.to(user._id.toString()).emit("booking_changed", {
             booking,
+            amount: Number(captureAmount.toFixed(6)),
           });
         }
 
@@ -133,16 +144,18 @@ const webhook = async (req, res) => {
           booking.transfer.airportToHotel.status = result.status;
           if (!result.reference) {
             captureAmount -= booking.price.breakdown.transferAirport;
+            await web3Service.refund({
+              chain,
+              token,
+              amount: booking.price.breakdown.transferAirport,
+              to: userWalletAddress,
+            });
             booking.price.breakdown.transferAirport = 0;
-            booking.price.totalAmount = Number(
-              (captureAmount / 100).toFixed(2),
-            );
-            booking.transfer.airportToHotel.offer = null;
           }
-          booking.price.totalAmount = captureAmount;
           await booking.save();
           io.to(user._id.toString()).emit("booking_changed", {
             booking,
+            amount: Number(captureAmount.toFixed(6)),
           });
         }
 
@@ -172,19 +185,28 @@ const webhook = async (req, res) => {
           booking.transfer.hotelToEvent.status = result.status;
           if (!result.reference) {
             captureAmount -= booking.price.breakdown.transferEvent;
+            await web3Service.refund({
+              chain,
+              token,
+              amount: booking.price.breakdown.transferEvent,
+              to: userWalletAddress,
+            });
             booking.price.breakdown.transferEvent = 0;
-            booking.price.totalAmount = Number(
-              (captureAmount / 100).toFixed(2),
-            );
-            booking.transfer.hotelToEvent.offer = null;
           }
-          booking.price.totalAmount = captureAmount;
           await booking.save();
           io.to(user._id.toString()).emit("booking_changed", {
             booking,
+            amount: Number(captureAmount.toFixed(6)),
           });
         }
 
+        if (metadata.isNewBooking === "true") {
+          booking.price.totalAmount = Number(captureAmount.toFixed(6));
+        } else {
+          booking.price.totalAmount = Number(
+            (booking.price.totalAmount + captureAmount).toFixed(6),
+          );
+        }
         await booking.save();
 
         await Transaction.create({
