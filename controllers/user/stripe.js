@@ -342,6 +342,13 @@ const webhook = async (req, res) => {
 
       if (captureAmount > 0) {
         await stripeService.capturePaymentIntent(id, captureAmount);
+      } else {
+        booking.paymentStatus = "completed";
+        await booking.save();
+        io.to(user._id.toString()).emit("booking_changed", {
+          booking,
+          amount: 0,
+        });
       }
 
       break;

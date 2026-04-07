@@ -7,6 +7,20 @@ const formatDuration = (isoDuration) => {
   return `${hours}h ${minutes}m`;
 };
 
+const getTotalDurationMinutes = (offer) => {
+  return offer.slices.reduce((total, slice) => {
+    const hours = slice.duration.match(/(\d+)H/)?.[1] || 0;
+    const minutes = slice.duration.match(/(\d+)M/)?.[1] || 0;
+    return total + Number(hours) * 60 + Number(minutes);
+  }, 0);
+};
+
+const getTotalStops = (offer) => {
+  return offer.slices.reduce((total, slice) => {
+    return total + (slice.segments.length - 1);
+  }, 0);
+};
+
 async function nearestAirport(lat, lng) {
   const url = `${BASE_URL}/places/suggestions?lat=${lat}&lng=${lng}&rad=50000`; // Increased radius to 50km
 
@@ -116,71 +130,102 @@ async function search(
       return [];
     }
 
-    const offer = json.data.offers[0];
+    const offers = json.data.offers;
+    if (offers.length === 0) {
+      return [];
+    }
 
-    const slices = offer.slices.map((slice) => {
-      const segments = slice.segments;
+    const sortedOffers = json.data.offers.sort((a, b) => {
+      const durationA = getTotalDurationMinutes(a);
+      const durationB = getTotalDurationMinutes(b);
+
+      const stopsA = getTotalStops(a);
+      const stopsB = getTotalStops(b);
+
+      // 1. Fewer stops first
+      if (stopsA !== stopsB) {
+        return stopsA - stopsB;
+      }
+
+      // 2. Shorter duration
+      if (durationA !== durationB) {
+        return durationA - durationB;
+      }
+
+      return Number(a.total_amount) - Number(b.total_amount);
+    });
+
+    const topOffers = sortedOffers.slice(0, 3);
+
+    const results = topOffers.map((offer) => {
+      const slices = offer.slices.map((slice) => {
+        const segments = slice.segments;
+
+        return {
+          departureTime: segments[0].departing_at,
+          arrivalTime: segments[segments.length - 1].arriving_at,
+          duration: formatDuration(slice.duration),
+
+          originIata: segments[0].origin.iata_code,
+          destinationIata: segments[segments.length - 1].destination.iata_code,
+
+          flightNumbers: segments.map(
+            (s) =>
+              `${s.marketing_carrier.iata_code}${s.marketing_carrier_flight_number}`,
+          ),
+
+          stops: segments.slice(0, -1).map((segment, index) => {
+            const nextSegment = segments[index + 1];
+
+            const arrival = new Date(segment.arriving_at);
+            const departure = new Date(nextSegment.departing_at);
+
+            const diffMs = departure.getTime() - arrival.getTime();
+
+            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+            const minutes = Math.floor(
+              (diffMs % (1000 * 60 * 60)) / (1000 * 60),
+            );
+
+            return {
+              iataCode: segment.destination.iata_code,
+              arrivalTime: segment.arriving_at,
+              departureTime: nextSegment.departing_at,
+              duration: `${hours}h ${minutes}m`,
+            };
+          }),
+        };
+      });
+
+      const outbound = offer.slices[0];
+      const outboundSegments = outbound.segments;
+
+      const departureTime = outboundSegments[0].departing_at;
+      const arrivalTime =
+        outboundSegments[outboundSegments.length - 1].arriving_at;
 
       return {
-        departureTime: segments[0].departing_at,
-        arrivalTime: segments[segments.length - 1].arriving_at,
-        duration: formatDuration(slice.duration),
-
-        originIata: segments[0].origin.iata_code,
-        destinationIata: segments[segments.length - 1].destination.iata_code,
-
-        flightNumbers: segments.map(
-          (s) =>
-            `${s.marketing_carrier.iata_code}${s.marketing_carrier_flight_number}`,
-        ),
-
-        stops: segments.slice(0, -1).map((segment, index) => {
-          const nextSegment = segments[index + 1];
-
-          const arrival = new Date(segment.arriving_at);
-          const departure = new Date(nextSegment.departing_at);
-
-          const diffMs = departure.getTime() - arrival.getTime();
-
-          const hours = Math.floor(diffMs / (1000 * 60 * 60));
-          const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-
-          return {
-            iataCode: segment.destination.iata_code,
-            arrivalTime: segment.arriving_at,
-            departureTime: nextSegment.departing_at,
-            duration: `${hours}h ${minutes}m`,
-          };
-        }),
+        id: offer.id,
+        airlineName: offer.owner.name,
+        airlineLogo: offer.owner.logo_symbol_url,
+        totalAmount: offer.total_amount,
+        currency: offer.total_currency,
+        passengerIds: json.data.passengers.map((p) => p.id),
+        slices,
+        tripType: offer.slices.length > 1 ? "round" : "oneWay",
+        departureTime,
+        arrivalTime,
+        converted: {
+          totalAmount: 0,
+          currency: "EUR",
+        },
       };
     });
 
-    const outbound = offer.slices[0];
-    const outboundSegments = outbound.segments;
-
-    const departureTime = outboundSegments[0].departing_at;
-    const arrivalTime =
-      outboundSegments[outboundSegments.length - 1].arriving_at;
-
-    return {
-      id: offer.id,
-      airlineName: offer.owner.name,
-      airlineLogo: offer.owner.logo_symbol_url,
-      totalAmount: offer.total_amount,
-      currency: offer.total_currency,
-      passengerIds: json.data.passengers.map((p) => p.id),
-      slices,
-      tripType: offer.slices.length > 1 ? "round" : "oneWay",
-      departureTime,
-      arrivalTime,
-      converted: {
-        totalAmount: 0,
-        currency: "EUR",
-      },
-    };
+    return results;
   } catch (err) {
     console.log("[duffel search flights error]: ", err);
-    return null;
+    return [];
   }
 }
 
