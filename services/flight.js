@@ -1,18 +1,31 @@
 const BASE_URL = "https://api.duffel.com";
 const ACCESS_TOKEN = process.env.DUFFEL_ACCESS_TOKEN;
 
-const formatDuration = (isoDuration) => {
-  const hours = isoDuration.match(/(\d+)H/)?.[1] || 0;
-  const minutes = isoDuration.match(/(\d+)M/)?.[1] || 0;
-  return `${hours}h ${minutes}m`;
+const formatMinutes = (totalMinutes) => {
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return `${h}h ${m}m`;
+};
+
+const parseISODurationToMinutes = (iso) => {
+  const days = Number(iso.match(/(\d+)D/)?.[1] || 0);
+  const hours = Number(iso.match(/(\d+)H/)?.[1] || 0);
+  const minutes = Number(iso.match(/(\d+)M/)?.[1] || 0);
+
+  return days * 24 * 60 + hours * 60 + minutes;
 };
 
 const getTotalDurationMinutes = (offer) => {
   return offer.slices.reduce((total, slice) => {
-    const hours = slice.duration.match(/(\d+)H/)?.[1] || 0;
-    const minutes = slice.duration.match(/(\d+)M/)?.[1] || 0;
-    return total + Number(hours) * 60 + Number(minutes);
+    return total + parseISODurationToMinutes(slice.duration);
   }, 0);
+};
+
+const getRealDurationMinutes = (departureTime, arrivalTime) => {
+  const dep = new Date(departureTime).getTime();
+  const arr = new Date(arrivalTime).getTime();
+
+  return Math.floor((arr - dep) / (1000 * 60));
 };
 
 const getTotalStops = (offer) => {
@@ -67,17 +80,13 @@ async function search(
   tripType,
 ) {
   try {
-    // 1. Get IATA codes from Coordinates
     const originIATA = await nearestAirport(
       Number(originLat),
       Number(originLng),
     );
     const destIATA = await nearestAirport(Number(destLat), Number(destLng));
 
-    if (!originIATA || !destIATA) {
-      console.log("Airports not found for coords:", { originLat, originLng });
-      return null;
-    }
+    if (!originIATA || !destIATA) return [];
 
     const bodySlices = [
       {
@@ -88,9 +97,7 @@ async function search(
     ];
 
     if (tripType === "round") {
-      if (!returnDate) {
-        return null;
-      }
+      if (!returnDate) return [];
       bodySlices.push({
         origin: destIATA,
         destination: originIATA,
@@ -98,7 +105,6 @@ async function search(
       });
     }
 
-    // 2. Search Flights
     const response = await fetch(
       `${BASE_URL}/air/offer_requests?return_offers=true`,
       {
@@ -121,50 +127,98 @@ async function search(
 
     const json = await response.json();
 
-    // Check if the API returned an error or if data.offers doesn't exist
-    if (json.errors || !json.data || !json.data.offers) {
-      console.log(
-        "[Duffel API Error Response]:",
-        JSON.stringify(json.errors || json),
-      );
-      return [];
-    }
+    if (json.errors || !json.data?.offers) return [];
 
     const offers = json.data.offers;
-    if (offers.length === 0) {
-      return [];
-    }
+    if (offers.length === 0) return [];
 
-    const sortedOffers = json.data.offers.sort((a, b) => {
-      const durationA = getTotalDurationMinutes(a);
-      const durationB = getTotalDurationMinutes(b);
+    // ✅ Helpers
+    const parseISODurationToMinutes = (iso) => {
+      const days = Number(iso.match(/(\d+)D/)?.[1] || 0);
+      const hours = Number(iso.match(/(\d+)H/)?.[1] || 0);
+      const minutes = Number(iso.match(/(\d+)M/)?.[1] || 0);
+      return days * 24 * 60 + hours * 60 + minutes;
+    };
 
+    const getTotalDurationMinutes = (offer) =>
+      offer.slices.reduce(
+        (sum, s) => sum + parseISODurationToMinutes(s.duration),
+        0,
+      );
+
+    const getTotalStops = (offer) =>
+      offer.slices.reduce((sum, s) => sum + (s.segments.length - 1), 0);
+
+    const formatMinutes = (mins) => {
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return `${h}h ${m}m`;
+    };
+
+    // ✅ 3 DIFFERENT OFFERS
+
+    // 🟢 BEST
+    const bestOffer = [...offers].sort((a, b) => {
       const stopsA = getTotalStops(a);
       const stopsB = getTotalStops(b);
 
-      // 1. Fewer stops first
-      if (stopsA !== stopsB) {
-        return stopsA - stopsB;
-      }
+      const durationA = getTotalDurationMinutes(a);
+      const durationB = getTotalDurationMinutes(b);
 
-      // 2. Shorter duration
-      if (durationA !== durationB) {
-        return durationA - durationB;
-      }
-
+      if (stopsA !== stopsB) return stopsA - stopsB;
+      if (durationA !== durationB) return durationA - durationB;
       return Number(a.total_amount) - Number(b.total_amount);
+    })[0];
+
+    // ⚡ FASTEST
+    const fastestOffer = [...offers].sort(
+      (a, b) => getTotalDurationMinutes(a) - getTotalDurationMinutes(b),
+    )[0];
+
+    // 💰 CHEAPEST
+    const cheapestOffer = [...offers].sort(
+      (a, b) => Number(a.total_amount) - Number(b.total_amount),
+    )[0];
+
+    // ✅ Deduplicate
+    const uniqueMap = new Map();
+    [
+      { offer: bestOffer, tag: "best" },
+      { offer: fastestOffer, tag: "fastest" },
+      { offer: cheapestOffer, tag: "cheapest" },
+    ].forEach(({ offer, tag }) => {
+      if (offer && !uniqueMap.has(offer.id)) {
+        uniqueMap.set(offer.id, { offer, tag });
+      }
     });
 
-    const topOffers = sortedOffers.slice(0, 3);
+    let selected = Array.from(uniqueMap.values());
 
-    const results = topOffers.map((offer) => {
+    // ✅ Fill if less than 3
+    if (selected.length < 3) {
+      const remaining = offers.filter(
+        (o) => !selected.find((s) => s.offer.id === o.id),
+      );
+
+      remaining
+        .sort((a, b) => Number(a.total_amount) - Number(b.total_amount))
+        .slice(0, 3 - selected.length)
+        .forEach((o) => {
+          selected.push({ offer: o, tag: "extra" });
+        });
+    }
+
+    // ✅ Map result
+    const results = selected.map(({ offer, tag }) => {
+      const totalDurationMinutes = getTotalDurationMinutes(offer);
+
       const slices = offer.slices.map((slice) => {
         const segments = slice.segments;
 
         return {
           departureTime: segments[0].departing_at,
           arrivalTime: segments[segments.length - 1].arriving_at,
-          duration: formatDuration(slice.duration),
+          duration: formatMinutes(parseISODurationToMinutes(slice.duration)),
 
           originIata: segments[0].origin.iata_code,
           destinationIata: segments[segments.length - 1].destination.iata_code,
@@ -174,47 +228,45 @@ async function search(
               `${s.marketing_carrier.iata_code}${s.marketing_carrier_flight_number}`,
           ),
 
-          stops: segments.slice(0, -1).map((segment, index) => {
-            const nextSegment = segments[index + 1];
+          stops: segments.slice(0, -1).map((segment, i) => {
+            const next = segments[i + 1];
 
-            const arrival = new Date(segment.arriving_at);
-            const departure = new Date(nextSegment.departing_at);
+            const diffMs =
+              new Date(next.departing_at) - new Date(segment.arriving_at);
 
-            const diffMs = departure.getTime() - arrival.getTime();
-
-            const hours = Math.floor(diffMs / (1000 * 60 * 60));
-            const minutes = Math.floor(
-              (diffMs % (1000 * 60 * 60)) / (1000 * 60),
-            );
+            const h = Math.floor(diffMs / (1000 * 60 * 60));
+            const m = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
 
             return {
               iataCode: segment.destination.iata_code,
               arrivalTime: segment.arriving_at,
-              departureTime: nextSegment.departing_at,
-              duration: `${hours}h ${minutes}m`,
+              departureTime: next.departing_at,
+              duration: `${h}h ${m}m`,
             };
           }),
         };
       });
 
-      const outbound = offer.slices[0];
-      const outboundSegments = outbound.segments;
-
-      const departureTime = outboundSegments[0].departing_at;
-      const arrivalTime =
-        outboundSegments[outboundSegments.length - 1].arriving_at;
+      const first = offer.slices[0].segments[0];
+      const lastSlice = offer.slices[offer.slices.length - 1];
+      const last = lastSlice.segments[lastSlice.segments.length - 1];
 
       return {
         id: offer.id,
+        tag, // ⭐ important for UI
         airlineName: offer.owner.name,
         airlineLogo: offer.owner.logo_symbol_url,
         totalAmount: offer.total_amount,
         currency: offer.total_currency,
         passengerIds: json.data.passengers.map((p) => p.id),
+
+        duration: formatMinutes(totalDurationMinutes),
+
         slices,
         tripType: offer.slices.length > 1 ? "round" : "oneWay",
-        departureTime,
-        arrivalTime,
+        departureTime: first.departing_at,
+        arrivalTime: last.arriving_at,
+
         converted: {
           totalAmount: 0,
           currency: "EUR",

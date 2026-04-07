@@ -102,24 +102,41 @@ async function search(lat, lng, checkIn, checkOut, packageType) {
   try {
     const searchRes = await duffel.stays.search(payload);
 
-    if (!searchRes?.data?.results?.length) return null;
+    if (!searchRes?.data?.results?.length) return [];
 
-    const selectedSearch = searchRes.data.results.find((result) =>
+    // ✅ Get ALL matching hotels (not just one)
+    const matchedHotels = searchRes.data.results.filter((result) =>
       matchHotelByPackage(result.accommodation, packageType),
     );
 
-    if (!selectedSearch) return null;
+    if (matchedHotels.length === 0) return [];
 
-    const ratesRes = await duffel.stays.searchResults.fetchAllRates(
-      selectedSearch.id,
+    // ✅ Take top 3
+    const topHotels = matchedHotels.slice(0, 3);
+
+    // ✅ Fetch rates for all 3 in parallel
+    const results = await Promise.all(
+      topHotels.map(async (hotel) => {
+        try {
+          const ratesRes = await duffel.stays.searchResults.fetchAllRates(
+            hotel.id,
+          );
+
+          if (!ratesRes?.data) return null;
+
+          return map(ratesRes.data);
+        } catch (err) {
+          console.error("[hotel rate error]: ", err);
+          return null;
+        }
+      }),
     );
 
-    if (!ratesRes?.data) return null;
-
-    return map(ratesRes.data);
+    // ✅ Remove failed ones
+    return results.filter(Boolean);
   } catch (error) {
     console.error("[search hotel error]: ", error);
-    return null;
+    return [];
   }
 }
 

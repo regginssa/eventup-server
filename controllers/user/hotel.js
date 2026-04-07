@@ -4,26 +4,34 @@ const { convertCurrency } = require("../../utils/currency");
 const get = async (req, res) => {
   try {
     const { lat, lng, checkIn, checkOut, packageType } = req.query;
-    let offer = await services.search(lat, lng, checkIn, checkOut, packageType);
+    let offers = await services.search(
+      lat,
+      lng,
+      checkIn,
+      checkOut,
+      packageType,
+    );
 
-    if (offer) {
-      if (offer.currency === "EUR") {
-        offer.converted.totalAmount = offer.totalAmount;
-      } else {
-        const totalAmount = await convertCurrency(
-          offer.totalAmount,
-          offer.currency,
-        );
+    if (offers.length > 0) {
+      for (const offer of offers) {
+        if (offer.currency === "EUR") {
+          offer.converted.totalAmount = offer.totalAmount;
+        } else {
+          const totalAmount = await convertCurrency(
+            offer.totalAmount,
+            offer.currency,
+          );
 
-        if (Number(totalAmount) <= 0) {
-          return res.json({ ok: true, data: null });
+          if (Number(totalAmount) <= 0) {
+            return res.json({ ok: true, data: null });
+          }
+
+          offer.converted.totalAmount = totalAmount;
         }
-
-        offer.converted.totalAmount = totalAmount;
       }
     }
 
-    res.status(200).json({ ok: true, data: offer });
+    res.status(200).json({ ok: true, data: offers });
   } catch (err) {
     res.status(500).json({ ok: false, message: "Internal server error" });
   }
