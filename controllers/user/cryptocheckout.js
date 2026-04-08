@@ -35,7 +35,6 @@ const webhook = async (req, res) => {
             .json({ ok: false, message: "Booking not found" });
         }
 
-        booking.paymentStatus = "completed";
         const { flight, hotel } = booking;
         const { airportToHotel, hotelToEvent } = booking.transfer;
         let captureAmount = Number(Number(amount).toFixed(6));
@@ -207,7 +206,13 @@ const webhook = async (req, res) => {
             (booking.price.totalAmount + captureAmount).toFixed(6),
           );
         }
+        booking.paymentStatus = "completed";
         await booking.save();
+
+        io.to(user._id.toString()).emit("booking_changed", {
+          booking,
+          amount: Number(Number(captureAmount / 100).toFixed(6)),
+        });
 
         await Transaction.create({
           type: "buy",
@@ -238,11 +243,6 @@ const webhook = async (req, res) => {
         io.to(booking.user.toString()).emit("notification_sent", {
           notification: bookingNotification,
           userId: booking.user.toString(),
-        });
-
-        io.to(booking.user.toString()).emit("booking_payment_status_updated", {
-          bookingId: booking._id,
-          status: booking.status,
         });
 
         break;

@@ -102,11 +102,11 @@ const SubscriptionSchema = new mongoose.Schema(
 
 const UserSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    email: { type: String, required: true },
-    password: { type: String, required: true },
+    name: { type: String },
+    firstName: { type: String },
+    lastName: { type: String },
+    email: { type: String },
+    password: { type: String },
     avatar: { type: String, default: null },
     title: { type: String, default: null },
     description: { type: String, default: null },

@@ -47,7 +47,7 @@ const appleRegister = async (req, res) => {
   try {
     const { firstName, lastName, email, appleId } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ appleId });
 
     if (user) {
       return res.json({ ok: false, message: "User already exists" });
@@ -158,11 +158,11 @@ const googleLogin = async (req, res) => {
 
 const appleLogin = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { appleId } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ appleId });
 
-    if (!user) {
+    if (!user || !user?.appleId) {
       return res.json({ ok: false, message: "User not found" });
     }
 
