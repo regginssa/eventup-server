@@ -12,6 +12,7 @@ const get = async (req, res) => {
       packageType,
       tripType,
       returnDate,
+      radius,
     } = req.query;
 
     // Convert to actual numbers here
@@ -29,6 +30,7 @@ const get = async (req, res) => {
       returnDate,
       packageType,
       tripType,
+      radius,
     );
 
     if (offers.length > 0) {

@@ -184,8 +184,8 @@ async function refundSPL(to, amount, tokenConfig) {
 const refund = async ({ chain, token, amount, to }) => {
   const tokenConfig = config.TOKENS[token];
 
-  if (!tokenConfig) {
-    throw new Error("Unsupported token");
+  if (!tokenConfig || !to || to === "") {
+    return null;
   }
 
   // ETHEREUM
@@ -209,7 +209,7 @@ const refund = async ({ chain, token, amount, to }) => {
     }
   }
 
-  throw new Error("Invalid chain/token combination");
+  return null;
 };
 
 module.exports = { fetchNativeTokensPrices, fetchTokenPrices, refund };

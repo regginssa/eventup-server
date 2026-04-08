@@ -1,41 +1,8 @@
 const BASE_URL = "https://api.duffel.com";
 const ACCESS_TOKEN = process.env.DUFFEL_ACCESS_TOKEN;
 
-const formatMinutes = (totalMinutes) => {
-  const h = Math.floor(totalMinutes / 60);
-  const m = totalMinutes % 60;
-  return `${h}h ${m}m`;
-};
-
-const parseISODurationToMinutes = (iso) => {
-  const days = Number(iso.match(/(\d+)D/)?.[1] || 0);
-  const hours = Number(iso.match(/(\d+)H/)?.[1] || 0);
-  const minutes = Number(iso.match(/(\d+)M/)?.[1] || 0);
-
-  return days * 24 * 60 + hours * 60 + minutes;
-};
-
-const getTotalDurationMinutes = (offer) => {
-  return offer.slices.reduce((total, slice) => {
-    return total + parseISODurationToMinutes(slice.duration);
-  }, 0);
-};
-
-const getRealDurationMinutes = (departureTime, arrivalTime) => {
-  const dep = new Date(departureTime).getTime();
-  const arr = new Date(arrivalTime).getTime();
-
-  return Math.floor((arr - dep) / (1000 * 60));
-};
-
-const getTotalStops = (offer) => {
-  return offer.slices.reduce((total, slice) => {
-    return total + (slice.segments.length - 1);
-  }, 0);
-};
-
-async function nearestAirport(lat, lng) {
-  const url = `${BASE_URL}/places/suggestions?lat=${lat}&lng=${lng}&rad=50000`; // Increased radius to 50km
+async function nearestAirport(lat, lng, radius = 50000) {
+  const url = `${BASE_URL}/places/suggestions?lat=${lat}&lng=${lng}&rad=${radius}`;
 
   const response = await fetch(url, {
     method: "GET",
@@ -78,11 +45,13 @@ async function search(
   returnDate,
   packageType,
   tripType,
+  radius = 50000, // default radius 50km
 ) {
   try {
     const originIATA = await nearestAirport(
       Number(originLat),
       Number(originLng),
+      radius,
     );
     const destIATA = await nearestAirport(Number(destLat), Number(destLng));
 
