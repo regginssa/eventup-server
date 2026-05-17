@@ -40,10 +40,19 @@ function formatCheckInInfo(info) {
   return parts.join(" • ");
 }
 
-function map(data, type = "search") {
-  if (type !== "search") return null;
-
-  const rooms = data.accommodation.rooms || [];
+function map(data) {
+  const rooms = (data.accommodation.rooms || [])
+    .map((room) => ({
+      ...room,
+      rates: (room.rates || []).filter(
+        (rate) =>
+          rate.cancellation_timeline.length > 0 ||
+          rate.conditions.some((c) =>
+            c.title?.toLowerCase().includes("cancellation"),
+          ),
+      ),
+    }))
+    .filter((room) => room.rates.length > 0);
 
   const defaultRoom =
     rooms.find((r) => Array.isArray(r.rates) && r.rates.length > 0) || null;
@@ -57,12 +66,7 @@ function map(data, type = "search") {
     defaultRate.conditions?.find((c) => c.title === title)?.description || null;
 
   return {
-    // =====================
-    // IDS
-    // =====================
-    id: `${data.accommodation.id}_${defaultRate.id}`,
-    hotelId: data.accommodation.id,
-    rateId: defaultRate.id,
+    id: defaultRate.id,
 
     // =====================
     // HOTEL
@@ -143,6 +147,7 @@ function map(data, type = "search") {
     rooms: rooms.map((room) => ({
       name: room.name,
       rates: room.rates || [],
+      photos: room.photos,
     })),
 
     defaultRoom,
@@ -225,7 +230,6 @@ async function search(lat, lng, checkIn, checkOut, packageType) {
 
     const offers = results.filter(Boolean);
 
-    console.log(offers[0]);
     return offers;
   } catch (error) {
     console.error("[search hotel error]: ", error);
@@ -244,36 +248,7 @@ async function quote(rateId) {
 
     if (!room) return null;
 
-    const mapped = {
-      id: data.id,
-      name: data.accommodation.name,
-      category: `${data.accommodation.rating} STARS`,
-      address: data.accommodation.location?.address?.line_one,
-      street: data.accommodation.location?.address?.line_one,
-      city: data.accommodation.location?.address?.city_name,
-      postalCode: data.accommodation.location?.address?.postal_code,
-      countryCode: data.accommodation.location?.address?.country_code,
-      latitude: String(
-        data.accommodation.location.geographic_coordinates.latitude,
-      ),
-      longitude: String(
-        data.accommodation.location.geographic_coordinates.longitude,
-      ),
-      image: data.accommodation.photos?.[0]?.url,
-      currency: data.total_currency,
-      totalAmount: Number(data.total_amount),
-      netAmount: Number(data.base_amount),
-      roomName: room?.name,
-      boardName: room?.beds?.[0]?.type?.toUpperCase(),
-      services: data.accommodation.amenities || [],
-      checkIn: data.check_in_date,
-      checkOut: data.check_out_date,
-      checkInInfo: formatCheckInInfo(data.accommodation.check_in_information),
-      converted: {
-        totalAmount: 0,
-        currency: "EUR",
-      },
-    };
+    const mapped = map(data);
 
     return mapped;
   } catch (error) {
