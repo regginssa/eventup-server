@@ -40,7 +40,7 @@ function formatCheckInInfo(info) {
   return parts.join(" • ");
 }
 
-function map(data) {
+function map(data, type = "search") {
   const rooms = (data.accommodation.rooms || [])
     .map((room) => ({
       ...room,
@@ -65,8 +65,10 @@ function map(data) {
   const getCondition = (title) =>
     defaultRate.conditions?.find((c) => c.title === title)?.description || null;
 
+  const id = type === "search" ? defaultRate.id : data.id;
+
   return {
-    id: defaultRate.id,
+    id,
 
     // =====================
     // HOTEL
@@ -248,7 +250,7 @@ async function quote(rateId) {
 
     if (!room) return null;
 
-    const mapped = map(data);
+    const mapped = map(data, "quote");
 
     return mapped;
   } catch (error) {
