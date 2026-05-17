@@ -41,47 +41,138 @@ function formatCheckInInfo(info) {
 }
 
 function map(data, type = "search") {
-  if (type === "search") {
-    const room = data.accommodation.rooms?.[0];
+  if (type !== "search") return null;
 
-    if (!room || !room.rates[0].id) return null;
+  const rooms = data.accommodation.rooms || [];
 
-    return {
-      id: room.rates[0].id,
-      name: data.accommodation.name,
-      category: `${data.accommodation.rating} STARS`,
-      address: data.accommodation.location?.address?.line_one,
-      street: data.accommodation.location?.address?.line_one,
-      city: data.accommodation.location?.address?.city_name,
-      postalCode: data.accommodation.location?.address?.postal_code,
-      countryCode: data.accommodation.location?.address?.country_code,
-      latitude: String(
-        data.accommodation.location.geographic_coordinates.latitude,
-      ),
-      longitude: String(
-        data.accommodation.location.geographic_coordinates.longitude,
-      ),
-      image: data.accommodation.photos?.[0]?.url,
-      currency: data.cheapest_rate_currency,
-      totalAmount: Number(
-        data.cheapest_rate_total_amount || data.total_currency || 0,
-      ),
-      netAmount: Number(
-        data.cheapest_rate_base_amount || data.total_currency || 0,
-      ),
-      roomName: room?.name,
-      boardName: room?.beds?.[0]?.type?.toUpperCase(),
-      services: data.accommodation.amenities || [],
-      checkIn: data.check_in_date,
-      checkOut: data.check_out_date,
-      checkInInfo: formatCheckInInfo(data.accommodation.check_in_information),
-      converted: {
-        totalAmount: 0,
-        currency: "EUR",
-      },
-    };
-  } else {
-  }
+  const defaultRoom =
+    rooms.find((r) => Array.isArray(r.rates) && r.rates.length > 0) || null;
+
+  if (!defaultRoom) return null;
+
+  const defaultRate = defaultRoom.rates[0];
+  if (!defaultRate) return null;
+
+  const getCondition = (title) =>
+    defaultRate.conditions?.find((c) => c.title === title)?.description || null;
+
+  return {
+    // =====================
+    // IDS
+    // =====================
+    id: `${data.accommodation.id}_${defaultRate.id}`,
+    hotelId: data.accommodation.id,
+    rateId: defaultRate.id,
+
+    // =====================
+    // HOTEL
+    // =====================
+    name: data.accommodation.name,
+    category: `${data.accommodation.rating} STARS`,
+
+    address: data.accommodation.location?.address?.line_one || "",
+    city: data.accommodation.location?.address?.city_name || "",
+    countryCode: data.accommodation.location?.address?.country_code || "",
+
+    latitude: String(
+      data.accommodation.location?.geographic_coordinates?.latitude ?? "",
+    ),
+    longitude: String(
+      data.accommodation.location?.geographic_coordinates?.longitude ?? "",
+    ),
+
+    image: data.accommodation.photos?.[0]?.url || "",
+
+    // =====================
+    // PRICING
+    // =====================
+    currency: defaultRate.public_currency,
+    totalAmount: Number(defaultRate.total_amount),
+    netAmount: Number(defaultRate.base_amount),
+    taxes: Number(defaultRate.tax_amount),
+    fees: Number(defaultRate.fee_amount),
+    dueAtAccommodation: Number(defaultRate.due_at_accommodation_amount),
+
+    // =====================
+    // ROOM
+    // =====================
+    roomName: defaultRoom.name,
+    boardName: defaultRate.board_type,
+
+    // =====================
+    // POLICIES
+    // =====================
+    ratePolicy:
+      getCondition("Rate Description") ||
+      getCondition("Description") ||
+      defaultRate.description ||
+      null,
+
+    cancellationPolicy: {
+      raw: defaultRate.cancellation_timeline || defaultRate.conditions || [],
+      summary:
+        getCondition("Guarantee Policy") ||
+        getCondition("Cancellation Policy") ||
+        null,
+      refundable:
+        (defaultRate.cancellation_timeline?.length ?? 0) > 0 ||
+        defaultRate.conditions?.some((c) =>
+          c.title?.toLowerCase().includes("cancellation"),
+        ),
+      timeline: defaultRate.cancellation_timeline || [],
+    },
+
+    // =====================
+    // SERVICES
+    // =====================
+    services: (data.accommodation.amenities || []).map((a) => ({
+      description: a.description || a.name || a,
+      type: a.type || a.code || "unknown",
+    })),
+
+    // =====================
+    // DATES
+    // =====================
+    checkIn: data.check_in_date,
+    checkOut: data.check_out_date,
+    checkInInfo: formatCheckInInfo(data.accommodation.check_in_information),
+
+    // =====================
+    // FULL DATA
+    // =====================
+    rooms: rooms.map((room) => ({
+      name: room.name,
+      rates: room.rates || [],
+    })),
+
+    defaultRoom,
+    defaultRate,
+
+    // =====================
+    // PAYMENT META (DUFFEL SAFE)
+    // =====================
+    payment: {
+      type: defaultRate.payment_type,
+      methods: defaultRate.available_payment_methods || [],
+      instructionAllowed: defaultRate.payment_instruction_allowed,
+    },
+
+    availability: {
+      quantity: defaultRate.quantity_available,
+      expiresAt: defaultRate.expires_at,
+    },
+
+    // =====================
+    // CONVERTED
+    // =====================
+    converted: {
+      totalAmount: Number(defaultRate.total_amount),
+      netAmount: Number(defaultRate.base_amount),
+      taxes: Number(defaultRate.tax_amount),
+      fees: Number(defaultRate.fee_amount),
+      currency: defaultRate.total_currency,
+    },
+  };
 }
 
 async function search(lat, lng, checkIn, checkOut, packageType) {
@@ -132,8 +223,10 @@ async function search(lat, lng, checkIn, checkOut, packageType) {
       }),
     );
 
-    // ✅ Remove failed ones
-    return results.filter(Boolean);
+    const offers = results.filter(Boolean);
+
+    console.log(offers[0]);
+    return offers;
   } catch (error) {
     console.error("[search hotel error]: ", error);
     return [];

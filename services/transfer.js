@@ -40,6 +40,8 @@ async function search({ from, to, departureDateTime, packageType }) {
   try {
     const url = `${BASE_URL}/availability/en/from/${from.type}/${from.code}/to/${to.type}/${to.code}/${formatDate(departureDateTime)}/1/0/0`;
 
+    console.log("transfer search url: ", url);
+
     const res = await fetch(url, {
       method: "GET",
       headers: getHeaders(),
@@ -69,6 +71,8 @@ async function search({ from, to, departureDateTime, packageType }) {
     if (!service) {
       return null;
     }
+
+    console.log("selected transfer service: ", service);
 
     // const transferTime = service.content.transferDetailInfo.find(
     //   (i) => i.id === "TRFTIME",
@@ -129,6 +133,9 @@ async function book({ holder, rateKey, transferDetails, bookingId }) {
     });
     const url = `${BASE_URL}/bookings`;
 
+    console.log("transfer book body json: ", body);
+    console.log("transfer book url: ", url);
+
     const res = await fetch(url, {
       method: "POST",
       headers: getHeaders(),
@@ -151,6 +158,7 @@ async function book({ holder, rateKey, transferDetails, bookingId }) {
         message: "Transfer booking failed",
       };
     }
+    console.log("transfer booking: ", booking);
     const transfer = booking?.transfers?.[0];
 
     const pickupDesc = transfer?.pickupInformation?.pickup?.description || "";
