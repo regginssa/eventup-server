@@ -1,5 +1,5 @@
 const services = require("../../services/hotel");
-const { convertCurrency } = require("../../utils/currency");
+const { convertCurrency, getCurrencyRate } = require("../../utils/currency");
 
 const get = async (req, res) => {
   try {
@@ -13,21 +13,34 @@ const get = async (req, res) => {
     );
 
     if (offers.length > 0) {
+      const currencies = [...new Set(offers.map((o) => o.currency))];
+      const rateMap = {};
+      await Promise.all(
+        currencies.map(async (currency) => {
+          rateMap[currency] = await getCurrencyRate(currency);
+        }),
+      );
+
       for (const offer of offers) {
-        if (offer.currency === "EUR") {
-          offer.converted.totalAmount = offer.totalAmount;
-        } else {
-          const totalAmount = await convertCurrency(
-            offer.totalAmount,
-            offer.currency,
-          );
-
-          if (Number(totalAmount) <= 0) {
-            return res.json({ ok: true, data: null });
-          }
-
-          offer.converted.totalAmount = totalAmount;
+        const totalAmount = offer.totalAmount;
+        if (Number(totalAmount) <= 0) {
+          return res.json({ ok: true, data: null });
         }
+
+        const rate = rateMap[offer.currency];
+
+        if (!rate) {
+          return res.json({ ok: true, data: null });
+        }
+
+        offer.converted.totalAmount = Number(totalAmount) * rate;
+        offer.defaultRate.total_amount =
+          Number(offer.defaultRate.total_amount) * rate;
+        offer.rooms.forEach((room) => {
+          room.rates.forEach((rt) => {
+            rt.total_amount = Number(rt.total_amount) * rate;
+          });
+        });
       }
     }
 
